@@ -1,0 +1,1934 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#020204">
+  <meta name="description" content="VOLT MATRIX — 电池科技交互学习体验">
+  <title>VOLT MATRIX — Battery Intelligence</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Sans+SC:wght@300;400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  >
+
+  <style>
+    :root {
+      --black: #020204;
+      --white: #f4f7fa;
+      --muted: #8e949f;
+      --cyan: #00ccff;
+      --orange: #ff6a24;
+      --line: rgba(255, 255, 255, 0.09);
+      --nav-height: 80px;
+      --page-gutter: clamp(24px, 5vw, 84px);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--black);
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    body {
+      min-width: 320px;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--white);
+      background:
+        radial-gradient(circle at 50% 38%, rgba(16, 33, 47, 0.16), transparent 34%),
+        radial-gradient(circle at 74% 62%, rgba(255, 83, 20, 0.035), transparent 26%),
+        var(--black);
+      font-family: "Space Grotesk", "Noto Sans SC", sans-serif;
+      font-weight: 300;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body::before {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      content: "";
+      opacity: 0.17;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.13'/%3E%3C/svg%3E");
+      mix-blend-mode: soft-light;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .navbar {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 50;
+      height: var(--nav-height);
+      padding: 0 var(--page-gutter);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: linear-gradient(180deg, rgba(2, 2, 4, 0.78), rgba(2, 2, 4, 0.18));
+      border-bottom: 1px solid transparent;
+      border-image: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent) 1;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 13px;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 24px;
+      letter-spacing: 0.16em;
+      line-height: 1;
+    }
+
+    .brand-mark {
+      position: relative;
+      width: 18px;
+      height: 18px;
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      transform: rotate(45deg);
+    }
+
+    .brand-mark::after {
+      position: absolute;
+      inset: 4px;
+      content: "";
+      background: linear-gradient(135deg, var(--cyan), var(--orange));
+      box-shadow: 0 0 15px rgba(0, 204, 255, 0.5);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: clamp(20px, 3.5vw, 54px);
+    }
+
+    .nav-links a {
+      position: relative;
+      padding: 31px 0;
+      color: rgba(255, 255, 255, 0.57);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      transition: color 240ms ease;
+    }
+
+    .nav-links a::after {
+      position: absolute;
+      right: 0;
+      bottom: 23px;
+      left: 0;
+      height: 1px;
+      content: "";
+      background: var(--cyan);
+      transform: scaleX(0);
+      transform-origin: right;
+      transition: transform 240ms ease;
+    }
+
+    .nav-links .mobile-index {
+      display: none;
+    }
+
+    .nav-links a:hover,
+    .nav-links a:focus-visible {
+      color: var(--white);
+      outline: none;
+    }
+
+    .nav-links a:hover::after,
+    .nav-links a:focus-visible::after {
+      transform: scaleX(1);
+      transform-origin: left;
+    }
+
+    .product-stage {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 70% 45%, rgba(25, 41, 54, 0.34), transparent 35%),
+        radial-gradient(circle at 78% 62%, rgba(255, 91, 28, 0.07), transparent 24%);
+    }
+
+    .product-stage::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background:
+        linear-gradient(90deg, rgba(2, 2, 4, 0.98) 0%, rgba(2, 2, 4, 0.82) 28%, rgba(2, 2, 4, 0.08) 62%, rgba(2, 2, 4, 0.42) 100%),
+        linear-gradient(180deg, rgba(2, 2, 4, 0.4), transparent 24%, transparent 76%, rgba(2, 2, 4, 0.76));
+      z-index: 2;
+    }
+
+    .product-stage::after {
+      position: absolute;
+      right: 5vw;
+      bottom: 5vh;
+      width: min(54vw, 850px);
+      height: 16%;
+      content: "";
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.72);
+      filter: blur(38px);
+      transform: perspective(400px) rotateX(64deg);
+    }
+
+    .product-image {
+      position: absolute;
+      z-index: 1;
+      top: 50%;
+      right: clamp(-40px, 1vw, 40px);
+      width: min(68vw, 1050px);
+      max-height: 92vh;
+      object-fit: contain;
+      filter:
+        drop-shadow(0 35px 40px rgba(0, 0, 0, 0.68))
+        drop-shadow(-14px 0 20px rgba(0, 180, 255, 0.08))
+        drop-shadow(14px 0 22px rgba(255, 91, 28, 0.06));
+      transform: translateY(-48%);
+    }
+
+    .product-spec {
+      position: absolute;
+      z-index: 3;
+      right: var(--page-gutter);
+      bottom: 7vh;
+      display: grid;
+      grid-template-columns: repeat(3, auto);
+      gap: clamp(22px, 3vw, 48px);
+      color: rgba(255, 255, 255, 0.42);
+      font-size: 9px;
+      letter-spacing: 0.15em;
+    }
+
+    .product-spec strong {
+      display: block;
+      margin-top: 7px;
+      color: rgba(255, 255, 255, 0.78);
+      font-size: 12px;
+      font-weight: 400;
+      letter-spacing: 0.05em;
+    }
+
+    .scroll-progress {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 80;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .scroll-progress span {
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--cyan), var(--orange));
+      transform: scaleX(0);
+      transform-origin: left;
+    }
+
+    .page-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: grid;
+      place-items: center;
+      background: var(--black);
+      transition: opacity 550ms ease, visibility 550ms ease;
+    }
+
+    .page-loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-content {
+      text-align: center;
+    }
+
+    .loader-content .brand-mark {
+      display: block;
+      width: 24px;
+      height: 24px;
+      margin: 0 auto 26px;
+    }
+
+    .loader-name {
+      display: block;
+      margin-bottom: 24px;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 32px;
+      letter-spacing: 0.28em;
+    }
+
+    .loader-line {
+      width: 240px;
+      height: 1px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .loader-line::after {
+      display: block;
+      width: 100%;
+      height: 100%;
+      content: "";
+      background: linear-gradient(90deg, var(--cyan), var(--orange));
+      transform-origin: left;
+      animation: loaderFill 900ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    @keyframes loaderFill {
+      from { transform: scaleX(0); }
+      to { transform: scaleX(1); }
+    }
+
+    .scroll-container {
+      position: relative;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .section {
+      position: relative;
+      min-height: 100svh;
+      padding: calc(var(--nav-height) + 32px) var(--page-gutter) 48px;
+      display: flex;
+      align-items: center;
+    }
+
+    .hero {
+      align-items: flex-end;
+      padding-bottom: clamp(56px, 9vh, 108px);
+    }
+
+    .hero-copy {
+      width: min(720px, 100%);
+      position: relative;
+      z-index: 4;
+    }
+
+    .hero h1 {
+      max-width: 650px;
+      margin: 0;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(84px, 13.5vw, 220px);
+      font-weight: 400;
+      letter-spacing: 0.01em;
+      line-height: 0.76;
+      text-wrap: balance;
+    }
+
+    .hero h1 span {
+      display: block;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(255, 255, 255, 0.38);
+    }
+
+    .hero-footer {
+      width: min(610px, 100%);
+      margin-top: clamp(30px, 5vh, 64px);
+      padding-top: 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 30px;
+      border-top: 1px solid var(--line);
+    }
+
+    .hero-footer p {
+      max-width: 410px;
+      margin: 0;
+      color: rgba(255, 255, 255, 0.72);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(16px, 1.2vw, 19px);
+      letter-spacing: 0.035em;
+      line-height: 1.9;
+    }
+
+    .scroll-cue {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: rgba(255, 255, 255, 0.42);
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      white-space: nowrap;
+      writing-mode: vertical-rl;
+    }
+
+    .scroll-cue::after {
+      width: 1px;
+      height: 52px;
+      content: "";
+      background: linear-gradient(var(--cyan), transparent);
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+
+    .info-panel {
+      --accent: var(--cyan);
+      width: min(390px, calc(100vw - (var(--page-gutter) * 2)));
+      padding: 2px 0 2px 28px;
+      border-left: 1px solid var(--accent);
+      opacity: 0;
+      transform: translateY(30px);
+      transition:
+        opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+        transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .info-panel::before {
+      position: absolute;
+      inset: -30px -36px;
+      z-index: -1;
+      content: "";
+      background: rgba(255, 255, 255, 0.018);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      mask-image: linear-gradient(90deg, black, transparent 94%);
+    }
+
+    .info-panel.active {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .info-panel.right {
+      margin-left: auto;
+    }
+
+    .info-panel.orange {
+      --accent: var(--orange);
+    }
+
+    .panel-label {
+      display: block;
+      margin-bottom: 17px;
+      color: var(--orange);
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+    }
+
+    .info-panel h2 {
+      margin: 0 0 18px;
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(52px, 6vw, 88px);
+      font-weight: 400;
+      letter-spacing: 0.035em;
+      line-height: 0.92;
+    }
+
+    .info-panel p {
+      margin: 0;
+      color: var(--muted);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.045em;
+      line-height: 1.9;
+    }
+
+    .data-row {
+      margin-top: 30px;
+      padding-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px 28px;
+      border-top: 1px solid var(--line);
+      color: rgba(255, 255, 255, 0.66);
+      font-family: "Space Mono", "SFMono-Regular", Consolas, monospace;
+      font-size: 9px;
+      letter-spacing: 0.13em;
+    }
+
+    .data-row strong {
+      color: var(--accent);
+      font-weight: 400;
+    }
+
+    .chapter-index {
+      position: absolute;
+      right: var(--page-gutter);
+      bottom: 42px;
+      color: rgba(255, 255, 255, 0.17);
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 76px;
+      letter-spacing: 0.06em;
+    }
+
+    .database-section {
+      display: none;
+      min-height: auto;
+      padding-top: clamp(120px, 16vh, 190px);
+      padding-bottom: clamp(120px, 18vh, 220px);
+      align-items: flex-start;
+      pointer-events: none;
+    }
+
+    .explore-section {
+      position: relative;
+      min-height: 100svh;
+      padding-top: calc(var(--nav-height) + 54px);
+      padding-bottom: 64px;
+      align-items: stretch;
+      pointer-events: auto;
+    }
+
+    .explore-section::before {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background:
+        linear-gradient(180deg, rgba(1, 2, 4, 0.72), rgba(1, 2, 4, 0.9)),
+        linear-gradient(90deg, rgba(1, 2, 4, 0.86), rgba(1, 2, 4, 0.5) 52%, rgba(1, 2, 4, 0.82));
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+
+    .explore-shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: clamp(36px, 5vh, 64px);
+    }
+
+    .explore-heading {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 40px;
+    }
+
+    .explore-heading h2 {
+      max-width: 720px;
+      margin: 0;
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(42px, 5.8vw, 82px);
+      font-weight: 400;
+      letter-spacing: -0.055em;
+      line-height: 1.08;
+    }
+
+    .explore-heading p {
+      max-width: 380px;
+      margin: 0;
+      color: rgba(255, 255, 255, 0.54);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(15px, 1.2vw, 18px);
+      line-height: 1.9;
+    }
+
+    .galaxy-gates {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .galaxy-gate {
+      --gate-accent: var(--cyan);
+      position: relative;
+      min-height: clamp(320px, 43vh, 470px);
+      padding: clamp(28px, 3vw, 44px);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      color: var(--white);
+      text-align: left;
+      background: rgba(2, 3, 6, 0.78);
+      border: 0;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      cursor: pointer;
+      font: inherit;
+      transition: background 500ms ease;
+    }
+
+    .galaxy-gate:last-child {
+      border-right: 0;
+    }
+
+    .galaxy-gate::before {
+      position: absolute;
+      inset: auto -25% -52% -25%;
+      height: 75%;
+      content: "";
+      opacity: 0.34;
+      background: radial-gradient(circle, var(--gate-accent), transparent 65%);
+      filter: blur(28px);
+      transform: translateY(28%);
+      transition: opacity 500ms ease, transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .galaxy-gate::after {
+      position: absolute;
+      inset: 0;
+      content: "";
+      background: linear-gradient(160deg, transparent 35%, color-mix(in srgb, var(--gate-accent) 10%, transparent));
+      opacity: 0;
+      transition: opacity 400ms ease;
+    }
+
+    .galaxy-gate:hover,
+    .galaxy-gate:focus-visible {
+      background: rgba(10, 13, 18, 0.88);
+      outline: none;
+    }
+
+    .galaxy-gate:hover::before,
+    .galaxy-gate:focus-visible::before {
+      opacity: 0.72;
+      transform: translateY(0);
+    }
+
+    .galaxy-gate:hover::after,
+    .galaxy-gate:focus-visible::after {
+      opacity: 1;
+    }
+
+    .galaxy-gate.primary,
+    .galaxy-gate.secondary,
+    .galaxy-gate.fuel,
+    .galaxy-gate.special {
+      --gate-accent: #d6dde3;
+    }
+
+    .gate-number,
+    .gate-copy,
+    .gate-action {
+      position: relative;
+      z-index: 1;
+    }
+
+    .gate-number {
+      color: rgba(255, 255, 255, 0.86);
+      font-family: "Bebas Neue", sans-serif;
+      font-size: clamp(72px, 7vw, 112px);
+      letter-spacing: 0.02em;
+      line-height: 0.8;
+      -webkit-text-stroke: 1px rgba(255, 255, 255, 0.18);
+    }
+
+    .gate-copy {
+      margin-top: auto;
+    }
+
+    .gate-copy h3 {
+      margin: 0 0 10px;
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(28px, 2.35vw, 38px);
+      font-weight: 400;
+      letter-spacing: -0.035em;
+      line-height: 1.3;
+    }
+
+    .gate-copy small {
+      display: block;
+      margin-bottom: 24px;
+      color: rgba(255, 255, 255, 0.42);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.17em;
+    }
+
+    .gate-copy p {
+      min-height: 3.7em;
+      margin: 0;
+      color: rgba(255, 255, 255, 0.6);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: 17px;
+      line-height: 1.85;
+    }
+
+    .gate-action {
+      margin-top: 28px;
+      padding-top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: rgba(255, 255, 255, 0.7);
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.14em;
+    }
+
+    .gate-arrow {
+      width: 34px;
+      height: 18px;
+      transition: transform 300ms ease;
+    }
+
+    .galaxy-gate:hover .gate-arrow,
+    .galaxy-gate:focus-visible .gate-arrow {
+      transform: translateX(7px);
+    }
+
+    .detail-explorer {
+      --detail-accent: var(--cyan);
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: grid;
+      grid-template-rows: 80px minmax(0, 1fr);
+      color: var(--white);
+      background:
+        radial-gradient(circle at 82% 46%, color-mix(in srgb, var(--detail-accent) 9%, transparent), transparent 32%),
+        rgba(1, 2, 4, 0.985);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(24px);
+      transition: opacity 380ms ease, transform 500ms cubic-bezier(0.22, 1, 0.36, 1), visibility 380ms;
+    }
+
+    .detail-explorer.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .detail-toolbar {
+      padding: 0 var(--page-gutter);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .detail-close,
+    .detail-step {
+      padding: 12px 0;
+      color: rgba(255, 255, 255, 0.74);
+      background: none;
+      border: 0;
+      cursor: pointer;
+      font: 500 11px/1 "Space Grotesk", sans-serif;
+      letter-spacing: 0.14em;
+    }
+
+    .detail-close:hover,
+    .detail-step:hover,
+    .detail-close:focus-visible,
+    .detail-step:focus-visible {
+      color: var(--white);
+      outline: none;
+    }
+
+    .detail-progress {
+      color: var(--detail-accent);
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 22px;
+      letter-spacing: 0.1em;
+    }
+
+    .detail-controls {
+      display: flex;
+      gap: 28px;
+    }
+
+    .detail-layout {
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(260px, 24vw) minmax(0, 1fr);
+    }
+
+    .detail-sidebar {
+      min-height: 0;
+      padding: clamp(34px, 5vh, 64px) clamp(24px, 3vw, 48px);
+      overflow-y: auto;
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .detail-module-label {
+      color: var(--detail-accent);
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+    }
+
+    .detail-module-title {
+      margin: 16px 0 38px;
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(28px, 2.45vw, 38px);
+      font-weight: 400;
+      line-height: 1.25;
+      white-space: nowrap;
+    }
+
+    .detail-index {
+      display: grid;
+      gap: 2px;
+    }
+
+    .detail-index button {
+      padding: 14px 0;
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 10px;
+      color: rgba(255, 255, 255, 0.42);
+      text-align: left;
+      background: none;
+      border: 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      cursor: pointer;
+      font: 400 13px/1.5 "Noto Sans SC", sans-serif;
+      transition: color 220ms ease, padding-left 220ms ease;
+    }
+
+    .detail-index button.active,
+    .detail-index button:hover,
+    .detail-index button:focus-visible {
+      padding-left: 8px;
+      color: var(--white);
+      outline: none;
+    }
+
+    .detail-index button.active span:first-child {
+      color: var(--detail-accent);
+    }
+
+    .detail-content {
+      min-height: 0;
+      padding: clamp(38px, 7vh, 90px) clamp(34px, 7vw, 112px);
+      overflow-y: auto;
+      display: flex;
+      align-items: center;
+    }
+
+    .detail-article {
+      width: min(900px, 100%);
+      margin: auto 0;
+    }
+
+    .detail-kicker {
+      margin-bottom: 18px;
+      color: var(--detail-accent);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+    }
+
+    .detail-title {
+      margin: 0;
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(54px, 7.2vw, 112px);
+      font-weight: 400;
+      letter-spacing: -0.065em;
+      line-height: 1.05;
+    }
+
+    .detail-english {
+      margin-top: 14px;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 13px;
+      letter-spacing: 0.15em;
+    }
+
+    .detail-description {
+      max-width: 780px;
+      margin: clamp(34px, 5vh, 58px) 0 0;
+      color: rgba(235, 239, 244, 0.79);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(18px, 1.55vw, 24px);
+      letter-spacing: 0.015em;
+      line-height: 1.95;
+    }
+
+    .detail-learning {
+      max-width: 920px;
+      margin-top: clamp(42px, 6vh, 72px);
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1px;
+      background: rgba(255, 255, 255, 0.09);
+    }
+
+    .learning-block {
+      padding: clamp(24px, 3vw, 38px);
+      background: #030507;
+    }
+
+    .learning-block h4 {
+      margin: 0 0 14px;
+      color: rgba(255, 255, 255, 0.92);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(18px, 1.45vw, 23px);
+      font-weight: 400;
+    }
+
+    .learning-block p {
+      margin: 0;
+      color: rgba(226, 231, 236, 0.66);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(15px, 1.1vw, 17px);
+      line-height: 1.9;
+    }
+
+    .learning-block.question {
+      grid-column: 1 / -1;
+    }
+
+    .learning-block.question h4 {
+      color: #dce3e8;
+    }
+
+    .detail-metrics {
+      margin-top: clamp(40px, 6vh, 70px);
+      padding-top: 24px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 28px;
+      border-top: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .detail-metric {
+      color: rgba(255, 255, 255, 0.46);
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .detail-metric strong {
+      display: block;
+      margin-top: 8px;
+      color: var(--detail-accent);
+      font-family: "Space Grotesk", "Noto Sans SC", sans-serif;
+      font-size: clamp(18px, 1.8vw, 28px);
+      font-weight: 400;
+      letter-spacing: -0.02em;
+    }
+
+    body.detail-open {
+      overflow: hidden;
+    }
+
+    .explore-section > .chapter-index {
+      display: none;
+    }
+
+    .database-module {
+      --module-accent: var(--cyan);
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      padding: clamp(28px, 4vw, 58px);
+      position: relative;
+      pointer-events: auto;
+      background:
+        linear-gradient(105deg, rgba(2, 3, 6, 0.97), rgba(2, 3, 6, 0.86) 70%, rgba(2, 3, 6, 0.58)),
+        rgba(2, 3, 6, 0.9);
+      border-top: 1px solid rgba(255, 255, 255, 0.13);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+    }
+
+    .database-module.primary {
+      --module-accent: #43e68a;
+    }
+
+    .database-module.secondary {
+      --module-accent: #22bfff;
+    }
+
+    .database-module.fuel {
+      --module-accent: #ffd64c;
+    }
+
+    .database-module.special {
+      --module-accent: #bb7cff;
+    }
+
+    .module-heading {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 0.65fr);
+      gap: clamp(28px, 7vw, 90px);
+      align-items: end;
+      margin-bottom: clamp(62px, 9vw, 112px);
+    }
+
+    .module-code {
+      display: block;
+      margin-bottom: 18px;
+      color: var(--module-accent);
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.28em;
+    }
+
+    .module-title {
+      margin: 0;
+      font-family: "Bebas Neue", "Noto Sans SC", sans-serif;
+      font-size: clamp(60px, 8.5vw, 118px);
+      font-weight: 400;
+      letter-spacing: 0.025em;
+      line-height: 0.88;
+    }
+
+    .module-title small {
+      display: block;
+      margin-top: 16px;
+      color: rgba(255, 255, 255, 0.33);
+      font-family: "Space Grotesk", sans-serif;
+      font-size: clamp(10px, 1vw, 13px);
+      font-weight: 400;
+      letter-spacing: 0.16em;
+      line-height: 1.5;
+    }
+
+    .module-overview {
+      margin: 0;
+      padding-left: 22px;
+      color: rgba(225, 230, 236, 0.66);
+      border-left: 1px solid var(--module-accent);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.035em;
+      line-height: 2;
+    }
+
+    .chemistry-group + .chemistry-group {
+      margin-top: clamp(68px, 9vw, 112px);
+    }
+
+    .group-heading {
+      margin: 0 0 22px;
+      padding-bottom: 16px;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      color: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(20px, 2.3vw, 30px);
+      font-weight: 400;
+      letter-spacing: 0.04em;
+    }
+
+    .group-heading span {
+      color: var(--module-accent);
+      font-family: "Bebas Neue", sans-serif;
+      font-size: 18px;
+      letter-spacing: 0.12em;
+    }
+
+    .chemistry-entry {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.65fr) minmax(0, 1.35fr);
+      gap: clamp(24px, 5vw, 70px);
+      padding: clamp(32px, 4vw, 50px) 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+    }
+
+    .entry-name {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.94);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: clamp(20px, 2.3vw, 29px);
+      font-weight: 400;
+      letter-spacing: 0.025em;
+      line-height: 1.45;
+    }
+
+    .entry-name small {
+      display: block;
+      margin-top: 10px;
+      color: rgba(255, 255, 255, 0.35);
+      font-family: "Space Grotesk", sans-serif;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      line-height: 1.5;
+    }
+
+    .entry-body p {
+      margin: 0;
+      color: rgba(210, 216, 224, 0.62);
+      font-family: "Noto Sans SC", sans-serif;
+      font-size: 13px;
+      letter-spacing: 0.025em;
+      line-height: 2;
+    }
+
+    .terminal-data {
+      margin-top: 22px;
+      padding-top: 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 24px;
+      border-top: 1px solid color-mix(in srgb, var(--module-accent) 38%, transparent);
+      color: rgba(255, 255, 255, 0.5);
+      font-family: "SFMono-Regular", Consolas, monospace;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+      line-height: 1.8;
+      text-transform: uppercase;
+    }
+
+    .terminal-data::before {
+      width: 100%;
+      color: var(--module-accent);
+      content: attr(data-label);
+      font-weight: 600;
+      letter-spacing: 0.2em;
+    }
+
+    .terminal-data strong {
+      color: rgba(255, 255, 255, 0.9);
+      font-weight: 400;
+    }
+
+    @keyframes pulse {
+      0%,
+      100% {
+        opacity: 0.35;
+        transform: scaleY(0.65);
+        transform-origin: top;
+      }
+      50% {
+        opacity: 1;
+        transform: scaleY(1);
+      }
+    }
+
+    @media (max-width: 760px) {
+      :root {
+        --nav-height: 68px;
+      }
+
+      .navbar {
+        padding-inline: 22px;
+      }
+
+      .brand {
+        font-size: 20px;
+      }
+
+      .brand-mark {
+        width: 15px;
+        height: 15px;
+      }
+
+      .nav-links {
+        gap: 18px;
+      }
+
+      .nav-links a {
+        display: none;
+      }
+
+      .nav-links a:last-child {
+        display: block;
+      }
+
+      .section {
+        align-items: flex-end;
+        padding-inline: 24px;
+        padding-bottom: 13vh;
+      }
+
+      .hero {
+        align-items: flex-start;
+        padding-top: 16vh;
+      }
+
+      .product-stage::before {
+        background:
+          linear-gradient(180deg, rgba(2, 2, 4, 0.48), rgba(2, 2, 4, 0.08) 28%, rgba(2, 2, 4, 0.3) 64%, rgba(2, 2, 4, 0.92)),
+          linear-gradient(90deg, rgba(2, 2, 4, 0.68), rgba(2, 2, 4, 0.08));
+      }
+
+      .product-image {
+        top: 46%;
+        right: -34vw;
+        width: 126vw;
+        max-width: none;
+        max-height: none;
+        opacity: 0.9;
+      }
+
+      .product-spec {
+        display: none;
+      }
+
+      .hero h1 {
+        font-size: clamp(78px, 28vw, 126px);
+      }
+
+      .hero-footer {
+        margin-top: 34px;
+      }
+
+      .hero-footer p {
+        max-width: 90vw;
+        font-size: 16px;
+        line-height: 1.85;
+      }
+
+      .scroll-cue {
+        display: none;
+      }
+
+      .info-panel,
+      .info-panel.right {
+        width: min(330px, 88vw);
+        margin-right: 0;
+        margin-left: 0;
+        padding-left: 20px;
+      }
+
+      .section:nth-child(even) .info-panel {
+        margin-left: auto;
+      }
+
+      .info-panel h2 {
+        font-size: clamp(50px, 16vw, 70px);
+      }
+
+      .database-section {
+        padding: 104px 16px 110px;
+      }
+
+      .explore-section {
+        min-height: auto;
+        padding: 106px 20px 70px;
+      }
+
+      .explore-heading {
+        display: block;
+      }
+
+      .explore-heading h2 {
+        font-size: 44px;
+      }
+
+      .explore-heading p {
+        margin-top: 22px;
+        font-size: 16px;
+      }
+
+      .galaxy-gates {
+        margin-top: 18px;
+        grid-template-columns: 1fr;
+      }
+
+      .galaxy-gate {
+        min-height: 280px;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .gate-number {
+        font-size: 76px;
+      }
+
+      .gate-copy h3 {
+        font-size: 31px;
+      }
+
+      .gate-copy p {
+        min-height: 0;
+        font-size: 17px;
+      }
+
+      .detail-explorer {
+        grid-template-rows: 68px minmax(0, 1fr);
+      }
+
+      .detail-toolbar {
+        padding-inline: 20px;
+      }
+
+      .detail-controls {
+        gap: 14px;
+      }
+
+      .detail-step {
+        font-size: 9px;
+      }
+
+      .detail-layout {
+        display: block;
+        overflow-y: auto;
+      }
+
+      .detail-sidebar {
+        min-height: auto;
+        padding: 26px 22px 18px;
+        overflow: visible;
+        border-right: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .detail-module-title {
+        margin: 10px 0 20px;
+        font-size: 30px;
+      }
+
+      .detail-index {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        scrollbar-width: none;
+      }
+
+      .detail-index::-webkit-scrollbar {
+        display: none;
+      }
+
+      .detail-index button {
+        min-width: 150px;
+        padding: 11px 12px;
+        display: block;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        font-size: 12px;
+      }
+
+      .detail-index button span:first-child {
+        margin-right: 8px;
+      }
+
+      .detail-index button.active,
+      .detail-index button:hover,
+      .detail-index button:focus-visible {
+        padding-left: 12px;
+        border-color: var(--detail-accent);
+      }
+
+      .detail-content {
+        min-height: auto;
+        padding: 38px 22px 80px;
+        overflow: visible;
+        display: block;
+      }
+
+      .detail-title {
+        font-size: clamp(46px, 15vw, 66px);
+      }
+
+      .detail-description {
+        font-size: 18px;
+      }
+
+      .detail-learning {
+        grid-template-columns: 1fr;
+      }
+
+      .learning-block.question {
+        grid-column: auto;
+      }
+
+      .detail-metrics {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .database-module {
+        padding: 28px 20px;
+      }
+
+      .module-heading,
+      .chemistry-entry {
+        grid-template-columns: 1fr;
+      }
+
+      .module-heading {
+        gap: 28px;
+        margin-bottom: 64px;
+      }
+
+      .module-title {
+        font-size: clamp(56px, 18vw, 82px);
+      }
+
+      .chemistry-entry {
+        gap: 18px;
+        padding-block: 34px;
+      }
+
+      .group-heading {
+        align-items: flex-start;
+      }
+
+      .chapter-index {
+        right: 24px;
+        bottom: 28px;
+        font-size: 50px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-loader" aria-hidden="true">
+    <div class="loader-content">
+      <span class="brand-mark"></span>
+      <span class="loader-name">VOLT MATRIX</span>
+      <div class="loader-line"></div>
+    </div>
+  </div>
+
+  <div class="scroll-progress" aria-hidden="true"><span></span></div>
+
+  <header class="navbar">
+    <a class="brand" href="#intro" aria-label="VOLT MATRIX 首页">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span>VOLT MATRIX</span>
+    </a>
+
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#explore" data-open-module="primary">PRIMARY</a>
+      <a href="#explore" data-open-module="secondary">SECONDARY</a>
+      <a href="#explore" data-open-module="fuel">FUEL</a>
+      <a href="#explore" data-open-module="special">SPECIAL</a>
+      <a class="mobile-index" href="#explore">DATABASE INDEX</a>
+    </nav>
+  </header>
+
+  <!-- 静态产品摄影主视觉：使用透明背景电池包图片替代 WebGL 动画。 -->
+  <div class="product-stage" aria-hidden="true">
+    <img class="product-image" src="assets/battery-exploded.png" alt="">
+    <div class="product-spec">
+      <span>FORMAT<strong>EXPLODED PACK</strong></span>
+      <span>LAYERS<strong>04 SYSTEMS</strong></span>
+      <span>DATABASE<strong>21 CHEMISTRIES</strong></span>
+    </div>
+  </div>
+
+  <main class="scroll-container">
+    <section class="section hero" id="intro">
+      <div class="hero-copy">
+        <h1>VOLT <span>MATRIX</span></h1>
+        <div class="hero-footer">
+          <p>
+            电池化学体系全景数据库。从一次电池、二次储能到燃料电池与特种能源，检索人类储存和释放电子的全部路径。
+          </p>
+          <span class="scroll-cue">SCROLL TO ACCESS DATABASE</span>
+        </div>
+      </div>
+      <span class="chapter-index">00</span>
+    </section>
+
+    <section class="section explore-section" id="explore">
+      <div class="explore-shell">
+        <header class="explore-heading">
+          <h2>选择一条能量路径，<br>进入它的内部世界。</h2>
+          <p>四种截然不同的储能逻辑。从不可逆放电到晶格循环，从持续发电到极端环境中的长期待命。</p>
+        </header>
+
+        <div class="galaxy-gates">
+          <button class="galaxy-gate primary" type="button" data-module="primary">
+            <span class="gate-number">01</span>
+            <span class="gate-copy">
+              <h3>一次电池</h3>
+              <small>PRIMARY POWER CELLS</small>
+              <p>一次释放，长期守候。探索不可逆电化学反应的稳定能量。</p>
+            </span>
+            <span class="gate-action">6 种化学体系
+              <svg class="gate-arrow" viewBox="0 0 34 18" aria-hidden="true"><path d="M1 9h30M24 2l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+            </span>
+          </button>
+
+          <button class="galaxy-gate secondary" type="button" data-module="secondary">
+            <span class="gate-number">02</span>
+            <span class="gate-copy">
+              <h3>二次电池</h3>
+              <small>SECONDARY STORAGE</small>
+              <p>离子往返，能量循环。理解现代电动化最核心的储能矩阵。</p>
+            </span>
+            <span class="gate-action">9 种储能体系
+              <svg class="gate-arrow" viewBox="0 0 34 18" aria-hidden="true"><path d="M1 9h30M24 2l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+            </span>
+          </button>
+
+          <button class="galaxy-gate fuel" type="button" data-module="fuel">
+            <span class="gate-number">03</span>
+            <span class="gate-copy">
+              <h3>燃料电池</h3>
+              <small>FUEL CELL GENERATORS</small>
+              <p>它不储存能量，而是持续制造电流。一座可移动的电化学电站。</p>
+            </span>
+            <span class="gate-action">3 种发电体系
+              <svg class="gate-arrow" viewBox="0 0 34 18" aria-hidden="true"><path d="M1 9h30M24 2l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+            </span>
+          </button>
+
+          <button class="galaxy-gate special" type="button" data-module="special">
+            <span class="gate-number">04</span>
+            <span class="gate-copy">
+              <h3>特种储备</h3>
+              <small>PHYSICAL &amp; RESERVE</small>
+              <p>为瞬时功率、深空岁月与绝对待机而生的极端能源系统。</p>
+            </span>
+            <span class="gate-action">3 种特种体系
+              <svg class="gate-arrow" viewBox="0 0 34 18" aria-hidden="true"><path d="M1 9h30M24 2l7 7-7 7" fill="none" stroke="currentColor" stroke-width="1.4"/></svg>
+            </span>
+          </button>
+        </div>
+      </div>
+      <span class="chapter-index">INDEX</span>
+    </section>
+
+    <section class="section database-section" id="primary">
+      <article class="database-module primary">
+        <header class="module-heading">
+          <div>
+            <span class="module-code">MODULE 01 // PRIMARY POWER CELLS</span>
+            <h2 class="module-title">一次电池<small>IRREVERSIBLE ELECTROCHEMICAL SYSTEMS</small></h2>
+          </div>
+          <p class="module-overview">内部电化学反应具备强烈不可逆性。电子释放属于单向高熵跃迁，电量耗尽即宣告生命周期终结。核心优势在于极低自放电率、超长静态存储寿命以及稳定的放电曲线。</p>
+        </header>
+
+        <div class="chemistry-group">
+          <h3 class="group-heading"><span>01</span>锌锰化学体系</h3>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">酸性碳性电芯<small>ZINC-CARBON</small></h4>
+            <div class="entry-body">
+              <p>传统碳锌夹层结构，制造成本极低。由于反应副产物呈酸性，在低压或长期静态状态下，负极外壳容易被穿透并引发漏液。</p>
+              <div class="terminal-data" data-label="[TERMINAL DATA]"><span>额定电压：<strong>1.5 V</strong></span><span>能量密度：<strong>约 40 Wh/kg</strong></span><span>状态：<strong>淘汰边缘</strong></span></div>
+            </div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">高级碱性电芯<small>ALKALINE</small></h4>
+            <div class="entry-body">
+              <p>引入高导电率氢氧化钾（KOH）作为电解质并逆转内部结构。放电容量提升约 3–5 倍，配合高致密密封圈，大幅降低漏液风险。</p>
+              <div class="terminal-data" data-label="[TERMINAL DATA]"><span>额定电压：<strong>1.5 V</strong></span><span>能量密度：<strong>约 90 Wh/kg</strong></span><span>状态：<strong>日常商用主力</strong></span></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="chemistry-group">
+          <h3 class="group-heading"><span>02</span>锂一次高能体系</h3>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">锂-二氧化锰纽扣电芯<small>Li-MnO<sub>2</sub></small></h4>
+            <div class="entry-body">
+              <p>采用轻量化有机电解质体系，具备极低自放电与长期静态供能能力，是微型电子系统的稳定能量锚点。</p>
+              <div class="terminal-data" data-label="[TERMINAL DATA]"><span>额定电压：<strong>3.0 V</strong></span><span>静态寿命：<strong>&gt; 10 年</strong></span><span>应用：<strong>CMOS、智能硬件</strong></span></div>
+            </div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">锂-亚硫酰氯工业电芯<small>Li-SOCl<sub>2</sub></small></h4>
+            <div class="entry-body">
+              <p>液态正极极化技术的代表，拥有极高比能量和极宽工业耐温跨度，适合长期无人值守及极端环境。</p>
+              <div class="terminal-data" data-label="[TERMINAL DATA]"><span>额定电压：<strong>3.6 V</strong></span><span>运行温区：<strong>-55°C 至 +85°C</strong></span><span>应用：<strong>深海探测、智能电网</strong></span></div>
+            </div>
+          </article>
+        </div>
+
+        <div class="chemistry-group">
+          <h3 class="group-heading"><span>03</span>经典特种一次体系</h3>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">锌空气激活电池<small>ZINC-AIR</small></h4>
+            <div class="entry-body">
+              <p>将环境中的自由氧 O<sub>2</sub> 作为正极催化活性物质，内部空间几乎全部用于负极锌膏，从而获得出色的体积能量密度。</p>
+              <div class="terminal-data" data-label="[TERMINAL DATA]"><span>体积比能量：<strong>高至 400 Wh/L</strong></span><span>触发：<strong>撕开封条空气激活</strong></span><span>应用：<strong>微型助听器</strong></span></div>
+            </div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">高稳氧化银纽扣电芯<small>SILVER OXIDE</small></h4>
+            <div class="entry-body">
+              <p>拥有极平稳的放电电压平台，生命周期末端之前输出波动极小，适用于对计时精度和电压稳定性要求极高的设备。</p>
+              <div class="terminal-data" data-label="[TERMINAL DATA]"><span>电压波动率：<strong>&lt; 1%</strong></span><span>特性：<strong>无汞化发展</strong></span><span>应用：<strong>精密石英腕表</strong></span></div>
+            </div>
+          </article>
+        </div>
+      </article>
+      <span class="chapter-index">01</span>
+    </section>
+
+    <section class="section database-section" id="secondary">
+      <article class="database-module secondary">
+        <header class="module-heading">
+          <div>
+            <span class="module-code">MODULE 02 // SECONDARY STORAGE SYSTEMS</span>
+            <h2 class="module-title">二次电池<small>REVERSIBLE ION STORAGE MATRIX</small></h2>
+          </div>
+          <p class="module-overview">晶格结构具备高度可逆的离子脱嵌特性。在外部电场干预下，内部电化学体系可以执行数千至数万次能量吞吐循环，是现代智能终端与工业电动化的核心心脏。</p>
+        </header>
+
+        <div class="chemistry-group">
+          <h3 class="group-heading"><span>01</span>锂离子摇椅电化学矩阵</h3>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">钴酸锂<small>LiCoO<sub>2</sub> / LCO · LAYERED</small></h4>
+            <div class="entry-body"><p>最早商用的经典层状晶格体系。工作电压高、克容量发挥充分、体积利用率极佳；钴资源成本和较低热失控温度限制了其大动力应用。</p><div class="terminal-data" data-label="[SYS_METRICS]"><span>额定电压：<strong>3.7–3.85 V</strong></span><span>体积密度：<strong>&gt; 700 Wh/L</strong></span><span>应用：<strong>手机、轻薄笔记本</strong></span></div></div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">三元锂<small>NCM / NCA · LAYERED</small></h4>
+            <div class="entry-body"><p>利用镍提高能量上限，钴稳定层状骨架，锰或铝保障安全。高镍 NCM811 等体系持续逼近液态锂电的能量密度极限。</p><div class="terminal-data" data-label="[SYS_METRICS]"><span>质量能量密度：<strong>250–350 Wh/kg</strong></span><span>阻抗：<strong>极低</strong></span><span>应用：<strong>长续航 EV、工业无人机</strong></span></div></div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">磷酸铁锂<small>LiFePO<sub>4</sub> / LFP · OLIVINE</small></h4>
+            <div class="entry-body"><p>坚固的 P-O 强共价键网络让晶格在针刺、过充和高倍率吞吐下保持稳定。热稳定性、循环寿命和经济性突出。</p><div class="terminal-data" data-label="[SYS_METRICS]"><span>循环寿命：<strong>3000–6000 次</strong></span><span>安全系数：<strong>极高</strong></span><span>应用：<strong>动力 Pack、城市储能 ESS</strong></span></div></div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">锰酸锂<small>LiMn<sub>2</sub>O<sub>4</sub> / LMO · SPINEL</small></h4>
+            <div class="entry-body"><p>三维交叉离子通道带来快速扩散和优秀倍率性能，成本低廉；高温下锰溶解会导致寿命快速衰减。</p><div class="terminal-data" data-label="[SYS_METRICS]"><span>快充能力：<strong>3C–5C</strong></span><span>生产成本：<strong>低</strong></span><span>应用：<strong>电动两轮车、电动工具</strong></span></div></div>
+          </article>
+        </div>
+
+        <div class="chemistry-group">
+          <h3 class="group-heading"><span>02</span>传统及非锂蓄电体系</h3>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">经典铅酸蓄电池<small>LEAD-ACID</small></h4>
+            <div class="entry-body"><p>拥有超过 160 年技术积淀。虽然质量大、能量密度低，但大电流瞬间放电能力和成熟回收体系使其长期不可替代。</p><div class="terminal-data" data-label="[SYS_METRICS]"><span>能量密度：<strong>35–50 Wh/kg</strong></span><span>回收效率：<strong>约 99%</strong></span><span>应用：<strong>汽车启动、UPS</strong></span></div></div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">高倍率镍氢蓄电池<small>Ni-MH</small></h4>
+            <div class="entry-body"><p>无严重记忆效应，材料抗滥用能力强，在极寒环境中仍可稳定吞吐电能，具备宽温区热稳定性。</p><div class="terminal-data" data-label="[SYS_METRICS]"><span>耐寒能力：<strong>-40°C 稳定运行</strong></span><span>特性：<strong>宽温区稳定</strong></span><span>应用：<strong>经典混动系统</strong></span></div></div>
+          </article>
+        </div>
+
+        <div class="chemistry-group">
+          <h3 class="group-heading"><span>03</span>下一代颠覆性储能矩阵</h3>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">钠离子电池<small>SODIUM-ION</small></h4>
+            <div class="entry-body"><p>依靠地壳丰度极高的钠离子进行脱嵌，降低对锂资源的依赖，在低温环境中拥有优异容量保持率。</p><div class="terminal-data" data-label="[SYS_METRICS]"><span>成本降幅：<strong>&gt; 30%</strong></span><span>-20°C 保持率：<strong>&gt; 90%</strong></span><span>应用：<strong>A00 级汽车、分布式储能</strong></span></div></div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">全固态电池<small>SOLID-STATE</small></h4>
+            <div class="entry-body"><p>以陶瓷、硫化物或聚合物固态电解质替代易燃液态电解液，并可匹配高容量锂金属负极，目标是跨越 500 Wh/kg 能量上限。</p><div class="terminal-data" data-label="[SYS_METRICS]"><span>理论密度：<strong>500+ Wh/kg</strong></span><span>形态：<strong>无液态电解液</strong></span><span>状态：<strong>产业化攻坚</strong></span></div></div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">全钒液流电池<small>VANADIUM FLOW</small></h4>
+            <div class="entry-body"><p>能量储存在外部水基钒盐溶液中，功率与容量解耦。充放电不涉及固态晶格反复形变，适合千兆瓦级长时储能。</p><div class="terminal-data" data-label="[SYS_METRICS]"><span>循环寿命：<strong>15000+ 次</strong></span><span>安全级别：<strong>水基不燃</strong></span><span>应用：<strong>跨日/跨周电网储能</strong></span></div></div>
+          </article>
+        </div>
+      </article>
+      <span class="chapter-index">02</span>
+    </section>
+
+    <section class="section database-section" id="fuel">
+      <article class="database-module fuel">
+        <header class="module-heading">
+          <div>
+            <span class="module-code">MODULE 03 // FUEL CELL GENERATORS</span>
+            <h2 class="module-title">燃料电池<small>CONTINUOUS ELECTROCHEMICAL GENERATORS</small></h2>
+          </div>
+          <p class="module-overview">它的本质不是能量“储存箱”，而是高度集成的移动微型发电站。只要持续输入燃料与氧化剂，就能不断输出外电路电流；氢燃料电池的主要物理副产物为水。</p>
+        </header>
+        <div class="chemistry-group">
+          <h3 class="group-heading"><span>01</span>持续供能系统</h3>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">质子交换膜燃料电池<small>PEMFC · H<sub>2</sub></small></h4>
+            <div class="entry-body"><p>氢气在铂催化剂表面发生半反应，质子穿过全氟磺酸交换膜。系统功率密度高，冷启动快速。</p><div class="terminal-data" data-label="[GEN_DATA]"><span>系统效率：<strong>50%–60%</strong></span><span>排放物：<strong>水 H<sub>2</sub>O</strong></span><span>应用：<strong>氢能重卡、乘用车</strong></span></div></div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">固体氧化物燃料电池<small>SOFC</small></h4>
+            <div class="entry-body"><p>在 600°C–1000°C 高温下运行，电极反应活跃，可使用天然气、煤气、甲醇等多种燃料。</p><div class="terminal-data" data-label="[GEN_DATA]"><span>热电联供效率：<strong>可超 80%</strong></span><span>燃料：<strong>宽谱兼容</strong></span><span>应用：<strong>船舶、分布式电站</strong></span></div></div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">直接甲醇燃料电池<small>DMFC</small></h4>
+            <div class="entry-body"><p>直接输入常温常压下的高能量密度液态甲醇，省去体积庞大的高压储氢系统，可快速补充续航。</p><div class="terminal-data" data-label="[GEN_DATA]"><span>燃料形态：<strong>常温液体</strong></span><span>特性：<strong>快速补能</strong></span><span>应用：<strong>单兵动力、应急基站</strong></span></div></div>
+          </article>
+        </div>
+      </article>
+      <span class="chapter-index">03</span>
+    </section>
+
+    <section class="section database-section" id="special">
+      <article class="database-module special">
+        <header class="module-heading">
+          <div>
+            <span class="module-code">MODULE 04 // PHYSICAL &amp; RESERVE SYSTEMS</span>
+            <h2 class="module-title">物理及特种储备<small>EXTREME-DUTY ENERGY SYSTEMS</small></h2>
+          </div>
+          <p class="module-overview">这些系统游离于传统静态电化学平衡之外，采用静电双层吸附、核素衰变热转换或物理状态瞬时激活技术，专为极限功率、超长服役和绝对待机等特殊场景而生。</p>
+        </header>
+        <div class="chemistry-group">
+          <h3 class="group-heading"><span>01</span>物理与储备能源</h3>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">双电层超级电容器<small>SUPERCAPACITORS</small></h4>
+            <div class="entry-body"><p>依靠活性炭电极与电解液界面的静电双层吸附电荷。充放电在数秒内完成，不涉及化学键断裂，循环寿命可达百万次。</p><div class="terminal-data" data-label="[SPEC_DATA]"><span>瞬时功率：<strong>&gt; 10 kW/kg</strong></span><span>充放电：<strong>秒级</strong></span><span>应用：<strong>制动回收、电网调频</strong></span></div></div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">放射性同位素核电池<small>ATOMIC / NUCLEAR BATTERIES · Pu-238</small></h4>
+            <div class="entry-body"><p>利用同位素衰变释放的热量或高能粒子，通过热电转换持续产生微弱电能，不受温度、压力和电磁环境显著影响。</p><div class="terminal-data" data-label="[SPEC_DATA]"><span>服役时限：<strong>30–80 年</strong></span><span>输出：<strong>微瓦/毫瓦级稳定直流</strong></span><span>应用：<strong>深空探测、深海信标</strong></span></div></div>
+          </article>
+          <article class="chemistry-entry">
+            <h4 class="entry-name">熔融盐火工激活热电池<small>THERMAL BATTERIES</small></h4>
+            <div class="entry-body"><p>静置时固体盐电解质电导率近乎为零，系统处于长期休眠。触发后加热片迅速将盐加热至约 400°C 熔融并激活高压输出。</p><div class="terminal-data" data-label="[SPEC_DATA]"><span>静态储存：<strong>20+ 年</strong></span><span>激活延时：<strong>&lt; 1.5 秒</strong></span><span>应用：<strong>导弹、火箭控制系统</strong></span></div></div>
+          </article>
+        </div>
+      </article>
+      <span class="chapter-index">04</span>
+    </section>
+  </main>
+
+  <aside class="detail-explorer" id="detail-explorer" aria-hidden="true" aria-label="电池体系详情">
+    <header class="detail-toolbar">
+      <button class="detail-close" type="button">← 返回分类索引</button>
+      <span class="detail-progress">01 / 06</span>
+      <div class="detail-controls">
+        <button class="detail-step detail-prev" type="button">PREV</button>
+        <button class="detail-step detail-next" type="button">NEXT</button>
+      </div>
+    </header>
+    <div class="detail-layout">
+      <nav class="detail-sidebar" aria-label="化学体系索引">
+        <span class="detail-module-label"></span>
+        <h2 class="detail-module-title"></h2>
+        <div class="detail-index"></div>
+      </nav>
+      <main class="detail-content">
+        <article class="detail-article">
+          <div class="detail-kicker"></div>
+          <h3 class="detail-title"></h3>
+          <div class="detail-english"></div>
+          <p class="detail-description"></p>
+          <div class="detail-metrics"></div>
+          <div class="detail-learning"></div>
+        </article>
+      </main>
+    </div>
+  </aside>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const detailExplorer = document.getElementById("detail-explorer");
+
+      const moduleMeta = {
+        primary: { label: "MODULE 01 // PRIMARY POWER CELLS", title: "一次电池", accent: "#d6dde3" },
+        secondary: { label: "MODULE 02 // SECONDARY STORAGE", title: "二次电池", accent: "#d6dde3" },
+        fuel: { label: "MODULE 03 // FUEL CELL GENERATORS", title: "燃料电池", accent: "#d6dde3" },
+        special: { label: "MODULE 04 // PHYSICAL & RESERVE", title: "特种储备", accent: "#d6dde3" }
+      };
+
+      const explainerData = {
+        "酸性碳性电芯": ["锌外壳既是容器也是负极，内部二氧化锰接受电子。反应发生后材料结构难以恢复，所以不能充电。", "它最大的价值是便宜，适合遥控器、挂钟等耗电很慢且不重要的设备。", "大电流下电压下降明显，放空后继续放置容易漏液。用完应及时取出，不适合昂贵设备。", "为什么同样写着 1.5V，却不如碱性电池耐用？因为额定电压相同不代表可释放的总能量和带载能力相同。"],
+        "高级碱性电芯": ["氢氧化钾让离子移动更顺畅，粉末状锌又扩大了反应面积，因此比碳性电池更能承受持续放电。", "价格、容量、购买便利性非常均衡，是玩具、鼠标、手电筒等日常设备的通用选择。", "所谓“防漏”并非绝对。高温、过度放电、混用新旧电池仍会增加漏液风险。", "碱性电池能充电吗？普通型号不建议充电，内部结构和安全阀并不是为反复充电设计的。"],
+        "锂-二氧化锰纽扣电芯": ["金属锂提供电子，二氧化锰接收电子。有机电解质让单节电压达到 3V，并显著降低长期自放电。", "体积小、寿命长、无需维护，特别适合主板时钟、车钥匙和传感器记忆电源。", "纽扣电池短路电流不低，误吞会在人体组织中造成严重电化学灼伤，必须远离儿童。", "为什么电脑关机后时间不会丢？这颗纽扣电池一直在给实时时钟和少量存储电路供电。"],
+        "锂-亚硫酰氯工业电芯": ["锂与亚硫酰氯组成高电压体系，锂表面会形成保护膜，因此能在多年待机中保持极低损耗。", "特别适合水表、油井仪器、追踪器等多年不换电池、偶尔发送数据的设备。", "保护膜会造成启动电压滞后；大脉冲设备常需并联电容。它也需要严格的专业安全设计。", "它为何能保存十几年？保护膜抑制了静置时的副反应，但工作时又能被电流暂时突破。"],
+        "锌空气激活电池": ["撕掉封条后，空气中的氧进入微孔正极参与反应，电池内部因此可以把更多空间留给锌。", "同体积下能装更多能量，放电电压也较稳定，非常适合长期运行的微型助听器。", "一旦接触空气就开始老化，即使不用也会逐渐耗尽；过干、过湿环境都会影响性能。", "为什么撕开封条后要等一会儿？氧气需要进入内部并建立稳定反应界面，通常等待一分钟更可靠。"],
+        "高稳氧化银纽扣电芯": ["锌负极与氧化银正极反应，整个放电期间电压平台非常平直。", "精密手表和仪器需要稳定电压，否则计时或测量会漂移，这正是它比碱性纽扣电池贵的原因。", "银材料成本高，容量优势不是压倒性的；应选择无汞产品并正规回收。", "手表换成便宜纽扣电池可以吗？尺寸可能相同，但电压曲线不同，精密设备未必能稳定工作。"],
+        "钴酸锂": ["锂离子在钴酸锂正极和石墨负极之间往返，充电时离开正极，放电时返回。", "它的体积能量密度很高，能在极薄空间中提供足够续航，因此长期主导手机和轻薄电子产品。", "钴昂贵，满电和高温状态下稳定性较弱。设备需要精确的保护电路和温度管理。", "为什么手机通常用它而汽车较少用？手机更看重体积，汽车则更看重成本、寿命和热安全。"],
+        "三元锂": ["镍、钴、锰或铝共同构成层状正极。镍负责容量，其他元素帮助稳定结构与控制安全。", "高能量密度意味着同样重量能跑更远，适合长续航汽车和对重量敏感的飞行器。", "高镍并不是越高越好，镍比例提高后对水分、温度、充电上限和制造一致性更敏感。", "三元锂一定比磷酸铁锂危险吗？材料热稳定性确有差异，但整车安全还取决于电芯设计、BMS和热管理。"],
+        "磷酸铁锂": ["锂离子进入和离开橄榄石结构，坚固的磷氧键让正极在高温和深度放电时更不容易释氧。", "寿命长、成本低、热稳定性好，特别适合高频使用的汽车、公交车和固定储能。", "低温性能和体积能量密度通常弱于高镍三元体系，冬季续航和快充需要额外热管理。", "它真的“针刺不起火”吗？材料更稳定，但电池包依然储存大量能量，短路、挤压和安装缺陷仍需严肃防护。"],
+        "锰酸锂": ["尖晶石结构拥有三维离子通道，锂离子可以更快速地穿过材料。", "功率输出和快充表现好，原材料成本较低，适合短途车辆和高功率工具。", "高温下锰可能溶入电解液，导致容量衰减，因此常与其他正极材料混合使用。", "为什么很多电池写着“混合正极”？不同材料组合可以在功率、寿命、成本之间取得更实际的平衡。"],
+        "经典铅酸蓄电池": ["充放电时，铅和二氧化铅与硫酸相互转化。反应成熟可靠，可以瞬间提供很大的启动电流。", "价格低、供应链成熟、回收体系完善，汽车启动和备用电源至今仍很依赖它。", "重量大，怕长期亏电，深度放电会产生难以恢复的硫酸铅结晶。", "汽车停久了为何电池会坏？车辆仍有待机耗电，持续低电量会加速硫化，而不是简单地“没电再充就好”。"],
+        "高倍率镍氢蓄电池": ["氢以金属氢化物形式在负极中吸收和释放，正极使用镍氧化物，体系耐过充和温度波动。", "安全、耐用、低温可靠，混动车频繁小幅充放电时非常合适。", "自放电和重量高于锂离子电池，充电效率也较低，不适合追求极致轻薄的设备。", "它还有“记忆效应”吗？现代镍氢已经明显改善，但长期固定浅循环仍建议偶尔进行完整维护循环。"],
+        "钠离子电池": ["工作方式与锂离子类似，只是搬运的是体积更大的钠离子，正负极材料也随之改变。", "钠资源丰富、供应链压力小，低温性能和安全潜力突出，适合低成本车辆与储能。", "钠离子更大、更重，目前能量密度通常低于成熟锂电，产业规模仍在快速爬坡。", "它会取代锂电吗？更可能形成分工：钠离子负责成本和低温，锂电继续服务高能量密度需求。"],
+        "全固态电池": ["用固体材料传导锂离子，目标是替代易燃液态电解液，并配合高容量锂金属负极。", "理论上能同时提高能量密度和安全上限，是下一代汽车电池最受关注的路线之一。", "固体之间很难保持完美接触，界面阻抗、枝晶、压力管理和量产良率仍是核心难题。", "为什么公布很多却迟迟没有大规模上车？实验室样品、工程样件和百万辆级稳定量产是完全不同的难度。"],
+        "全钒液流电池": ["两种不同价态的钒离子溶液在外部储罐中循环，通过膜两侧的反应堆交换电子。", "储罐越大，能存的电越多；反应堆越大，功率越高。容量与功率可以分别设计。", "系统体积大、泵和管路复杂、能量密度低，不适合汽车，却非常适合固定式长时储能。", "它为什么寿命长？活性物质始终是同一种元素的不同价态，交叉污染和固体结构损伤较少。"],
+        "质子交换膜燃料电池": ["氢气在阳极分成质子和电子。质子穿膜，电子绕外电路做功，最后与氧结合生成水。", "启动快、功率密度高、运行安静，适合需要长续航和快速补能的重型交通工具。", "氢气制取、运输和加注基础设施成本高，铂催化剂也怕杂质，系统还要管理水和低温结冰。", "它是零排放吗？车辆端主要排水，但整体碳排取决于氢气是用可再生电力还是化石能源生产。"],
+        "固体氧化物燃料电池": ["高温陶瓷电解质传导氧离子，使天然气、氢气甚至部分合成燃料都能参与反应。", "高温让反应效率很高，废热还能用于供暖或继续发电，适合稳定运行的电站和船舶。", "启动慢，频繁冷热循环会损伤陶瓷材料，因此不适合需要瞬间启动和频繁启停的场景。", "为什么效率能超过普通发电机？它直接把化学能转成电能，绕过了燃烧、机械旋转等多级损失。"],
+        "直接甲醇燃料电池": ["甲醇在阳极直接发生电化学氧化，不必先转化成高压氢气，燃料以液体形式储存。", "液体补给方便、能量携带密度高，适合远离电网的低功率长期任务。", "功率密度和效率低于氢燃料电池，甲醇可能穿过膜造成损失，催化剂成本也较高。", "它能给手机直接加甲醇吗？技术上可以，但消费电子更在意体积、成本和燃料管理，目前主要用于专业设备。"],
+        "双电层超级电容器": ["电荷吸附在电极表面，没有明显的体相化学反应，因此可以极快地充入和释放。", "特别擅长短时间吸收或释放巨大功率，例如制动回收、起步助力和电网频率调节。", "它存不住太多总能量，而且静置漏电较快，不能简单替代汽车的主动力电池。", "几秒充满为什么不能跑很远？充电速度和储能总量是两回事，超级电容强在功率，不强在容量。"],
+        "放射性同位素核电池": ["放射性同位素持续衰变并释放热量或粒子，再由热电材料或半导体转换成电能。", "无需阳光、燃料补给和维护，可以在深空、极寒与高压环境中连续工作几十年。", "输出功率通常很小，材料稀缺且监管严格，设计重点是屏蔽、可靠性和任务全寿命安全。", "它会像核反应堆一样爆炸吗？不会发生链式裂变爆炸，但放射性材料必须被坚固封装并严格管理。"],
+        "熔融盐火工激活热电池": ["平时固体盐不导电。启动命令点燃内部热源，盐迅速熔化后才允许离子移动并输出电流。", "储存期间几乎没有自放电，激活后又能立即提供高功率，适合一次性关键任务。", "工作温度极高、激活后不可停止也不可重复使用，属于专业工程系统。", "为什么不直接一直保持熔融？持续加热会耗能并降低寿命，固态休眠正是它能存放二十年的关键。"]
+      };
+
+      const explorerData = Object.fromEntries(
+        Object.keys(moduleMeta).map((moduleId) => {
+          const source = document.getElementById(moduleId);
+          const entries = [...source.querySelectorAll(".chemistry-entry")].map((entry, index) => {
+            const name = entry.querySelector(".entry-name");
+            const english = name.querySelector("small");
+            const metrics = [...entry.querySelectorAll(".terminal-data span")].map((metric) => {
+              const strong = metric.querySelector("strong");
+              return {
+                label: metric.childNodes[0]?.textContent.trim().replace(/：$/, "") || "",
+                value: strong?.innerHTML || ""
+              };
+            });
+
+            return {
+              number: String(index + 1).padStart(2, "0"),
+              title: name.childNodes[0]?.textContent.trim() || "",
+              english: english?.innerHTML || "",
+              description: entry.querySelector(".entry-body p")?.textContent.trim() || "",
+              metrics
+            };
+          });
+          return [moduleId, entries];
+        })
+      );
+
+      let activeModule = "primary";
+      let activeEntry = 0;
+      let lastFocusedControl = null;
+
+      const explorerNodes = {
+        close: detailExplorer.querySelector(".detail-close"),
+        progress: detailExplorer.querySelector(".detail-progress"),
+        prev: detailExplorer.querySelector(".detail-prev"),
+        next: detailExplorer.querySelector(".detail-next"),
+        moduleLabel: detailExplorer.querySelector(".detail-module-label"),
+        moduleTitle: detailExplorer.querySelector(".detail-module-title"),
+        index: detailExplorer.querySelector(".detail-index"),
+        kicker: detailExplorer.querySelector(".detail-kicker"),
+        title: detailExplorer.querySelector(".detail-title"),
+        english: detailExplorer.querySelector(".detail-english"),
+        description: detailExplorer.querySelector(".detail-description"),
+        metrics: detailExplorer.querySelector(".detail-metrics"),
+        learning: detailExplorer.querySelector(".detail-learning"),
+        content: detailExplorer.querySelector(".detail-content")
+      };
+
+      function renderExplorerEntry() {
+        const entries = explorerData[activeModule];
+        const entry = entries[activeEntry];
+        const meta = moduleMeta[activeModule];
+
+        detailExplorer.style.setProperty("--detail-accent", meta.accent);
+        explorerNodes.moduleLabel.textContent = meta.label;
+        explorerNodes.moduleTitle.textContent = meta.title;
+        explorerNodes.progress.textContent =
+          `${String(activeEntry + 1).padStart(2, "0")} / ${String(entries.length).padStart(2, "0")}`;
+        explorerNodes.kicker.textContent = `${meta.label.split(" // ")[0]} // CHEMISTRY ${entry.number}`;
+        explorerNodes.title.textContent = entry.title;
+        explorerNodes.english.innerHTML = entry.english;
+        explorerNodes.description.textContent = entry.description;
+        explorerNodes.metrics.innerHTML = entry.metrics.map((metric) => `
+          <div class="detail-metric">
+            <span>${metric.label}</span>
+            <strong>${metric.value}</strong>
+          </div>
+        `).join("");
+
+        const insights = explainerData[entry.title] || [
+          "这种体系通过电极材料之间的离子与电子迁移完成能量转换。",
+          "它被采用通常是因为在成本、性能、寿命或使用环境中具备独特优势。",
+          "真实使用效果还会受到温度、负载、充电方式和系统设计影响。",
+          "判断一种电池是否合适，不能只看电压或能量密度，还要结合完整使用场景。"
+        ];
+        const learningLabels = ["它怎么工作？", "为什么会选择它？", "使用时要注意什么？", "大家最常问"];
+        explorerNodes.learning.innerHTML = insights.map((text, index) => `
+          <section class="learning-block ${index === 3 ? "question" : ""}">
+            <h4>${learningLabels[index]}</h4>
+            <p>${text}</p>
+          </section>
+        `).join("");
+
+        explorerNodes.index.innerHTML = entries.map((item, index) => `
+          <button type="button" class="${index === activeEntry ? "active" : ""}" data-entry="${index}">
+            <span>${item.number}</span><span>${item.title}</span>
+          </button>
+        `).join("");
+
+        explorerNodes.index.querySelectorAll("button").forEach((button) => {
+          button.addEventListener("click", () => {
+            activeEntry = Number(button.dataset.entry);
+            renderExplorerEntry();
+          });
+        });
+
+        explorerNodes.content.scrollTop = 0;
+        window.dispatchEvent(new CustomEvent("volt:modulechange", {
+          detail: { module: activeModule, index: activeEntry, accent: meta.accent }
+        }));
+      }
+
+      function openExplorer(moduleId, trigger) {
+        activeModule = moduleId;
+        activeEntry = 0;
+        lastFocusedControl = trigger || document.activeElement;
+        renderExplorerEntry();
+        detailExplorer.classList.add("open");
+        detailExplorer.setAttribute("aria-hidden", "false");
+        document.body.classList.add("detail-open");
+        requestAnimationFrame(() => explorerNodes.close.focus());
+      }
+
+      function closeExplorer() {
+        detailExplorer.classList.remove("open");
+        detailExplorer.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("detail-open");
+        window.dispatchEvent(new CustomEvent("volt:moduleclose"));
+        lastFocusedControl?.focus();
+      }
+
+      document.querySelectorAll(".galaxy-gate").forEach((gate) => {
+        gate.addEventListener("click", () => openExplorer(gate.dataset.module, gate));
+      });
+
+      document.querySelectorAll("[data-open-module]").forEach((link) => {
+        link.addEventListener("click", (event) => {
+          event.preventDefault();
+          openExplorer(link.dataset.openModule, link);
+        });
+      });
+
+      explorerNodes.close.addEventListener("click", closeExplorer);
+      explorerNodes.prev.addEventListener("click", () => {
+        const length = explorerData[activeModule].length;
+        activeEntry = (activeEntry - 1 + length) % length;
+        renderExplorerEntry();
+      });
+      explorerNodes.next.addEventListener("click", () => {
+        activeEntry = (activeEntry + 1) % explorerData[activeModule].length;
+        renderExplorerEntry();
+      });
+      document.addEventListener("keydown", (event) => {
+        if (!detailExplorer.classList.contains("open")) return;
+        if (event.key === "Escape") closeExplorer();
+        if (event.key === "ArrowLeft") explorerNodes.prev.click();
+        if (event.key === "ArrowRight") explorerNodes.next.click();
+      });
+
+      const loader = document.querySelector(".page-loader");
+      const productImage = document.querySelector(".product-image");
+      const progressBar = document.querySelector(".scroll-progress span");
+
+      function revealPage() {
+        window.setTimeout(() => loader.classList.add("hidden"), 260);
+      }
+
+      if (productImage.complete) {
+        revealPage();
+      } else {
+        productImage.addEventListener("load", revealPage, { once: true });
+        productImage.addEventListener("error", revealPage, { once: true });
+      }
+
+      function updateScrollProgress() {
+        const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
+        const progress = scrollRange > 0 ? window.scrollY / scrollRange : 0;
+        progressBar.style.transform = `scaleX(${Math.min(1, Math.max(0, progress))})`;
+      }
+
+      window.addEventListener("scroll", updateScrollProgress, { passive: true });
+      window.addEventListener("resize", updateScrollProgress, { passive: true });
+      updateScrollProgress();
+    })();
+  </script>
+</body>
+</html>
