@@ -1,11 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="Battery Lab is a student-built interactive learning and research website about batteries, materials science, EV range, and energy storage.">
   <meta name="theme-color" content="#000000">
-  <title>Battery Lab — Energy Storage Learning Hub</title>
+  <title>Battery Lab — 能源储存学习与研究</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='black'/%3E%3Cpath d='M18 20h24v24H18zM42 28h4v8h-4' fill='none' stroke='white' stroke-width='4'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
   <script src="script.js" defer></script>
@@ -29,9 +30,9 @@
         <a href="#research">RESEARCH</a>
       </div>
       <div class="language-switch" role="group" aria-label="Language">
-        <button class="language-option active" type="button" data-language="en" aria-pressed="true">EN</button>
+        <button class="language-option" type="button" data-language="en" aria-pressed="false">EN</button>
         <span></span>
-        <button class="language-option" type="button" data-language="zh" aria-pressed="false">中文</button>
+        <button class="language-option active" type="button" data-language="zh" aria-pressed="true">中文</button>
       </div>
     </nav>
   </header>
@@ -42,17 +43,35 @@
         <p class="hero-kicker">BATTERY LAB / MATERIALS SCIENCE</p>
         <h1>ENERGY STORAGE<br>RESEARCH</h1>
         <div class="hero-actions">
-          <a class="button primary" href="#overview">EXPLORE PROJECT</a>
-          <a class="button secondary" href="#calculator">VIEW CALCULATOR</a>
+          <a class="button primary" href="#types">EXPLORE BATTERIES</a>
+          <a class="button secondary" href="#learning-path">START LEARNING</a>
         </div>
       </div>
     </section>
 
-    <section class="mission" aria-label="Project mission">
-      <p>MISSION</p>
-      <article><span>01</span><h2>BATTERIES</h2><p>Understand how different chemistries store energy and why every choice involves trade-offs.</p></article>
-      <article><span>02</span><h2>MATERIALS</h2><p>Explore how cathodes, anodes, electrolytes, and separators shape performance and safety.</p></article>
-      <article><span>03</span><h2>EV SYSTEMS</h2><p>Connect individual cells to range, thermal management, pack structure, and real vehicles.</p></article>
+    <section class="learning-path" id="learning-path" aria-label="What this website helps you understand">
+      <header>
+        <span>LEARNING PATH</span>
+        <h2>WHAT THIS WEBSITE<br>HELPS YOU UNDERSTAND</h2>
+      </header>
+      <div class="learning-path-grid">
+        <article><span>01</span><h3>BATTERY BASICS</h3><p>Understand voltage, capacity, energy density, and cycle life.</p></article>
+        <article><span>02</span><h3>BATTERY TYPES</h3><p>Compare lead-acid, NiMH, LFP, NMC lithium-ion, sodium-ion, and solid-state batteries.</p></article>
+        <article><span>03</span><h3>EV SYSTEMS</h3><p>Learn how battery packs, thermal management, and range estimation work.</p></article>
+        <article><span>04</span><h3>MATERIALS SCIENCE</h3><p>Explore cathodes, anodes, electrolytes, separators, and future battery materials.</p></article>
+      </div>
+    </section>
+
+    <section class="section knowledge-section" id="knowledge">
+      <div class="section-heading reveal">
+        <span class="section-number">00</span>
+        <div><p class="section-label">KNOWLEDGE BASE</p><h2>Battery Knowledge Hub</h2></div>
+        <p>Search a battery type, material, structure, or performance term. Each entry explains the concept in plain language and keeps the technical trade-offs visible.</p>
+      </div>
+      <div class="knowledge-search-panel reveal">
+        <label class="knowledge-search">Search knowledge entries<input id="knowledge-search" type="search" placeholder="Search NCM, LFP, SOC, electrolyte, separator…"></label>
+        <div class="knowledge-results" id="knowledge-results" aria-live="polite"></div>
+      </div>
     </section>
 
     <section class="section section-intro" id="overview">
@@ -78,6 +97,7 @@
           <p>Better cathodes, anodes, electrolytes, separators, and thermal systems can improve safety, cost, and useful life.</p>
         </article>
       </div>
+      <aside class="key-takeaway reveal"><span>KEY TAKEAWAY</span><p>Energy density matters for range, but safety, cost, cycle life, and temperature performance can be just as important.</p></aside>
     </section>
 
     <section class="chapter-image chapter-production" aria-label="Battery production">
@@ -109,6 +129,7 @@
         <div><p class="section-label">RELATIVE PERFORMANCE</p><h2>Compare Battery Technologies</h2></div>
         <p>Choose up to four technologies. Scores are simplified educational estimates, not industrial specifications.</p>
       </div>
+      <p class="learning-lead reveal">No battery type is best at everything. Engineers choose a chemistry for a specific application by balancing range, cost, safety, cycle life, charging speed, and temperature performance.</p>
       <div class="comparison-layout">
         <aside class="comparison-controls reveal">
           <p>Select technologies</p>
@@ -144,7 +165,12 @@
       </div>
       <div class="calculator-grid single">
         <article class="calculator-card reveal">
-          <header><span>01</span><h3>Battery Energy Calculator</h3></header>
+          <header>
+            <span>01</span><h3>Battery Energy Calculator</h3>
+            <p>Estimate how much electrical energy a battery can store from its voltage and amp-hour capacity.</p>
+            <div class="formula-block"><small>FORMULA</small><strong>Energy (Wh) = Voltage (V) × Capacity (Ah)</strong></div>
+            <p class="calculator-example"><b>EXAMPLE</b> A 12 V, 60 Ah battery stores about 720 Wh in this simplified model.</p>
+          </header>
           <form id="energy-form" novalidate>
             <label>Voltage <span>V</span><input id="voltage" type="number" min="0" step="any" placeholder="e.g. 12"></label>
             <label>Capacity <span>Ah</span><input id="capacity" type="number" min="0" step="any" placeholder="e.g. 60"></label>
@@ -166,7 +192,12 @@
       </div>
       <div class="calculator-grid single">
         <article class="calculator-card reveal">
-          <header><span>02</span><h3>EV Range Calculator</h3></header>
+          <header>
+            <span>02</span><h3>EV Range Calculator</h3>
+            <p>Estimate driving range from usable battery energy and average vehicle consumption.</p>
+            <div class="formula-block"><small>FORMULA</small><strong>Range (km) = Battery Size (kWh) × 1000 ÷ Consumption (Wh/km)</strong></div>
+            <p class="calculator-example"><b>EXAMPLE</b> A 60 kWh pack at 170 Wh/km gives about 353 km before temperature adjustment.</p>
+          </header>
           <form id="range-form" novalidate>
             <label>Battery Size <span>kWh</span><input id="battery-size" type="number" min="0" step="any" placeholder="e.g. 60"></label>
             <label>Consumption <span>Wh/km</span><input id="consumption" type="number" min="0" step="any" placeholder="e.g. 170"></label>
@@ -216,6 +247,7 @@
         <div><p class="section-label">SYSTEM ARCHITECTURE</p><h2>From Cell to Pack</h2></div>
         <p>An EV battery is more than chemistry. Packaging, sensing, thermal control, structure, and software determine how cells behave as a system.</p>
       </div>
+      <p class="learning-lead reveal">A battery pack is not simply one very large battery. It is a coordinated system that manages electricity, heat, safety, structure, and communication with the vehicle.</p>
       <div class="pack-explorer">
         <div class="pack-diagram reveal" aria-label="Interactive cell to pack diagram">
           <button class="pack-layer active" data-pack-level="cell" type="button">
@@ -232,6 +264,12 @@
         </div>
         <article class="pack-explanation reveal" id="pack-explanation" aria-live="polite"></article>
       </div>
+      <div class="system-components reveal">
+        <article><span>01 / BMS</span><h3>Battery Management System</h3><p>Monitors voltage, current, and temperature; estimates battery state; and protects the pack when conditions become unsafe.</p></article>
+        <article><span>02 / COOLING</span><h3>Thermal Management</h3><p>Moves heat away from cells and keeps temperature differences small so the pack can perform consistently and age more evenly.</p></article>
+        <article><span>03 / STRUCTURE</span><h3>Safety Structure</h3><p>Uses the enclosure, insulation, fuses, contactors, and crash protection to reduce electrical, thermal, and mechanical risks.</p></article>
+      </div>
+      <aside class="key-takeaway reveal"><span>KEY TAKEAWAY</span><p>A battery pack is a complete engineering system, not just a collection of cells.</p></aside>
     </section>
 
     <section class="section materials-section" id="materials">
@@ -246,6 +284,7 @@
       </div>
       <div class="materials-grid" id="materials-grid"></div>
       <p class="empty-state" id="materials-empty" hidden>No material found.</p>
+      <aside class="key-takeaway reveal"><span>KEY TAKEAWAY</span><p>Battery performance begins with materials, but every improvement creates a new question about cost, manufacturing, safety, or durability.</p></aside>
     </section>
 
     <section class="section research-section" id="research">
@@ -256,22 +295,26 @@
       </div>
       <div class="research-notes">
         <article class="research-note reveal">
-          <span>01 / RESOURCE</span><h3>Why Sodium-ion Batteries Matter</h3>
+          <span>01 / SODIUM-ION BATTERIES</span><h3>Why Sodium-ion Batteries Matter</h3>
+          <p class="research-question"><b>QUESTION</b> Could sodium-ion batteries become important even if they have lower energy density?</p>
           <p>Sodium-ion batteries may not completely replace lithium-ion batteries, and I do not think replacement is the most useful way to frame the question. Sodium is more abundant and could be valuable where low cost, supply stability, and cold-weather behavior matter more than maximum range.</p>
           <p>For stationary storage or smaller vehicles, accepting lower energy density may be reasonable if the overall system becomes cheaper and easier to scale. This helped me understand that engineering is often about matching a material to a job rather than finding one universal “best” material.</p>
         </article>
         <article class="research-note reveal">
-          <span>02 / TEMPERATURE</span><h3>The Challenge of Winter EV Range</h3>
+          <span>02 / WINTER EV RANGE</span><h3>The Challenge of Winter EV Range</h3>
+          <p class="research-question"><b>QUESTION</b> Why do EVs lose range in cold weather?</p>
           <p>Cold weather affects more than passenger comfort. Ion movement becomes slower, internal resistance rises, and the battery may need energy to warm itself before it can charge or deliver power efficiently.</p>
           <p>At the same time, cabin heating draws energy from the same pack. This is why winter range is a materials problem and a thermal-management problem. Better insulation, heat pumps, battery preconditioning, and cell chemistry all contribute to the result.</p>
         </article>
         <article class="research-note feature-note reveal">
-          <span>03 / HEAT RECOVERY</span><h3>Can Battery Waste Heat Be Reused?</h3>
+          <span>03 / BATTERY WASTE HEAT</span><h3>Can Battery Waste Heat Be Reused?</h3>
+          <p class="research-question"><b>QUESTION</b> Can heat from the battery pack or power electronics be reused in winter?</p>
           <p>I previously wondered whether heat produced by the battery pack could become part of the cabin heating system in winter. The idea is attractive because an EV already spends valuable energy creating heat.</p>
           <p>However, useful heat is not always available at the right temperature or time. A practical system would need to combine battery heat, power-electronics heat, a heat pump, coolant routing, and careful controls. Recovering some heat may reduce waste, but battery safety and lifetime must remain the first priority.</p>
           <blockquote>A possible direction may be to treat the whole vehicle as one thermal system, not as separate components.</blockquote>
         </article>
       </div>
+      <aside class="key-takeaway reveal"><span>KEY TAKEAWAY</span><p>Sodium-ion batteries may be valuable because engineering is often about choosing the right material for the right job.</p></aside>
     </section>
 
     <section class="section quiz-section" id="quiz">
@@ -313,5 +356,18 @@
     <div><a class="brand footer-brand" href="#home">BATTERY LAB</a><p>A student project about materials science and energy storage.</p></div>
     <div class="footer-meta"><span>Built by Terry Wang</span><a href="https://github.com/" target="_blank" rel="noreferrer">GitHub</a><a href="mailto:your-email@example.com">your-email@example.com</a><a href="#home">Back to top ↑</a></div>
   </footer>
+
+  <div class="knowledge-modal" id="knowledge-modal" hidden role="dialog" aria-modal="true" aria-labelledby="knowledge-title">
+    <button class="knowledge-backdrop" type="button" data-close-knowledge aria-label="Close knowledge entry"></button>
+    <article class="knowledge-panel" role="document">
+      <button class="knowledge-close" type="button" data-close-knowledge>关闭</button>
+      <p class="knowledge-category" id="knowledge-category"></p>
+      <h2 id="knowledge-title"></h2>
+      <p class="knowledge-one-line" id="knowledge-one-line"></p>
+      <div class="knowledge-tags" id="knowledge-tags"></div>
+      <div class="knowledge-metrics" id="knowledge-metrics"></div>
+      <div class="knowledge-body" id="knowledge-body"></div>
+    </article>
+  </div>
 </body>
 </html>
