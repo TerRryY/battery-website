@@ -1,1242 +1,749 @@
 "use strict";
 
-let currentLanguage = "zh";
+let currentLang = localStorage.getItem("battery-lab-language") || "zh";
+if (!["zh", "en"].includes(currentLang)) currentLang = "zh";
+let radarChart;
+let barChart;
+let currentModalId = null;
 
-const zhTranslations = {
-  "Skip to content": "跳到主要内容",
-  "Main navigation": "主导航",
-  "Open navigation": "打开导航",
-  "Close knowledge entry": "关闭词条",
-  "OVERVIEW": "概览",
-  "TYPES": "类型",
-  "CALCULATOR": "计算器",
-  "MATERIALS": "材料",
-  "RESEARCH": "研究",
-  "BATTERY LAB / MATERIALS SCIENCE": "电池实验室 / 材料科学",
-  "KNOWLEDGE BASE": "知识库",
-  "Battery Knowledge Hub": "电池知识库",
-  "Search a battery type, material, structure, or performance term. Each entry explains the concept in plain language and keeps the technical trade-offs visible.": "搜索电池类型、材料、结构或性能指标。每个词条都会用通俗语言解释，同时保留关键技术取舍。",
-  "Search knowledge entries": "搜索知识词条",
-  "ENERGY STORAGE": "能源储存",
-  "RESEARCH": "研究",
-  "EXPLORE PROJECT": "探索项目",
-  "VIEW CALCULATOR": "使用计算器",
-  "MISSION": "研究方向",
-  "BATTERIES": "电池",
-  "MATERIALS": "材料",
-  "EV SYSTEMS": "电动汽车系统",
-  "Understand how different chemistries store energy and why every choice involves trade-offs.": "理解不同化学体系如何储能，以及为什么每种选择都伴随着取舍。",
-  "Explore how cathodes, anodes, electrolytes, and separators shape performance and safety.": "探索正极、负极、电解质和隔膜如何影响性能与安全。",
-  "Connect individual cells to range, thermal management, pack structure, and real vehicles.": "把单体电芯与续航、热管理、电池包结构和真实车辆联系起来。",
-  "THE BIG PICTURE": "整体视角",
-  "Why Batteries Matter": "为什么电池很重要",
-  "Batteries connect chemistry to daily life. They influence how we travel, how renewable electricity is used, and which materials future engineers need to improve.": "电池把化学与日常生活连接起来。它影响我们的出行方式、可再生电力的利用方式，以及未来工程师需要改进哪些材料。",
-  "Clean Transportation": "清洁交通",
-  "Renewable Energy Storage": "可再生能源储存",
-  "Materials Innovation": "材料创新",
-  "Batteries are central to electric vehicles and can reduce dependence on fossil fuels when electricity is produced cleanly.": "电池是电动汽车的核心。当电力来源足够清洁时，它能帮助减少对化石燃料的依赖。",
-  "Solar and wind are variable. Storage can shift energy across hours and help balance supply with demand.": "太阳能与风能具有波动性。储能可以把电力转移到更需要的时段，帮助平衡供需。",
-  "Better cathodes, anodes, electrolytes, separators, and thermal systems can improve safety, cost, and useful life.": "更好的正负极、电解质、隔膜和热管理系统，可以改善安全性、成本与使用寿命。",
-  "01 / MANUFACTURING": "01 / 制造",
-  "FROM MATERIAL": "从材料",
-  "TO CELL": "到电芯",
-  "Precision manufacturing turns electrochemical ideas into repeatable, safe products.": "精密制造把电化学设想变成性能一致、可以安全使用的产品。",
-  "CHAPTER 02": "第二章",
-  "TECHNOLOGIES & PERFORMANCE": "技术与性能",
-  "CHEMISTRY MAP": "化学体系",
-  "Battery Types": "电池类型",
-  "No chemistry wins every category. Open a profile to see where each technology is useful and what trade-offs it makes.": "没有一种化学体系能在所有指标上获胜。展开条目，了解每种技术适合什么场景，又牺牲了什么。",
-  "RELATIVE PERFORMANCE": "相对性能",
-  "Compare Battery Technologies": "比较电池技术",
-  "Choose up to four technologies. Scores are simplified educational estimates, not industrial specifications.": "最多选择四种技术。评分是用于学习的简化估计，不代表工业规格。",
-  "Select technologies": "选择技术",
-  "Relative score: 1 = low, 10 = high. For cost, a higher score means more affordable.": "相对评分：1 为低，10 为高。成本分数越高，表示越经济。",
-  "RADAR / 6 FACTORS": "雷达图 / 6 项指标",
-  "Balanced performance": "综合性能",
-  "BAR / ENERGY DENSITY": "柱状图 / 能量密度",
-  "Typical midpoint estimate": "典型区间中值估计",
-  "02 / PACK ENGINEERING": "02 / 电池包工程",
-  "CHEMISTRY NEEDS": "化学体系需要",
-  "STRUCTURE": "结构支撑",
-  "A cell becomes useful at vehicle scale only when structure, cooling, sensing, and protection work together.": "只有当结构、冷却、传感和保护协同工作时，电芯才能真正用于整车。",
-  "CHAPTER 03": "第三章",
-  "CALCULATION & HISTORY": "计算与历史",
-  "ENERGY MODEL": "能量模型",
-  "Battery Energy Calculator": "电池能量计算器",
-  "Connect voltage and capacity with a simplified estimate of stored electrical energy.": "用电压与容量，估算电池储存的电能。",
-  "Voltage": "电压",
-  "Capacity": "容量",
-  "Calculate Energy": "计算能量",
-  "Reset": "重置",
-  "RESULT": "结果",
-  "Enter valid values to estimate stored energy.": "输入有效数值以估算储存能量。",
-  "VEHICLE MODEL": "车辆模型",
-  "EV Range Calculator": "电动车续航计算器",
-  "Estimate how battery size, energy consumption, and a simplified cold-weather factor may affect driving range.": "估算电池容量、能耗和简化低温系数如何影响行驶里程。",
-  "Battery Size": "电池容量",
-  "Consumption": "百公里能耗",
-  "Temperature Model": "温度模型",
-  "Normal temperature · 100%": "常温 · 100%",
-  "Cold weather · 85%": "寒冷天气 · 85%",
-  "Very cold weather · 70%": "严寒天气 · 70%",
-  "Estimate Range": "估算续航",
-  "ESTIMATED RANGE": "预计续航",
-  "Real range also depends on speed, tires, terrain, HVAC use, and battery condition.": "真实续航还会受到车速、轮胎、地形、空调和电池状态影响。",
-  "TWO CENTURIES OF CHANGE": "两个世纪的变化",
-  "Battery Innovation Timeline": "电池创新时间线",
-  "Battery history is not a straight path. Each step solved a different problem: rechargeability, portability, cost, power, or safety.": "电池发展并不是一条直线。每一步都在解决不同问题：可充电性、便携性、成本、功率或安全。",
-  "03 / SYSTEM INTEGRATION": "03 / 系统集成",
-  "FROM PACK": "从电池包",
-  "TO VEHICLE": "到整车",
-  "Battery performance is finally measured inside a complete thermal, electrical, and mechanical system.": "电池的最终表现，要放在完整的热、电和机械系统中评价。",
-  "CHAPTER 04": "第四章",
-  "SYSTEMS, MATERIALS & RESEARCH": "系统、材料与研究",
-  "SYSTEM ARCHITECTURE": "系统架构",
-  "From Cell to Pack": "从电芯到电池包",
-  "An EV battery is more than chemistry. Packaging, sensing, thermal control, structure, and software determine how cells behave as a system.": "电动车电池不只是化学体系。封装、传感、热控制、结构和软件共同决定电芯作为系统时的表现。",
-  "CELL": "电芯",
-  "MODULE": "模组",
-  "PACK": "电池包",
-  "MATERIALS DATABASE": "材料数据库",
-  "What Is Inside a Battery?": "电池里面有什么？",
-  "Search by material or filter by role. Each entry focuses on one useful advantage and one engineering challenge.": "按材料搜索或按作用筛选。每个条目聚焦一个优势和一个工程挑战。",
-  "SEARCH": "搜索",
-  "All": "全部",
-  "Cathode": "正极",
-  "Anode": "负极",
-  "Electrolyte": "电解质",
-  "Separator": "隔膜",
-  "Element": "元素",
-  "ADVANTAGE": "优势",
-  "CHALLENGE": "挑战",
-  "No material found.": "没有找到相关材料。",
-  "PERSONAL NOTES": "个人研究笔记",
-  "My Research Thoughts": "我的研究思考",
-  "These notes are not conclusions. They are questions I found useful while connecting chemistry, materials, and vehicle engineering.": "这些笔记不是最终结论，而是我在连接化学、材料与车辆工程时认为值得继续追问的问题。",
-  "Why Sodium-ion Batteries Matter": "为什么钠离子电池值得关注",
-  "The Challenge of Winter EV Range": "冬季电动车续航的挑战",
-  "Can Battery Waste Heat Be Reused?": "电池余热能否被重新利用？",
-  "KNOWLEDGE CHECK": "知识检查",
-  "Test Your Battery Knowledge": "测试你的电池知识",
-  "Five short questions. Explanations appear after submission so the quiz also works as a review.": "五道简短问题。提交后会显示解释，也可以用来复习。",
-  "Submit Answers": "提交答案",
-  "Restart": "重新开始",
-  "REFERENCE": "术语参考",
-  "Battery Glossary": "电池术语表",
-  "Find a term": "查找术语",
-  "No glossary term found.": "没有找到相关术语。",
-  "WHY I BUILT THIS WEBSITE": "为什么我建立这个网站",
-  "A learning project about materials, systems, and better questions.": "一个关于材料、系统与持续提问的学习项目。",
-  "A student project about materials science and energy storage.": "一个关于材料科学与能源储存的学生项目。",
-  "Built by Terry Wang": "Terry Wang 制作",
-  "Back to top ↑": "返回顶部 ↑",
-  "Lead-Acid Battery": "铅酸电池",
-  "Nickel-Metal Hydride Battery": "镍氢电池",
-  "Lithium Iron Phosphate Battery": "磷酸铁锂电池",
-  "NMC Lithium-ion Battery": "三元锂离子电池",
-  "Sodium-ion Battery": "钠离子电池",
-  "Solid-State Battery": "全固态电池",
-  "Approximate typical range": "典型范围（近似值）",
-  "ADVANTAGES": "优势",
-  "LIMITATIONS": "局限",
-  "COMMON APPLICATIONS": "常见应用",
-  "Lead-acid": "铅酸",
-  "NMC Li-ion": "三元锂",
-  "Sodium-ion": "钠离子",
-  "Solid-state": "全固态",
-  "Energy Density": "能量密度",
-  "Cost": "成本",
-  "Safety": "安全性",
-  "Cycle Life": "循环寿命",
-  "Charging": "充电性能",
-  "Cold Weather": "低温性能",
-  "Wh/kg · approximate midpoint": "Wh/kg · 近似中值",
-  "Voltaic Pile": "伏打电堆",
-  "Lead-acid Battery": "铅酸电池",
-  "Nickel-Cadmium": "镍镉电池",
-  "Commercial Li-ion": "商用锂离子电池",
-  "EV Battery Expansion": "电动车电池扩张",
-  "Sodium-ion Development": "钠离子发展",
-  "Solid-state Potential": "固态电池潜力",
-  "Lithium": "锂",
-  "Sodium": "钠",
-  "Graphite": "石墨",
-  "Silicon": "硅",
-  "Liquid Electrolyte": "液态电解质",
-  "Solid Electrolyte": "固态电解质",
-  "Correct.": "回答正确。",
-  "Charts could not load. Check your internet connection and refresh.": "图表加载失败，请检查网络连接并刷新页面。"
-};
-
-function tr(text) {
-  return currentLanguage === "zh" ? (zhTranslations[text] || text) : text;
-}
-
-const batteryTypes = [
-  {
-    id: "lead",
-    knowledgeId: "lead-acid",
-    name: "Lead-Acid Battery",
-    description: "A mature rechargeable chemistry known for low cost and strong short bursts of current.",
-    density: "30–50 Wh/kg",
-    advantage: "Low cost, reliable high-current output, and a well-established recycling system.",
-    limitation: "Heavy and relatively low in energy density; deep discharge can shorten its life.",
-    applications: "Vehicle starter batteries, UPS systems, backup power.",
-    takeaway: "Lead-acid is heavy, but it remains useful when low cost and high starting current matter most."
+const ui = {
+  zh: {
+    nav: { story: "故事", types: "电池", materials: "材料", pack: "电池包", future: "未来", tools: "工具" },
+    hero: {
+      title: "电池科学",
+      sub: "探索驱动手机、电动汽车与未来能源系统的核心技术。",
+      cta1: "探索电池",
+      cta2: "继续了解"
+    },
+    story: {
+      kicker: "为什么电池重要",
+      title: "每一部手机。\n每一辆电动车。\n每一颗卫星。",
+      body: "电池不是一个孤立零件。它连接材料科学、能源系统、交通方式和安全工程。理解电池，就是理解现代技术如何储存、释放和管理能量。"
+    },
+    types: {
+      kicker: "探索电池体系",
+      title: "不是所有电池都为同一个任务而生。",
+      body: "有些追求长续航，有些追求安全寿命，有些为低成本和资源稳定而来。横向浏览不同体系，点击进入完整解释。"
+    },
+    comparison: {
+      kicker: "性能对比",
+      title: "工程选择，永远是取舍。",
+      body: "这里的图表是简化学习模型，不是工业规格。它帮助你直观看到能量密度、成本、安全、寿命、快充和低温性能之间的平衡。",
+      select: "选择技术",
+      note: "相对评分：1 较低，10 较高。成本分数越高代表越经济。",
+      radar: "综合雷达图",
+      bar: "典型能量密度"
+    },
+    materials: {
+      kicker: "材料科学",
+      title: "微小材料，决定巨大系统。",
+      body: "正极、负极、电解质和隔膜共同决定电池的容量、安全、成本和寿命。材料不是列表，而是性能的源头。"
+    },
+    pack: {
+      kicker: "电动车电池包",
+      title: "电池性能，最终在系统中兑现。",
+      body: "电芯只是开始。模组、电池包、BMS、热管理、充电和安全结构，决定电池能否稳定进入真实车辆。"
+    },
+    future: {
+      kicker: "未来技术",
+      title: "下一代电池，不只有一种答案。",
+      body: "固态、钠离子、硅负极、锂硫、锂空气和更智能的能量管理，都在从不同方向逼近更安全、更便宜、更稳定的储能系统。"
+    },
+    tools: {
+      kicker: "学习工具",
+      title: "先被吸引，再深入研究。",
+      body: "搜索、计算器和测验放在学习旅程后段，作为探索工具，而不是一进门就看到的数据库入口。"
+    },
+    knowledge: { label: "搜索电池知识库", placeholder: "搜索 NCM、LFP、SOC、电解液、隔膜…", empty: "没有找到相关词条。" },
+    calc: {
+      energyTitle: "电池能量计算器",
+      energyBody: "用电压和安时容量估算电池储存的电能。",
+      voltage: "电压 V",
+      capacity: "容量 Ah",
+      calculate: "计算",
+      reset: "重置",
+      result: "结果",
+      energyHint: "输入数值后显示估算结果。",
+      rangeTitle: "电动车续航计算器",
+      rangeBody: "用电池容量、能耗和低温系数估算续航。",
+      size: "电池容量 kWh",
+      consumption: "能耗 Wh/km",
+      temperature: "温度模型",
+      normal: "常温 · 100%",
+      cold: "寒冷 · 85%",
+      veryCold: "严寒 · 70%",
+      estimate: "估算",
+      rangeHint: "真实续航还受车速、空调、轮胎、地形和电池状态影响。",
+      invalidEnergy: "请输入大于零的电压和容量。",
+      invalidRange: "请输入大于零的电池容量和能耗。",
+      energyText: "理论上，这块电池可以用 {value} 瓦的功率持续供电 1 小时；真实可用能量通常更低。",
+      rangeText: "基础估算：{base} km。温度模型：{factor}%。真实续航还会变化。"
+    },
+    quiz: { kicker: "知识小测", title: "你真的理解电池了吗？", submit: "提交答案", restart: "重新开始", correct: "回答正确。", scorePerfect: "很好，你已经连接起这些关键概念。", scoreAgain: "阅读解释后，可以再次尝试。", answer: "正确答案" },
+    research: { kicker: "个人研究思考", title: "材料、热管理和系统问题，是我最想继续研究的方向。" },
+    modal: { close: "关闭" },
+    footer: { body: "一个关于电池技术、材料科学与能源储存的学生学习项目。", built: "Terry Wang 制作", search: "知识库", top: "回到顶部 ↑" },
+    labels: { learnMore: "了解更多", approximate: "典型范围", whkg: "Wh/kg · 近似中值", chartsFail: "图表加载失败，请检查网络连接后刷新。", noCharts: "无图表" }
   },
-  {
-    id: "nimh",
-    knowledgeId: "nimh",
-    name: "Nickel-Metal Hydride Battery",
-    description: "A durable rechargeable chemistry that remains useful where temperature tolerance and robustness matter.",
-    density: "60–120 Wh/kg",
-    advantage: "Good abuse tolerance, wide operating temperature range, and proven reliability.",
-    limitation: "Heavier and more prone to self-discharge than modern lithium-ion cells.",
-    applications: "Hybrid vehicles, consumer rechargeable cells, industrial equipment.",
-    takeaway: "NiMH is not the lightest option, but it is robust and dependable across demanding conditions."
-  },
-  {
-    id: "lfp",
-    knowledgeId: "lfp",
-    name: "Lithium Iron Phosphate Battery",
-    description: "A lithium-ion chemistry built around a stable phosphate cathode and long cycle life.",
-    density: "90–160 Wh/kg",
-    advantage: "Strong thermal stability, long service life, and lower reliance on nickel and cobalt.",
-    limitation: "Lower volumetric energy density and weaker cold-weather charging than high-nickel cells.",
-    applications: "EVs, buses, stationary storage, power tools.",
-    takeaway: "LFP is not the lightest lithium-ion battery, but it is safe, durable, and cost-effective."
-  },
-  {
-    id: "nmc",
-    knowledgeId: "nmc",
-    name: "NMC Lithium-ion Battery",
-    description: "A layered cathode chemistry that balances nickel, manganese, and cobalt for high specific energy.",
-    density: "180–300 Wh/kg",
-    advantage: "High energy density supports longer range with less battery mass.",
-    limitation: "Requires careful manufacturing, battery management, and thermal protection.",
-    applications: "Long-range EVs, laptops, drones, portable electronics.",
-    takeaway: "NMC is valuable when range and low mass matter, but it needs careful thermal and safety control."
-  },
-  {
-    id: "sodium",
-    knowledgeId: "sodium-ion",
-    name: "Sodium-ion Battery",
-    description: "A developing rechargeable system that replaces lithium ions with more abundant sodium ions.",
-    density: "100–180 Wh/kg",
-    advantage: "Potentially lower material cost, diversified supply, and useful low-temperature behavior.",
-    limitation: "Current cells usually store less energy per kilogram than leading lithium-ion designs.",
-    applications: "Entry-level EVs, two-wheelers, stationary storage.",
-    takeaway: "Sodium-ion trades some energy density for abundant materials, supply diversity, and potential cost advantages."
-  },
-  {
-    id: "solid",
-    knowledgeId: "solid-state",
-    name: "Solid-State Battery",
-    description: "A family of developing batteries that uses a solid electrolyte instead of a conventional liquid one.",
-    density: "Potentially >300 Wh/kg",
-    advantage: "Could support lithium-metal anodes and improve the safety and energy ceiling.",
-    limitation: "Interface resistance, dendrites, pressure control, cost, and manufacturing yield remain difficult.",
-    applications: "Future EVs, aviation, premium electronics; still developing.",
-    takeaway: "Solid-state batteries have high potential, but manufacturing reliable interfaces at scale remains the real test."
-  }
-];
-
-const comparisonData = {
-  lead: { label: "Lead-acid", color: "#777777", midpoint: 40, scores: [2, 10, 7, 5, 4, 7] },
-  nimh: { label: "NiMH", color: "#999999", midpoint: 90, scores: [4, 6, 8, 6, 5, 8] },
-  lfp: { label: "LFP", color: "#ffffff", midpoint: 125, scores: [6, 8, 9, 9, 8, 6] },
-  nmc: { label: "NMC Li-ion", color: "#d8d8d8", midpoint: 240, scores: [9, 5, 6, 6, 8, 5] },
-  sodium: { label: "Sodium-ion", color: "#b8b8b8", midpoint: 140, scores: [5, 8, 8, 7, 7, 9] },
-  solid: { label: "Solid-state", color: "#efefef", midpoint: 330, scores: [10, 2, 8, 7, 8, 6] }
-};
-
-const timelineData = [
-  ["1800", "Voltaic Pile", "Alessandro Volta stacked metal discs and electrolyte-soaked material to produce a continuous current."],
-  ["1859", "Lead-acid Battery", "Gaston Planté developed the first practical rechargeable battery, a chemistry still used today."],
-  ["1899", "Nickel-Cadmium", "Rechargeable nickel-cadmium improved durability and power, although cadmium created environmental concerns."],
-  ["1991", "Commercial Li-ion", "Commercial lithium-ion cells made portable electronics lighter and helped establish modern rechargeable devices."],
-  ["2010s", "EV Battery Expansion", "Large-scale manufacturing, improved cells, and better battery management accelerated electric vehicles."],
-  ["2020s", "Sodium-ion Development", "Sodium-ion moved from laboratories toward early commercial production for cost-sensitive applications."],
-  ["2030+", "Solid-state Potential", "Several companies are targeting solid-state commercialization, but timing depends on engineering and manufacturing progress."]
-];
-
-const packContent = {
-  cell: {
-    code: "LEVEL 01 / ELECTROCHEMISTRY",
-    title: "Cell",
-    text: "A cell is one electrochemical unit. Its cathode, anode, electrolyte, and separator determine voltage, energy, power, aging, and many safety limits.",
-    facts: [["Contains", "Electrodes, electrolyte, separator"], ["Measured by", "Voltage, capacity, resistance"], ["Key concern", "Heat generation and consistency"]]
-  },
-  module: {
-    code: "LEVEL 02 / INTEGRATION",
-    title: "Module",
-    text: "A module connects multiple cells electrically and mechanically. It simplifies assembly, sensing, service, and structural support, although some modern packs use cell-to-pack designs without traditional modules.",
-    facts: [["Contains", "Cells, busbars, sensors, frame"], ["Purpose", "Electrical and mechanical grouping"], ["Key concern", "Cell matching and heat spreading"]]
-  },
-  pack: {
-    code: "LEVEL 03 / VEHICLE SYSTEM",
-    title: "Pack",
-    text: "A pack combines cells or modules with a battery management system, cooling circuit, enclosure, contactors, fuses, insulation, and crash protection. System design can matter as much as cell chemistry.",
-    facts: [["Contains", "BMS, cooling, structure, safety"], ["Connects to", "Motor, charger, vehicle controls"], ["Key concern", "Thermal propagation and reliability"]]
+  en: {
+    nav: { story: "Story", types: "Batteries", materials: "Materials", pack: "Pack", future: "Future", tools: "Tools" },
+    hero: {
+      title: "Battery Science",
+      sub: "Exploring the technologies behind smartphones, electric vehicles, and future energy systems.",
+      cta1: "Explore Batteries",
+      cta2: "Learn More"
+    },
+    story: {
+      kicker: "Why batteries matter",
+      title: "Every smartphone.\nEvery EV.\nEvery satellite.",
+      body: "A battery is not an isolated component. It connects materials science, energy systems, transportation, and safety engineering. To understand batteries is to understand how modern technology stores, releases, and manages energy."
+    },
+    types: {
+      kicker: "Explore battery types",
+      title: "Not every battery is built for the same job.",
+      body: "Some chemistries chase driving range, some prioritize safety and lifetime, and some are designed for low cost and supply stability. Browse the gallery and open each explanation."
+    },
+    comparison: {
+      kicker: "Performance comparison",
+      title: "Engineering is always a trade-off.",
+      body: "These charts are simplified educational models, not industrial specifications. They help show the balance between energy density, cost, safety, cycle life, charging, and cold-weather behavior.",
+      select: "Select technologies",
+      note: "Relative score: 1 = low, 10 = high. For cost, a higher score means more affordable.",
+      radar: "Balanced radar",
+      bar: "Typical energy density"
+    },
+    materials: {
+      kicker: "Materials science",
+      title: "Tiny materials shape massive systems.",
+      body: "Cathodes, anodes, electrolytes, and separators determine capacity, safety, cost, and life. Materials are not a list; they are where performance begins."
+    },
+    pack: {
+      kicker: "EV battery pack",
+      title: "Battery performance becomes real inside a system.",
+      body: "Cells are only the beginning. Modules, packs, BMS, thermal management, charging, and safety structures decide whether a battery can work reliably inside a real vehicle."
+    },
+    future: {
+      kicker: "Future technologies",
+      title: "Next-generation batteries will not have one answer.",
+      body: "Solid-state, sodium-ion, silicon anodes, lithium-sulfur, lithium-air, and smarter energy management approach safer, cheaper, more stable storage from different directions."
+    },
+    tools: {
+      kicker: "Learning tools",
+      title: "Attract first. Then go deeper.",
+      body: "Search, calculators, and quizzes appear later in the journey as exploration tools instead of making the first screen feel like a database."
+    },
+    knowledge: { label: "Search the battery knowledge base", placeholder: "Search NCM, LFP, SOC, electrolyte, separator…", empty: "No entry found." },
+    calc: {
+      energyTitle: "Battery Energy Calculator",
+      energyBody: "Estimate stored electrical energy from voltage and amp-hour capacity.",
+      voltage: "Voltage V",
+      capacity: "Capacity Ah",
+      calculate: "Calculate",
+      reset: "Reset",
+      result: "Result",
+      energyHint: "Enter values to show an estimate.",
+      rangeTitle: "EV Range Calculator",
+      rangeBody: "Estimate range from pack size, consumption, and a cold-weather factor.",
+      size: "Battery Size kWh",
+      consumption: "Consumption Wh/km",
+      temperature: "Temperature Model",
+      normal: "Normal · 100%",
+      cold: "Cold · 85%",
+      veryCold: "Very cold · 70%",
+      estimate: "Estimate",
+      rangeHint: "Real range also depends on speed, HVAC, tires, terrain, and battery condition.",
+      invalidEnergy: "Enter voltage and capacity values greater than zero.",
+      invalidRange: "Enter battery size and consumption values greater than zero.",
+      energyText: "This battery could theoretically supply {value} watts for 1 hour. Real usable energy is usually lower.",
+      rangeText: "Base estimate: {base} km. Temperature model: {factor}%. Real range will vary."
+    },
+    quiz: { kicker: "Knowledge check", title: "Do you really understand batteries?", submit: "Submit Answers", restart: "Restart", correct: "Correct.", scorePerfect: "Excellent. You connected the key ideas.", scoreAgain: "Review the explanations and try again.", answer: "Answer" },
+    research: { kicker: "Personal research thoughts", title: "Materials, thermal management, and system questions are what I want to keep studying." },
+    modal: { close: "Close" },
+    footer: { body: "A student learning project about battery technology, materials science, and energy storage.", built: "Built by Terry Wang", search: "Knowledge base", top: "Back to top ↑" },
+    labels: { learnMore: "Learn More", approximate: "Typical range", whkg: "Wh/kg · approximate midpoint", chartsFail: "Charts could not load. Check your connection and refresh.", noCharts: "No chart" }
   }
 };
+
+const stats = [
+  { value: "300+", zh: "Wh/kg 是高能电池常被讨论的潜力区间之一，实际取决于体系和设计。", en: "Wh/kg is a commonly discussed potential range for high-energy cells, depending on chemistry and design." },
+  { value: "1000+", zh: "循环寿命不只由材料决定，也由温度、充电策略和使用方式决定。", en: "Cycle life depends not only on materials, but also temperature, charging strategy, and usage." },
+  { value: "2030+", zh: "固态电池、钠离子和硅负极仍在走向更成熟的产业化。", en: "Solid-state, sodium-ion, and silicon anode paths are still moving toward maturity." }
+];
+
+const batteries = [
+  {
+    id: "nmc", short: "NCM / NCA",
+    zh: {
+      title: "三元锂电池 NCM/NCA",
+      desc: "使用镍、钴、锰或镍、钴、铝正极，通常追求更高能量密度和更长续航。",
+      tags: ["高能量密度", "长续航", "需要热管理"],
+      metrics: [["能量密度", "通常较高"], ["安全性", "需要严格控制"], ["成本", "受镍钴影响"], ["低温", "通常较好"], ["寿命", "中高，取决于管理"]],
+      sections: [
+        ["概览", "三元锂是一类高能量密度锂离子电池，常见于长续航电动车、笔记本、无人机等场景。"],
+        ["名字是什么意思", "“三元”指镍、钴、锰或镍、钴、铝等元素组合。镍提高容量，钴稳定结构，锰或铝改善稳定性和安全边界。"],
+        ["工作原理", "充电时锂离子从正极移动到负极，放电时回到正极，同时电子从外部电路流动。"],
+        ["优点", "相同重量下通常可储存更多电能，适合对续航和轻量化要求高的产品。"],
+        ["局限", "成本较高，对制造、BMS 和热管理要求高；高镍体系的稳定性更需要精细控制。"],
+        ["与 LFP 对比", "三元锂通常能量密度更高，LFP 通常更安全、寿命更长、成本更低。"],
+        ["普通人怎么理解", "它像轻量大容量背包，能装更多东西，但需要更仔细保护。"],
+        ["未来方向", "高镍化、表面包覆、固态电解质和更好的热管理都是重要方向。"]
+      ]
+    },
+    en: {
+      title: "NCM / NCA Lithium-ion",
+      desc: "A nickel-cobalt based lithium-ion family often used when high energy density and long range matter.",
+      tags: ["High energy", "Long range", "Thermal control"],
+      metrics: [["Energy density", "Usually high"], ["Safety", "Needs careful control"], ["Cost", "Nickel/cobalt sensitive"], ["Cold weather", "Usually good"], ["Cycle life", "Medium-high, management dependent"]],
+      sections: [
+        ["Overview", "NCM/NCA cells are high-energy lithium-ion batteries used in long-range EVs, laptops, drones, and premium electronics."],
+        ["What the name means", "NCM refers to nickel, cobalt, and manganese. NCA refers to nickel, cobalt, and aluminum. Nickel raises capacity, cobalt stabilizes the layered structure, and manganese or aluminum helps stability."],
+        ["How it works", "During charging, lithium ions move from the cathode to the anode. During discharge, they return while electrons flow through the external circuit."],
+        ["Advantages", "It can store more energy at the same mass, which helps range and lightweight design."],
+        ["Limitations", "It is more demanding in manufacturing, battery management, and thermal protection. High-nickel formulas require especially careful control."],
+        ["Compared with LFP", "NCM/NCA usually offers higher energy density. LFP usually offers better safety, cycle life, and cost."],
+        ["Plain-language analogy", "It is like a lightweight backpack with more capacity, but it needs more careful protection."],
+        ["Future outlook", "High-nickel designs, coatings, solid electrolytes, and better thermal management are important directions."]
+      ]
+    }
+  },
+  {
+    id: "lfp", short: "LFP",
+    zh: {
+      title: "磷酸铁锂电池 LFP",
+      desc: "以磷酸铁锂为正极，特点是安全稳定、寿命长、成本友好。",
+      tags: ["安全稳定", "长寿命", "成本友好"],
+      metrics: [["能量密度", "中等"], ["安全性", "通常较高"], ["成本", "较低"], ["低温", "需要改善"], ["寿命", "通常较长"]],
+      sections: [
+        ["概览", "LFP 是一种稳定、耐用、成本相对低的锂离子体系，常用于电动车、公交车和储能。"],
+        ["核心材料", "正极为磷酸铁锂，不依赖镍和钴。磷氧键较稳定，热稳定性通常较好。"],
+        ["工作原理", "锂离子在磷酸铁锂正极和石墨负极之间往返移动。"],
+        ["优点", "安全性好、循环寿命长、成本较低，适合重视耐用性的应用。"],
+        ["局限", "能量密度通常低于高镍三元，低温充电和冬季续航需要热管理帮助。"],
+        ["应用", "城市电动车、储能电站、公交车、商用车和电动工具。"],
+        ["普通人怎么理解", "它像一个结实可靠的工具箱，不追求最轻，但很耐用。"],
+        ["未来方向", "结构创新、CTP/刀片电池、低温电解液和更好的热管理会继续提升实用性。"]
+      ]
+    },
+    en: {
+      title: "Lithium Iron Phosphate LFP",
+      desc: "A lithium-ion chemistry known for stability, long life, and cost advantages.",
+      tags: ["Stable", "Long life", "Cost friendly"],
+      metrics: [["Energy density", "Medium"], ["Safety", "Usually high"], ["Cost", "Lower"], ["Cold weather", "Needs support"], ["Cycle life", "Usually long"]],
+      sections: [
+        ["Overview", "LFP is a stable, durable, and relatively affordable lithium-ion chemistry used in EVs, buses, and storage systems."],
+        ["Core material", "Its cathode is lithium iron phosphate and does not rely on nickel or cobalt. Strong phosphate bonds help thermal stability."],
+        ["How it works", "Lithium ions move between the LFP cathode and graphite anode during charge and discharge."],
+        ["Advantages", "Good safety, long cycle life, and lower material cost make it useful for durable applications."],
+        ["Limitations", "Energy density is usually lower than high-nickel cells, and cold-weather charging needs thermal management."],
+        ["Applications", "City EVs, grid storage, buses, commercial vehicles, and power tools."],
+        ["Plain-language analogy", "It is like a tough tool case: not the lightest, but very dependable."],
+        ["Future outlook", "Pack structure innovation, cell-to-pack designs, low-temperature electrolytes, and thermal management will keep improving it."]
+      ]
+    }
+  },
+  {
+    id: "sodium", short: "Sodium-ion",
+    zh: {
+      title: "钠离子电池",
+      desc: "用钠离子替代锂离子，资源更丰富，适合低成本储能和部分入门级车辆。",
+      tags: ["资源丰富", "低成本潜力", "低温表现"],
+      metrics: [["能量密度", "通常低于锂电"], ["安全性", "取决于体系"], ["成本", "有下降潜力"], ["低温", "部分路线较好"], ["寿命", "快速发展中"]],
+      sections: [
+        ["概览", "钠离子电池不一定取代锂电池，但可能补上低成本和资源稳定这块拼图。"],
+        ["为什么重要", "钠资源分布更广，长期可能降低供应风险。"],
+        ["工作原理", "钠离子在正负极之间往返移动。因为钠离子更大，材料结构需要重新设计。"],
+        ["优点", "资源丰富、供应多元，部分体系低温表现不错。"],
+        ["局限", "目前能量密度通常低于主流锂离子，产业链仍在成熟。"],
+        ["应用", "固定式储能、两轮车、入门级电动车和低温场景。"],
+        ["普通人怎么理解", "它像一种更容易找到原料的路线，不一定跑最远，但可能更便宜、更容易铺开。"],
+        ["未来方向", "硬碳负极、层状氧化物、普鲁士蓝类材料和规模化制造是关键。"]
+      ]
+    },
+    en: {
+      title: "Sodium-ion Battery",
+      desc: "A developing system that uses sodium ions instead of lithium ions, with potential for lower-cost storage.",
+      tags: ["Abundant", "Cost potential", "Cold weather"],
+      metrics: [["Energy density", "Usually below Li-ion"], ["Safety", "Chemistry dependent"], ["Cost", "Potentially lower"], ["Cold weather", "Often promising"], ["Cycle life", "Developing"]],
+      sections: [
+        ["Overview", "Sodium-ion batteries may not replace lithium-ion, but they could fill a valuable role in low-cost and supply-stable storage."],
+        ["Why it matters", "Sodium is more abundant and widely distributed, which may reduce long-term supply risk."],
+        ["How it works", "Sodium ions move between electrodes. Because sodium ions are larger, the materials need dedicated design."],
+        ["Advantages", "Abundant resources, diversified supply, and promising low-temperature behavior in some designs."],
+        ["Limitations", "Energy density is usually lower than leading lithium-ion cells, and the supply chain is still maturing."],
+        ["Applications", "Stationary storage, two-wheelers, entry-level EVs, and cold-weather applications."],
+        ["Plain-language analogy", "It is like a route with easier-to-find raw materials: not always the longest range, but potentially cheaper and easier to scale."],
+        ["Future outlook", "Hard carbon anodes, layered oxides, Prussian blue materials, and scale manufacturing are key."]
+      ]
+    }
+  },
+  {
+    id: "solid", short: "Solid-state",
+    zh: {
+      title: "固态电池",
+      desc: "用固态电解质替代传统液态电解液，有潜力提升安全和能量上限，但量产仍困难。",
+      tags: ["发展中", "固态电解质", "高潜力"],
+      metrics: [["能量密度", "有提升潜力"], ["安全性", "不等于绝对安全"], ["成本", "目前较高"], ["低温", "路线差异大"], ["寿命", "界面是关键"]],
+      sections: [
+        ["概览", "固态电池是一个技术家族，不是一种已经完全成熟的单一产品。"],
+        ["核心材料", "关键是固态电解质，包括氧化物、硫化物和聚合物路线。"],
+        ["工作原理", "离子仍在正负极之间移动，只是通道从液体变成固体。"],
+        ["优点", "有机会减少易燃液态成分，并支持锂金属负极，提高能量上限。"],
+        ["局限", "固-固界面接触、枝晶、压力控制、成本和制造良率仍然困难。"],
+        ["应用", "未来高端电动车、航空、消费电子和高安全储能。"],
+        ["普通人怎么理解", "液态电解液像水路，固态电解质像固体隧道。隧道更稳，但修好很难。"],
+        ["未来方向", "硫化物电解质、锂金属负极、界面工程和量产工艺是核心。"]
+      ]
+    },
+    en: {
+      title: "Solid-state Battery",
+      desc: "A battery family using solid electrolytes, with high potential but difficult manufacturing challenges.",
+      tags: ["Developing", "Solid electrolyte", "High potential"],
+      metrics: [["Energy density", "Potentially higher"], ["Safety", "Not absolute"], ["Cost", "Currently high"], ["Cold weather", "Route dependent"], ["Cycle life", "Interface critical"]],
+      sections: [
+        ["Overview", "Solid-state batteries are a family of technologies, not one fully mature product."],
+        ["Core materials", "The key is the solid electrolyte, including oxide, sulfide, and polymer routes."],
+        ["How it works", "Ions still move between electrodes, but the ion pathway changes from liquid to solid."],
+        ["Advantages", "They may reduce flammable liquid content and support lithium-metal anodes for higher energy ceilings."],
+        ["Limitations", "Solid-solid interfaces, dendrites, pressure control, cost, and manufacturing yield remain hard."],
+        ["Applications", "Future premium EVs, aviation, electronics, and high-safety storage."],
+        ["Plain-language analogy", "Liquid electrolyte is like a waterway. Solid electrolyte is like a tunnel: potentially safer, but hard to build perfectly."],
+        ["Future outlook", "Sulfide electrolytes, lithium metal, interface engineering, and scalable manufacturing are central."]
+      ]
+    }
+  },
+  {
+    id: "lead", short: "Lead-acid",
+    zh: {
+      title: "铅酸电池",
+      desc: "历史悠久、成本低、瞬时大电流强，但重量大、能量密度低。",
+      tags: ["低成本", "启动电流", "成熟回收"],
+      metrics: [["能量密度", "约 30–50 Wh/kg"], ["安全性", "需规范处理"], ["成本", "很低"], ["低温", "启动能力下降"], ["寿命", "怕深度亏电"]],
+      sections: [
+        ["概览", "铅酸电池很重，却仍是汽车启动和备用电源中的成熟方案。"],
+        ["工作原理", "放电时正负极都逐渐变成硫酸铅，充电时尽量恢复。"],
+        ["优点", "便宜、可靠、大电流输出强，回收体系成熟。"],
+        ["局限", "重量大、能量密度低，长期亏电会损伤寿命。"],
+        ["应用", "燃油车启动电源、UPS、通信备用电源。"],
+        ["普通人怎么理解", "它像一个很重但很有力的启动器，不适合长跑，却擅长瞬间发力。"]
+      ]
+    },
+    en: {
+      title: "Lead-acid Battery",
+      desc: "A very mature, low-cost battery with strong starting current, but low energy density and high weight.",
+      tags: ["Low cost", "Starting current", "Recycling"],
+      metrics: [["Energy density", "About 30–50 Wh/kg"], ["Safety", "Needs proper handling"], ["Cost", "Very low"], ["Cold weather", "Starting drops"], ["Cycle life", "Deep discharge hurts"]],
+      sections: [
+        ["Overview", "Lead-acid is heavy, but it remains a mature solution for starting batteries and backup power."],
+        ["How it works", "During discharge, both electrodes move toward lead sulfate; charging tries to reverse the reaction."],
+        ["Advantages", "Cheap, reliable, strong high-current output, and mature recycling."],
+        ["Limitations", "Heavy, low energy density, and damaged by long-term deep discharge."],
+        ["Applications", "Vehicle starter batteries, UPS systems, and telecom backup power."],
+        ["Plain-language analogy", "It is like a heavy but strong starter: not a distance runner, but good at instant force."]
+      ]
+    }
+  },
+  {
+    id: "nimh", short: "NiMH",
+    zh: {
+      title: "镍氢电池 NiMH",
+      desc: "耐用、宽温区、抗滥用能力强，曾广泛用于混合动力汽车和充电电池。",
+      tags: ["耐用", "混动车", "宽温区"],
+      metrics: [["能量密度", "中等"], ["安全性", "较稳健"], ["成本", "中等"], ["低温", "相对稳定"], ["寿命", "适合浅充浅放"]],
+      sections: [
+        ["概览", "镍氢电池不再是最轻的选择，但在可靠性和耐用性上仍有价值。"],
+        ["工作原理", "负极储氢合金在充放电中吸收和释放氢。"],
+        ["优点", "耐用、抗滥用、宽温区，适合混动车频繁小幅充放电。"],
+        ["局限", "自放电较高，重量和体积大于现代锂离子。"],
+        ["应用", "混合动力汽车、消费级充电电池和工业设备。"],
+        ["普通人怎么理解", "它像稳健老队员，不一定最快，但抗压可靠。"]
+      ]
+    },
+    en: {
+      title: "Nickel-Metal Hydride NiMH",
+      desc: "A durable, robust battery once widely used in hybrids and rechargeable consumer cells.",
+      tags: ["Durable", "Hybrid vehicles", "Wide temperature"],
+      metrics: [["Energy density", "Medium"], ["Safety", "Robust"], ["Cost", "Medium"], ["Cold weather", "Stable"], ["Cycle life", "Good shallow cycling"]],
+      sections: [
+        ["Overview", "NiMH is no longer the lightest choice, but it remains valuable for reliability and toughness."],
+        ["How it works", "The metal hydride anode absorbs and releases hydrogen during cycling."],
+        ["Advantages", "Durable, abuse-tolerant, wide temperature range, and good for hybrid shallow cycling."],
+        ["Limitations", "Higher self-discharge and larger mass/volume than modern lithium-ion."],
+        ["Applications", "Hybrid vehicles, rechargeable consumer cells, and industrial equipment."],
+        ["Plain-language analogy", "It is like a steady veteran: not the fastest, but robust and dependable."]
+      ]
+    }
+  }
+];
 
 const materials = [
-  ["Lithium", "Element", "A charge-carrying element used across many rechargeable battery chemistries.", "High electrochemical potential and low atomic mass.", "Supply concentration, extraction impacts, and price volatility."],
-  ["Sodium", "Element", "A charge carrier in sodium-ion batteries.", "Abundant and widely distributed resources.", "Larger ion size can reduce energy density and changes material choices."],
-  ["Graphite", "Anode", "The most common commercial anode material in lithium-ion batteries.", "Stable, mature, efficient, and supported by large supply chains.", "Limited theoretical capacity compared with silicon-rich anodes."],
-  ["Silicon", "Anode", "An anode material often blended with graphite to increase capacity.", "Very high theoretical lithium-storage capacity.", "Large volume change during cycling can damage particles and interfaces."],
-  ["LFP", "Cathode", "A phosphate cathode used in lithium iron phosphate cells.", "Strong thermal stability, long life, and relatively low material cost.", "Lower voltage and energy density than high-nickel layered cathodes."],
-  ["NMC", "Cathode", "A layered oxide cathode containing nickel, manganese, and cobalt.", "High energy density with adjustable composition.", "Cost, sourcing, moisture sensitivity, and thermal-management demands."],
-  ["Liquid Electrolyte", "Electrolyte", "A conductive salt solution that transports ions between electrodes.", "High ionic conductivity and mature manufacturing.", "Usually flammable and sensitive to voltage and temperature extremes."],
-  ["Separator", "Separator", "A porous membrane that prevents direct electrode contact while allowing ion flow.", "Thin, light, and essential for electrical isolation.", "Shrinkage, puncture, or contamination can create internal short circuits."],
-  ["Solid Electrolyte", "Electrolyte", "A solid ceramic, sulfide, or polymer designed to conduct ions.", "May reduce flammable liquid content and support new anode designs.", "Interfaces, brittleness, pressure, moisture sensitivity, and scale-up."]
-].map(([name, category, role, advantage, challenge]) => ({ name, category, role, advantage, challenge }));
+  { id: "lithium", symbol: "Li", zh: ["锂", "轻、活泼，是锂离子电池高能量密度的重要来源，但资源和开采问题需要关注。"], en: ["Lithium", "Light and electrochemically active, lithium helps high energy density but raises supply and extraction questions."] },
+  { id: "nickel", symbol: "Ni", zh: ["镍", "常用于高能量正极，提高容量，但高镍也带来稳定性和成本挑战。"], en: ["Nickel", "Used in high-energy cathodes to raise capacity, while increasing stability and cost challenges."] },
+  { id: "cobalt", symbol: "Co", zh: ["钴", "帮助稳定层状正极结构，但价格、供应和伦理问题推动低钴化。"], en: ["Cobalt", "Helps stabilize layered cathodes, but cost, supply, and ethics push the industry toward lower cobalt."] },
+  { id: "graphite", symbol: "C", zh: ["石墨", "最成熟的商业负极材料，稳定可靠，但理论容量有限。"], en: ["Graphite", "The most mature commercial anode material: stable and reliable, but limited in theoretical capacity."] },
+  { id: "silicon", symbol: "Si", zh: ["硅", "容量潜力很高，但充放电膨胀明显，界面和寿命是难点。"], en: ["Silicon", "High capacity potential, but large expansion makes interfaces and lifetime difficult."] },
+  { id: "lfp-material", symbol: "Fe", zh: ["LFP", "稳定、安全、成本友好的磷酸铁锂正极，是储能和大众电动车的重要材料。"], en: ["LFP", "A stable, safe, cost-friendly phosphate cathode for storage and mainstream EVs."] },
+  { id: "electrolyte", symbol: "E", zh: ["电解质", "离子通道，影响快充、低温、寿命与安全。液态成熟，固态仍在发展。"], en: ["Electrolyte", "The ion pathway affecting fast charging, cold weather, life, and safety. Liquid is mature; solid is developing."] }
+];
+
+const futureItems = [
+  { zh: ["固态电池", "有望减少易燃液体并提升能量上限，但界面、成本和量产仍是核心挑战。"], en: ["Solid-state batteries", "May reduce flammable liquid content and raise energy ceilings, but interface, cost, and manufacturing remain hard."] },
+  { zh: ["钠离子电池", "可能在低成本储能、两轮车和入门级车辆中发挥作用，而不是简单取代锂电。"], en: ["Sodium-ion batteries", "Could matter in low-cost storage, two-wheelers, and entry EVs rather than simply replacing lithium-ion."] },
+  { zh: ["硅负极", "提高容量的潜力很大，但必须控制体积膨胀和界面老化。"], en: ["Silicon anodes", "Large capacity potential, but volume expansion and interface aging must be controlled."] },
+  { zh: ["锂硫电池", "理论能量密度高、硫资源丰富，但穿梭效应和循环寿命仍是难点。"], en: ["Lithium-sulfur", "High theoretical energy and abundant sulfur, but shuttle effects and cycle life remain difficult."] },
+  { zh: ["锂空气电池", "理论上非常高的能量密度，但现实反应环境和寿命挑战巨大。"], en: ["Lithium-air", "Very high theoretical energy density, but real reaction environments and lifetime are major challenges."] },
+  { zh: ["智能能量管理", "AI 与控制算法可以帮助预测热状态、寿命和充电策略，但必须以安全验证为基础。"], en: ["AI energy management", "AI and control algorithms can help predict heat, life, and charging strategy, but must be grounded in safety validation."] }
+];
+
+const packItems = [
+  { id: "cell", zh: ["电芯", "最小电化学单元。正极、负极、电解质和隔膜决定它的电压、容量、寿命和安全边界。"], en: ["Cell", "The smallest electrochemical unit. Cathode, anode, electrolyte, and separator define voltage, capacity, life, and safety limits."] },
+  { id: "module", zh: ["模组", "把多个电芯进行电气和机械组合，便于装配、采样、固定和散热。"], en: ["Module", "Groups multiple cells electrically and mechanically for assembly, sensing, support, and heat spreading."] },
+  { id: "pack", zh: ["电池包", "把电芯或模组、BMS、冷却、壳体和高压安全件整合成整车可用系统。"], en: ["Pack", "Combines cells or modules with BMS, cooling, enclosure, and high-voltage safety components."] },
+  { id: "thermal", zh: ["热管理", "让电池不过冷、不过热，并尽量减少不同电芯之间的温差。"], en: ["Thermal management", "Keeps cells from becoming too cold or too hot and reduces temperature differences across the pack."] },
+  { id: "bms", zh: ["BMS", "监测电压、电流、温度，估算 SOC/SOH，并在异常时保护电池包。"], en: ["BMS", "Monitors voltage, current, and temperature, estimates SOC/SOH, and protects the pack under abnormal conditions."] },
+  { id: "safety", zh: ["安全系统", "保险丝、接触器、绝缘、泄压和隔热结构共同降低风险。"], en: ["Safety systems", "Fuses, contactors, insulation, venting, and thermal barriers work together to reduce risk."] }
+];
+
+const researchItems = [
+  {
+    zh: ["为什么钠离子值得关注？", "我不认为钠离子一定要“取代”锂离子。更有价值的问题是：在低成本储能、入门级车辆和寒冷地区，它能不能成为更合适的材料选择？"],
+    en: ["Why sodium-ion matters", "I do not think sodium-ion must “replace” lithium-ion. The more useful question is whether it can be the better material choice for low-cost storage, entry vehicles, and cold regions."]
+  },
+  {
+    zh: ["冬季续航为什么下降？", "低温让离子移动变慢、内阻升高，同时座舱和电池加热也要消耗能量。所以冬季续航既是材料问题，也是热管理问题。"],
+    en: ["Why winter range drops", "Low temperature slows ion movement and raises internal resistance, while cabin and battery heating consume energy. Winter range is both a materials problem and a thermal-management problem."]
+  },
+  {
+    zh: ["电池余热能否再利用？", "我曾想过电池包和功率电子产生的热量能否作为冬季热源之一。这个方向有吸引力，但必须保证温度、时机、安全和寿命都被严格控制。"],
+    en: ["Can battery waste heat be reused?", "I have wondered whether heat from the battery pack and power electronics could become part of winter heating. The direction is attractive, but temperature, timing, safety, and lifetime must be controlled carefully."]
+  }
+];
+
+const knowledgeEntries = [
+  ...batteries.map((battery) => ({ id: battery.id, category: { zh: "电池类型", en: "Battery type" }, ...battery })),
+  ...materials.map((material) => ({
+    id: material.id,
+    category: { zh: "材料科学", en: "Materials science" },
+    short: material.symbol,
+    zh: {
+      title: material.zh[0],
+      desc: material.zh[1],
+      tags: ["材料", material.symbol],
+      metrics: [],
+      sections: [
+        ["它在电池里做什么", material.zh[1]],
+        ["为什么重要", "电池材料会影响能量密度、功率、寿命、安全和成本。单个材料的提升，往往会带来新的制造或稳定性问题。"],
+        ["普通人怎么理解", "材料像电池的体质。体质不同，同样的系统会表现出完全不同的耐力、速度和安全边界。"]
+      ]
+    },
+    en: {
+      title: material.en[0],
+      desc: material.en[1],
+      tags: ["Material", material.symbol],
+      metrics: [],
+      sections: [
+        ["Role in a battery", material.en[1]],
+        ["Why it matters", "Battery materials affect energy density, power, life, safety, and cost. Improving one material often creates new manufacturing or stability questions."],
+        ["Plain-language analogy", "Materials are like the battery's physical constitution. Different materials give the same system different endurance, speed, and safety limits."]
+      ]
+    }
+  })),
+  { id: "cathode", category: { zh: "电池结构", en: "Battery structure" }, short: "Cathode", zh: { title: "正极材料", desc: "通常决定电池电压、容量、安全边界和成本。", tags: ["正极", "材料"], metrics: [], sections: [["基本概念", "正极是锂离子放电时返回的位置，材料体系会强烈影响电池性能。"], ["常见类型", "LFP、NCM/NCA、LMO、LCO 都是常见正极路线。"], ["普通人怎么理解", "正极像主要能量仓库，结构不同，能装多少和稳不稳都不同。"]] }, en: { title: "Cathode Material", desc: "Often determines voltage, capacity, safety limits, and cost.", tags: ["Cathode", "Material"], metrics: [], sections: [["Concept", "The cathode is where lithium ions return during discharge, and its chemistry strongly shapes battery performance."], ["Common types", "LFP, NCM/NCA, LMO, and LCO are common cathode routes."], ["Analogy", "The cathode is like the main energy warehouse: its structure affects capacity and stability."]] } },
+  { id: "anode", category: { zh: "电池结构", en: "Battery structure" }, short: "Anode", zh: { title: "负极材料", desc: "充电时接收锂离子，常见材料是石墨，硅和锂金属是重要方向。", tags: ["负极", "石墨", "硅"], metrics: [], sections: [["基本概念", "负极像离子停车位，充电时锂离子进入，放电时离开。"], ["挑战", "容量、体积变化、快充和界面稳定需要平衡。"], ["普通人怎么理解", "停车位越多容量越高，但地面不能被反复撑裂。"]] }, en: { title: "Anode Material", desc: "Receives lithium ions during charging. Graphite is common; silicon and lithium metal are important directions.", tags: ["Anode", "Graphite", "Silicon"], metrics: [], sections: [["Concept", "The anode is like a parking area for ions during charging."], ["Challenge", "Capacity, volume change, fast charging, and interface stability must be balanced."], ["Analogy", "More parking spots increase capacity, but the floor must not crack from repeated use."]] } },
+  { id: "electrolyte", category: { zh: "电池结构", en: "Battery structure" }, short: "Electrolyte", zh: { title: "电解液 / 电解质", desc: "让离子在正负极之间移动，是电池内部的离子通道。", tags: ["离子传导", "安全"], metrics: [], sections: [["基本概念", "电解质传导离子，但不希望电子在内部直接通过。"], ["为什么重要", "它影响快充、低温、寿命和安全。"], ["普通人怎么理解", "它像电池内部给离子走的高速路。"]] }, en: { title: "Electrolyte", desc: "Allows ions to move between electrodes: the ion pathway inside a battery.", tags: ["Ion transport", "Safety"], metrics: [], sections: [["Concept", "The electrolyte conducts ions, while electrons should travel through the external circuit."], ["Why it matters", "It affects fast charging, cold weather, life, and safety."], ["Analogy", "It is the highway for ions inside the battery."]] } },
+  { id: "separator", category: { zh: "电池结构", en: "Battery structure" }, short: "Separator", zh: { title: "隔膜", desc: "阻止正负极直接接触，同时允许离子通过。", tags: ["安全", "绝缘"], metrics: [], sections: [["基本概念", "隔膜是一层多孔绝缘膜。"], ["风险", "破损、收缩或杂质刺穿可能导致内部短路。"], ["普通人怎么理解", "它像带小孔的绝缘墙。"]] }, en: { title: "Separator", desc: "Prevents direct electrode contact while allowing ions to pass.", tags: ["Safety", "Insulation"], metrics: [], sections: [["Concept", "The separator is a porous insulating membrane."], ["Risk", "Damage, shrinkage, or contamination can cause internal short circuits."], ["Analogy", "It is like an insulating wall with tiny ion pathways."]] } },
+  { id: "bms", category: { zh: "电池结构", en: "Battery structure" }, short: "BMS", zh: { title: "电池管理系统 BMS", desc: "监测并保护电池包，估算 SOC 和 SOH。", tags: ["控制", "安全"], metrics: [], sections: [["基本概念", "BMS 是电池包的大脑和安全员。"], ["功能", "监测电压、电流、温度，控制保护和均衡。"], ["普通人怎么理解", "它像电池的油表、医生和安全员。"]] }, en: { title: "Battery Management System BMS", desc: "Monitors and protects the pack while estimating SOC and SOH.", tags: ["Control", "Safety"], metrics: [], sections: [["Concept", "The BMS is the pack's brain and safety officer."], ["Function", "It monitors voltage, current, temperature, protection, and balancing."], ["Analogy", "It is the battery's fuel gauge, doctor, and safety officer."]] } },
+  { id: "energy-density", category: { zh: "性能指标", en: "Performance term" }, short: "Wh/kg", zh: { title: "能量密度", desc: "单位质量或体积能储存多少能量，常与续航相关。", tags: ["Wh/kg", "续航"], metrics: [], sections: [["基本概念", "质量能量密度看每千克储能多少，体积能量密度看每升储能多少。"], ["注意", "能量密度高不代表一定最好，安全、寿命和成本同样重要。"], ["普通人怎么理解", "像背包单位重量能装多少食物。"]] }, en: { title: "Energy Density", desc: "How much energy a battery stores per mass or volume, often related to range.", tags: ["Wh/kg", "Range"], metrics: [], sections: [["Concept", "Gravimetric energy density measures energy per kg; volumetric energy density measures energy per liter."], ["Caution", "Higher energy density is not automatically best; safety, life, and cost also matter."], ["Analogy", "It is like how much food a backpack holds per unit weight."]] } },
+  { id: "soc", category: { zh: "性能指标", en: "Performance term" }, short: "SOC", zh: { title: "SOC 荷电状态", desc: "表示电池当前还剩多少可用电量，通常用百分比显示。", tags: ["剩余电量", "估算"], metrics: [], sections: [["基本概念", "SOC 类似电量百分比，但它是 BMS 根据模型估算的。"], ["为什么不简单", "温度、老化和电流都会影响估算。"], ["普通人怎么理解", "SOC 像汽车油表。"]] }, en: { title: "SOC State of Charge", desc: "An estimate of usable charge remaining, usually shown as a percentage.", tags: ["Remaining charge", "Estimate"], metrics: [], sections: [["Concept", "SOC is like a battery percentage, but it is estimated by the BMS."], ["Why it is hard", "Temperature, aging, and current affect the estimate."], ["Analogy", "SOC is like a fuel gauge."]] } },
+  { id: "soh", category: { zh: "性能指标", en: "Performance term" }, short: "SOH", zh: { title: "SOH 健康状态", desc: "表示电池相对于新电池的健康程度。", tags: ["老化", "容量衰减"], metrics: [], sections: [["基本概念", "SOH 不是剩余电量，而是电池老化程度。"], ["影响因素", "高温、快充、长期满电和深度放电都会影响 SOH。"], ["普通人怎么理解", "SOC 是杯子里还有多少水，SOH 是杯子有没有变小。"]] }, en: { title: "SOH State of Health", desc: "An estimate of battery aging compared with a new battery.", tags: ["Aging", "Capacity fade"], metrics: [], sections: [["Concept", "SOH is not remaining charge; it is the battery's aging condition."], ["Factors", "Heat, fast charging, long high SOC, and deep discharge affect SOH."], ["Analogy", "SOC is how much water is in the cup; SOH is whether the cup has shrunk."]] } }
+];
+
+const knowledgeMap = new Map(knowledgeEntries.map((entry) => [entry.id, entry]));
+
+const comparisonData = {
+  lead: { color: "#777", midpoint: 40, scores: [2, 10, 7, 5, 4, 7] },
+  nimh: { color: "#a8a8a8", midpoint: 90, scores: [4, 6, 8, 6, 5, 8] },
+  lfp: { color: "#fff", midpoint: 125, scores: [6, 8, 9, 9, 8, 6] },
+  nmc: { color: "#d8d8d8", midpoint: 240, scores: [9, 5, 6, 6, 8, 5] },
+  sodium: { color: "#b8b8b8", midpoint: 140, scores: [5, 8, 8, 7, 7, 9] },
+  solid: { color: "#8fc7ff", midpoint: 330, scores: [10, 2, 8, 7, 8, 6] }
+};
 
 const quizData = [
   {
-    question: "What does Wh measure?",
-    options: ["Electrical resistance", "Stored or delivered energy", "Charging speed only", "Battery temperature"],
-    answer: 1,
-    explanation: "A watt-hour is a unit of energy. It combines power in watts with time in hours."
+    zh: { q: "Wh 衡量什么？", options: ["电阻", "储存或释放的能量", "仅充电速度", "电池温度"], exp: "Wh 是能量单位，把功率和时间联系起来。" },
+    en: { q: "What does Wh measure?", options: ["Electrical resistance", "Stored or delivered energy", "Charging speed only", "Battery temperature"], exp: "Wh is a unit of energy that connects power and time." },
+    answer: 1
   },
   {
-    question: "Which battery family is commonly used in modern EV traction packs?",
-    options: ["Lithium-ion", "Zinc-carbon", "Silver oxide", "Primary alkaline"],
-    answer: 0,
-    explanation: "Most current EVs use lithium-ion families such as LFP or nickel-rich layered oxide chemistries."
+    zh: { q: "现代电动车动力电池常用哪一大类？", options: ["锂离子电池", "碳性锌锰电池", "氧化银电池", "一次碱性电池"], exp: "目前主流电动车通常使用 LFP 或三元等锂离子体系。" },
+    en: { q: "Which battery family is commonly used in modern EV traction packs?", options: ["Lithium-ion", "Zinc-carbon", "Silver oxide", "Primary alkaline"], exp: "Most current EVs use lithium-ion families such as LFP or NCM/NCA." },
+    answer: 0
   },
   {
-    question: "Why can cold weather reduce EV range?",
-    options: ["The wheels become smaller", "Electrons stop existing", "Ion movement slows and heating uses energy", "The pack gains mass"],
-    answer: 2,
-    explanation: "Cold raises internal resistance and slows reaction kinetics, while cabin and battery heating also consume energy."
+    zh: { q: "为什么低温会影响电动车续航？", options: ["车轮变小", "电子消失", "离子移动变慢且加热耗电", "电池包变重"], exp: "低温提高内阻、减慢反应，同时座舱和电池加热也会耗能。" },
+    en: { q: "Why can cold weather reduce EV range?", options: ["The wheels become smaller", "Electrons stop existing", "Ion movement slows and heating uses energy", "The pack gains mass"], exp: "Cold increases resistance, slows reactions, and heating consumes energy." },
+    answer: 2
   },
   {
-    question: "What is a main role of the electrolyte?",
-    options: ["Carry ions between electrodes", "Hold the vehicle body together", "Measure tire pressure", "Create mechanical braking"],
-    answer: 0,
-    explanation: "The electrolyte allows ions to move internally while electrons travel through the external circuit."
+    zh: { q: "电解质的主要作用是什么？", options: ["在电极之间传递离子", "支撑车身", "测量胎压", "产生机械制动"], exp: "电解质让离子在内部移动，电子则通过外部电路移动。" },
+    en: { q: "What is a main role of the electrolyte?", options: ["Carry ions between electrodes", "Hold the vehicle body together", "Measure tire pressure", "Create mechanical braking"], exp: "The electrolyte lets ions move internally while electrons move through the external circuit." },
+    answer: 0
   },
   {
-    question: "What does BMS stand for?",
-    options: ["Battery Material Standard", "Battery Management System", "Balanced Motor Supply", "Basic Module Structure"],
-    answer: 1,
-    explanation: "A Battery Management System monitors and controls conditions such as voltage, current, temperature, and state estimation."
+    zh: { q: "BMS 是什么？", options: ["电池材料标准", "电池管理系统", "平衡电机供电", "基础模组结构"], exp: "BMS 监测并控制电压、电流、温度和状态估算。" },
+    en: { q: "What does BMS stand for?", options: ["Battery Material Standard", "Battery Management System", "Balanced Motor Supply", "Basic Module Structure"], exp: "A BMS monitors and controls voltage, current, temperature, and state estimation." },
+    answer: 1
   }
 ];
 
-const glossary = [
-  ["Anode", "The electrode where oxidation occurs. In a discharging lithium-ion cell, it releases lithium ions and electrons."],
-  ["Cathode", "The electrode where reduction occurs during discharge. Cathode chemistry strongly influences voltage and energy."],
-  ["Electrolyte", "The ion-conducting material between electrodes. It may be liquid, gel, polymer, ceramic, or sulfide."],
-  ["Separator", "A porous electrical insulator that keeps electrodes apart while allowing ions to move."],
-  ["Energy Density", "How much energy a battery stores relative to mass or volume, often measured in Wh/kg or Wh/L."],
-  ["Power Density", "How quickly a battery can deliver energy relative to its mass or volume."],
-  ["Cycle Life", "The number of charge-discharge cycles before capacity or performance reaches a defined limit."],
-  ["Thermal Management", "Hardware and control strategies used to keep cells within a suitable temperature range."],
-  ["BMS", "Battery Management System: electronics and software that monitor, estimate, protect, and control a pack."],
-  ["SOC", "State of Charge: an estimate of how much usable charge remains, usually expressed as a percentage."],
-  ["SOH", "State of Health: an estimate of aging compared with a new battery's performance."],
-  ["Fast Charging", "Charging at high power. It can save time but requires careful control of heat and lithium plating risk."],
-  ["Solid-state Battery", "A battery family using a solid electrolyte. Designs and performance vary widely."],
-  ["Sodium-ion Battery", "A rechargeable battery that moves sodium ions instead of lithium ions between electrodes."]
-].map(([term, definition]) => ({ term, definition }));
-
-const materialKnowledgeMap = {
-  Lithium: "lithium",
-  Sodium: "sodium",
-  Graphite: "graphite",
-  Silicon: "silicon",
-  LFP: "lfp-material",
-  NMC: "nmc-material",
-  "Liquid Electrolyte": "electrolyte",
-  Separator: "separator",
-  "Solid Electrolyte": "solid-electrolyte"
-};
-
-const glossaryKnowledgeMap = {
-  Anode: "anode",
-  Cathode: "cathode",
-  Electrolyte: "electrolyte",
-  Separator: "separator",
-  "Energy Density": "energy-density",
-  "Power Density": "power-density",
-  "Cycle Life": "cycle-life",
-  "Thermal Management": "thermal-management",
-  BMS: "bms",
-  SOC: "soc",
-  SOH: "soh",
-  "Fast Charging": "fast-charging",
-  "Solid-state Battery": "solid-state",
-  "Sodium-ion Battery": "sodium-ion"
-};
-
-const knowledgeEntries = [
-  {
-    id: "nmc",
-    category: "电池类型",
-    title: "三元锂电池 NCM/NCA",
-    aliases: ["三元锂", "NCM", "NCA", "镍钴锰", "镍钴铝", "长续航"],
-    oneLine: "三元锂电池是一类使用镍、钴、锰或镍、钴、铝作为正极材料的锂离子电池，特点是能量密度较高，常用于追求长续航的电动车。",
-    tags: ["高能量密度", "锂离子", "电动车"],
-    metrics: [["能量密度", "通常较高，取决于镍含量与电芯设计"], ["安全性", "需要严格热管理和 BMS 保护"], ["成本", "受镍、钴价格影响较明显"], ["低温表现", "通常好于 LFP，但仍会受低温影响"], ["寿命", "取决于配方、温度和充电策略"]],
-    sections: [
-      ["名字是什么意思", "“三元”指正极材料中包含三类主要金属元素。NCM 通常指镍、钴、锰；NCA 通常指镍、钴、铝。镍主要帮助提高容量，钴帮助稳定层状结构，锰或铝帮助改善安全与结构稳定。"],
-      ["工作原理", "可以把它想成一个可反复停靠锂离子的停车场。充电时，锂离子从正极离开并嵌入负极；放电时，锂离子回到正极，同时电子从外部电路流过，为设备或电机供电。"],
-      ["主要优点", "相同重量下通常能储存更多电能，所以适合长续航电动车、无人机和轻薄电子产品。"],
-      ["主要缺点", "材料成本较高，对制造环境、热管理和电池管理系统要求更高。如果温度控制不好，老化和安全风险会增加。"],
-      ["和磷酸铁锂的区别", "三元锂通常能量密度更高、低温表现更好；磷酸铁锂通常更安全、寿命更长、成本更低。选择哪种电池，取决于更看重续航、价格、安全还是寿命。"],
-      ["未来发展方向", "高镍化可以继续提高能量密度，但也会带来界面稳定性和热安全挑战。固态电解质、表面包覆和更好的热管理可能是重要方向。"],
-      ["普通人怎么理解", "如果把电池比作背包，三元锂像一个容量更大的轻量背包，能装更多东西，但需要更仔细保护，不能过热、过充或长期处在不合适的环境中。"],
-      ["一句话总结", "三元锂适合追求高续航和轻量化，但必须用更精细的安全与热管理来交换这些优势。"]
-    ]
-  },
-  {
-    id: "lfp",
-    category: "电池类型",
-    title: "磷酸铁锂电池 LFP",
-    aliases: ["LFP", "LiFePO4", "铁锂", "刀片电池"],
-    oneLine: "磷酸铁锂电池是一类使用磷酸铁锂作为正极材料的锂离子电池，以安全性、循环寿命和成本优势著称。",
-    tags: ["安全稳定", "长寿命", "储能"],
-    metrics: [["能量密度", "通常低于高镍三元"], ["安全性", "热稳定性通常较好"], ["成本", "不依赖镍钴，成本压力较低"], ["低温表现", "低温充电与续航会明显受影响"], ["寿命", "通常循环寿命较长"]],
-    sections: [
-      ["基本概念", "LFP 的全称是 Lithium Iron Phosphate，也就是磷酸铁锂。它仍属于锂离子电池，只是正极材料与三元锂不同。"],
-      ["核心材料", "它的正极含铁、磷、氧和锂，不使用钴和镍。磷氧键比较稳定，因此在高温或滥用条件下更不容易释放氧气。"],
-      ["工作原理", "充放电时，锂离子在磷酸铁锂正极和石墨负极之间往返移动。材料结构越稳定，反复往返时越不容易“塌”。"],
-      ["主要优点", "安全性好、循环寿命长、成本相对低，适合电动车、公交车、家用储能和电网储能。"],
-      ["主要缺点", "单位体积和单位重量储能通常低于高镍三元，冬季低温性能也需要通过预热和热管理改善。"],
-      ["应用场景", "很多重视成本、安全和寿命的电动车与储能系统会选择 LFP。对于城市通勤，它往往是非常实用的方案。"],
-      ["普通人怎么理解", "LFP 像一个不追求极限轻量、但耐用踏实的工具箱。它可能不最轻，但经得起长期使用。"],
-      ["一句话总结", "磷酸铁锂不是能量密度冠军，但它在安全、寿命和成本之间取得了很强的平衡。"]
-    ]
-  },
-  {
-    id: "sodium-ion",
-    category: "电池类型",
-    title: "钠离子电池",
-    aliases: ["钠电", "Na-ion", "SIB", "低温电池"],
-    oneLine: "钠离子电池用钠离子在正负极之间移动来储能，资源更丰富，可能适合低成本储能和部分入门级电动车。",
-    tags: ["资源丰富", "低成本潜力", "低温表现"],
-    metrics: [["能量密度", "通常低于主流锂离子"], ["安全性", "取决于材料体系与电解液"], ["成本", "长期可能更低，但量产仍在发展"], ["低温表现", "部分路线表现较好"], ["寿命", "随材料路线差异较大"]],
-    sections: [
-      ["基本概念", "钠离子电池和锂离子电池的思路相似，只是来回移动的离子从锂变成钠。钠资源分布更广，理论上供应压力更小。"],
-      ["为什么重要", "它不一定完全取代锂电池，但可能在低成本储能、两轮车、A00 级小车和寒冷地区应用中很有价值。"],
-      ["工作原理", "钠离子在充电时进入负极，放电时回到正极。因为钠离子比锂离子更大，所以材料结构需要专门设计，不能简单照搬锂电池。"],
-      ["主要优点", "钠资源丰富、供应分布更均衡，部分体系低温性能较好，也可能降低对锂资源的依赖。"],
-      ["主要缺点", "目前能量密度通常不如高水平锂离子电池，材料、制造和供应链仍在快速成熟中。"],
-      ["应用场景", "更适合对极限续航要求不高、但重视成本、低温和规模化的场景，例如固定式储能、低速车和入门级车型。"],
-      ["普通人怎么理解", "钠离子电池像一种更容易找到原料的替代路线。它不一定跑得最远，但可能更便宜、更容易大规模铺开。"],
-      ["一句话总结", "钠离子电池的价值不在于全面取代锂电，而在于补上低成本和资源安全这块拼图。"]
-    ]
-  },
-  {
-    id: "solid-state",
-    category: "电池类型",
-    title: "固态电池",
-    aliases: ["全固态", "半固态", "固态电解质", "Solid-state"],
-    oneLine: "固态电池用固态电解质替代传统液态电解液，有潜力提升安全性和能量密度，但仍面临制造、成本和界面稳定性挑战。",
-    tags: ["发展中", "固态电解质", "高潜力"],
-    metrics: [["能量密度", "未来有提升潜力，实际取决于路线"], ["安全性", "可减少易燃液体，但不等于绝对安全"], ["成本", "目前制造成本和良率仍是挑战"], ["低温表现", "随电解质类型差异很大"], ["寿命", "受界面接触和枝晶影响"]],
-    sections: [
-      ["基本概念", "传统锂离子电池内部通常有液态电解液，固态电池则希望用陶瓷、硫化物或聚合物等固态材料传导离子。"],
-      ["核心材料", "关键在固态电解质。它既要让锂离子快速通过，又要与正负极稳定接触，还要能被大规模制造。"],
-      ["主要优点", "理论上可以减少易燃液态电解液，并可能搭配锂金属负极，提高能量密度上限。"],
-      ["主要缺点", "固体和固体之间很难像液体那样完全贴合，界面阻抗、枝晶、压力控制、成本和量产良率都是难题。"],
-      ["常见误解", "固态电池并不是已经完全取代锂电池的技术，也不是绝对不会出问题。它仍需要严谨的工程验证。"],
-      ["应用场景", "如果成熟，可能用于高端电动车、航空、电动工具和需要高安全高能量的场景。"],
-      ["普通人怎么理解", "液态电解液像水路，固态电解质像固体中的隧道。隧道更稳，但要修得连续、平整、低阻力并不容易。"],
-      ["一句话总结", "固态电池很有前景，但真正难点是把漂亮的实验室结果稳定、低成本地做成大量产品。"]
-    ]
-  },
-  {
-    id: "lead-acid",
-    category: "电池类型",
-    title: "铅酸电池",
-    aliases: ["Lead-acid", "启动电池", "蓄电池", "UPS"],
-    oneLine: "铅酸电池是一种历史很长的可充电电池，能量密度低但成本低、瞬时大电流能力强、回收体系成熟。",
-    tags: ["成熟可靠", "低成本", "可回收"],
-    metrics: [["能量密度", "通常约 30–50 Wh/kg"], ["安全性", "技术成熟，但酸液和铅需要规范处理"], ["成本", "很低"], ["低温表现", "低温启动能力会下降"], ["寿命", "怕长期亏电和深度放电"]],
-    sections: [
-      ["基本概念", "铅酸电池使用铅、二氧化铅和硫酸电解液。它很重，但可以在短时间内输出很大的电流。"],
-      ["工作原理", "放电时，正负极材料都会逐渐变成硫酸铅；充电时反应尽量反向恢复。反复亏电会导致硫化，容量下降。"],
-      ["主要优点", "便宜、可靠、启动电流强，全球回收体系非常成熟。"],
-      ["主要缺点", "重量大、能量密度低，不适合追求轻量和长续航的主动力电池。"],
-      ["应用场景", "燃油车启动电源、UPS 后备电源、通信基站和一些低速车辆。"],
-      ["普通人怎么理解", "铅酸电池像一个很重但很有力的启动器，不适合长跑，却很擅长瞬间发力。"],
-      ["一句话总结", "铅酸电池不先进，但在低成本和大电流启动场景中仍然难以被完全替代。"]
-    ]
-  },
-  {
-    id: "nimh",
-    category: "电池类型",
-    title: "镍氢电池 NiMH",
-    aliases: ["NiMH", "镍氢", "混动电池"],
-    oneLine: "镍氢电池是一种耐用的可充电电池，抗滥用能力好，曾广泛用于混合动力汽车和可充电 AA/AAA 电池。",
-    tags: ["耐用", "宽温区", "混动车"],
-    metrics: [["能量密度", "通常高于铅酸、低于锂离子"], ["安全性", "抗滥用能力较好"], ["成本", "中等"], ["低温表现", "相对稳定"], ["寿命", "适合频繁浅充浅放"]],
-    sections: [
-      ["基本概念", "NiMH 指 Nickel-Metal Hydride，中文是镍氢电池。它使用含镍正极和储氢合金负极。"],
-      ["工作原理", "充放电时，氢在合金材料中吸收和释放，同时电极发生可逆反应。"],
-      ["主要优点", "耐用、宽温区、抗滥用能力强，适合混动车频繁小幅充放电。"],
-      ["主要缺点", "比锂离子电池重，自放电更明显，能量密度不够高。"],
-      ["应用场景", "早期和部分经典混合动力汽车、消费级充电电池、工业设备。"],
-      ["普通人怎么理解", "镍氢像一位稳健的老队员，不一定跑得最快，但抗压、耐用、可靠。"],
-      ["一句话总结", "镍氢电池在轻量化时代不再耀眼，但在可靠性和耐用性上仍有价值。"]
-    ]
-  },
-  {
-    id: "cathode",
-    category: "电池结构",
-    title: "正极材料",
-    aliases: ["Cathode", "正极", "LFP", "NMC", "NCA", "LMO"],
-    oneLine: "正极材料通常决定电池的电压、能量密度、安全边界和很多成本因素，是锂离子电池最关键的材料之一。",
-    tags: ["核心材料", "决定电压", "成本关键"],
-    sections: [
-      ["基本概念", "在锂离子电池放电时，锂离子回到正极，电子也通过外部电路完成工作后进入正极。"],
-      ["常见类型", "常见正极包括磷酸铁锂 LFP、三元材料 NCM/NCA、锰酸锂 LMO、钴酸锂 LCO 等。"],
-      ["为什么重要", "正极通常影响能量密度、安全性、成本和循环寿命。不同正极路线适合不同应用。"],
-      ["普通人怎么理解", "正极像电池的主要“能量仓库”。仓库结构不同，能装多少、稳不稳、贵不贵都会不同。"]
-    ]
-  },
-  {
-    id: "anode",
-    category: "电池结构",
-    title: "负极材料",
-    aliases: ["Anode", "负极", "石墨", "硅负极", "锂金属"],
-    oneLine: "负极材料在充电时接收锂离子，在放电时释放锂离子，常见材料是石墨，硅和锂金属是重要发展方向。",
-    tags: ["石墨", "硅负极", "容量"],
-    sections: [
-      ["基本概念", "负极是锂离子充电时主要停留的位置。它需要能稳定接收和释放离子。"],
-      ["核心材料", "商业锂离子电池最常用石墨负极。硅容量更高，但膨胀大；锂金属容量更高，但枝晶和安全挑战更强。"],
-      ["主要挑战", "负极要在容量、体积变化、界面稳定、快充能力和安全性之间平衡。"],
-      ["普通人怎么理解", "负极像停车位。停车位越多容量越高，但如果车进出时把地面撑裂，寿命就会下降。"]
-    ]
-  },
-  {
-    id: "electrolyte",
-    category: "电池结构",
-    title: "电解液 / 电解质",
-    aliases: ["Electrolyte", "液态电解液", "电解质", "离子通道"],
-    oneLine: "电解液负责让离子在正负极之间移动，但通常不让电子直接通过，因此它是电池内部离子交通系统。",
-    tags: ["离子传导", "安全", "界面"],
-    sections: [
-      ["基本概念", "电解液通常由锂盐和有机溶剂组成。它让锂离子通过，但电子主要走外部电路。"],
-      ["为什么重要", "电解液影响倍率、低温性能、寿命和安全。很多液态电解液可燃，因此需要严格安全设计。"],
-      ["和固态电解质区别", "液态电解液像流动的道路，接触好、传导快；固态电解质更像固定隧道，可能更安全，但界面更难做好。"],
-      ["普通人怎么理解", "它像电池内部给离子走的高速路。路越通畅，电池充放电越顺；路越不稳定，老化和安全问题越多。"]
-    ]
-  },
-  {
-    id: "separator",
-    category: "电池结构",
-    title: "隔膜",
-    aliases: ["Separator", "电池隔膜", "多孔膜", "短路保护"],
-    oneLine: "隔膜是一层很薄的多孔绝缘膜，阻止正负极直接接触短路，同时允许离子通过。",
-    tags: ["绝缘", "安全", "多孔膜"],
-    sections: [
-      ["基本概念", "隔膜夹在正极和负极之间。它本身不储能，但对安全非常关键。"],
-      ["为什么重要", "如果隔膜破损、收缩或被杂质刺穿，正负极可能直接接触，形成内部短路，严重时引发热失控。"],
-      ["工程要求", "它需要足够薄、孔隙合适、耐热，并且在制造中保持极高洁净度。"],
-      ["普通人怎么理解", "隔膜像两个房间之间带小孔的绝缘墙，离子可以穿过小孔，正负极却不能直接碰到一起。"]
-    ]
-  },
-  {
-    id: "current-collector",
-    category: "电池结构",
-    title: "集流体",
-    aliases: ["Current collector", "铜箔", "铝箔", "极耳"],
-    oneLine: "集流体是电池内部收集和传导电子的金属薄箔，常见组合是正极铝箔、负极铜箔。",
-    tags: ["导电", "铜箔", "铝箔"],
-    sections: [
-      ["基本概念", "活性材料需要涂在金属薄箔上，电子通过这些薄箔被收集并传到外部电路。"],
-      ["为什么重要", "集流体影响内阻、重量、成本和制造稳定性。钠离子电池部分路线可在负极使用铝箔，可能降低成本。"],
-      ["普通人怎么理解", "集流体像电池内部的电流高速路和骨架，把分散产生的电子汇集起来。"]
-    ]
-  },
-  {
-    id: "bms",
-    category: "电池结构",
-    title: "电池管理系统 BMS",
-    aliases: ["BMS", "Battery Management System", "电池管理", "均衡", "保护板"],
-    oneLine: "BMS 是电池包的监测和保护系统，用来估算状态、控制充放电、监测温度电压，并在异常时保护电池。",
-    tags: ["安全控制", "SOC", "SOH"],
-    sections: [
-      ["基本概念", "BMS 的英文是 Battery Management System，中文是电池管理系统。它不是电芯材料，而是电子硬件和软件控制系统。"],
-      ["主要功能", "监测电压、电流、温度，估算 SOC 和 SOH，做电芯均衡，控制接触器，并在过压、过温、短路等风险下保护电池包。"],
-      ["为什么重要", "同样的电芯，如果管理不好，寿命和安全都会变差。BMS 是把电芯安全变成系统安全的关键。"],
-      ["普通人怎么理解", "BMS 像电池包的大脑和安全员，一边估算还剩多少电，一边判断能不能继续充电、放电或需要保护。"]
-    ]
-  },
-  {
-    id: "module",
-    category: "电池结构",
-    title: "模组",
-    aliases: ["Module", "电池模组", "Cell module"],
-    oneLine: "模组是把多个电芯进行电气和机械组合的中间层，便于装配、检测、结构固定和热管理。",
-    tags: ["电芯组合", "结构", "热管理"],
-    sections: [
-      ["基本概念", "电芯数量很多时，工程上常先把一组电芯做成模组，再把多个模组装成电池包。"],
-      ["主要作用", "模组帮助电芯固定、连接、采样、散热和维修，也能提高生产装配的标准化。"],
-      ["发展变化", "一些新设计采用 Cell-to-Pack，减少传统模组层级，以提高空间利用率，但对结构和安全设计要求更高。"],
-      ["普通人怎么理解", "电芯像书页，模组像把若干页装订成小册子，电池包再把多本小册子装成完整系统。"]
-    ]
-  },
-  {
-    id: "pack",
-    category: "电池结构",
-    title: "电池包",
-    aliases: ["Pack", "Battery pack", "动力电池包", "CTP"],
-    oneLine: "电池包是把电芯或模组、BMS、冷却系统、壳体、安全件和高压连接集成在一起的完整储能系统。",
-    tags: ["系统工程", "热管理", "安全结构"],
-    sections: [
-      ["基本概念", "电池包不是一块单纯的大电池，而是电化学、电气、热、机械和软件共同组成的系统。"],
-      ["核心组成", "通常包括电芯或模组、BMS、冷却板、壳体、保险丝、接触器、绝缘件、传感器和高压连接件。"],
-      ["为什么重要", "电芯性能只有在电池包中被正确管理，才能变成整车可用的续航、功率和安全。"],
-      ["普通人怎么理解", "电芯像发动机里的零件，电池包像完整动力系统。材料好只是开始，系统设计决定最终表现。"]
-    ]
-  },
-  {
-    id: "energy-density",
-    category: "性能指标",
-    title: "能量密度",
-    aliases: ["Energy density", "Wh/kg", "Wh/L", "续航"],
-    oneLine: "能量密度表示单位重量或单位体积能储存多少能量，常用 Wh/kg 或 Wh/L 表示。",
-    tags: ["续航", "轻量化", "Wh/kg"],
-    sections: [
-      ["基本概念", "质量能量密度看每千克能储存多少电，体积能量密度看每升空间能储存多少电。"],
-      ["为什么重要", "电动车续航、手机厚度、无人机飞行时间都与能量密度有关。"],
-      ["局限", "能量密度高不代表一定最好。安全、成本、寿命、低温表现和快充能力也很重要。"],
-      ["普通人怎么理解", "它像背包单位重量能装多少食物。装得多很有用，但背包也要结实、安全、耐用。"]
-    ]
-  },
-  {
-    id: "power-density",
-    category: "性能指标",
-    title: "功率密度",
-    aliases: ["Power density", "倍率", "高功率", "瞬时输出"],
-    oneLine: "功率密度表示电池能多快释放能量，关系到加速、快放电和瞬时大电流能力。",
-    tags: ["输出能力", "加速", "倍率"],
-    sections: [
-      ["基本概念", "能量密度关心能装多少电，功率密度关心电能释放得有多快。"],
-      ["为什么重要", "电动车加速、电动工具启动、混动车能量回收都需要较高功率密度。"],
-      ["局限", "高功率输出会带来更多发热，因此需要电芯设计、导电路径和冷却系统配合。"],
-      ["普通人怎么理解", "能量密度像油箱大小，功率密度像油门能瞬间给出多大力。"]
-    ]
-  },
-  {
-    id: "cycle-life",
-    category: "性能指标",
-    title: "循环寿命",
-    aliases: ["Cycle life", "寿命", "充放电次数", "衰减"],
-    oneLine: "循环寿命表示电池经过多少次充放电后，容量或性能下降到某个规定水平。",
-    tags: ["寿命", "衰减", "耐用性"],
-    sections: [
-      ["基本概念", "一次完整充放电可以理解为一个循环，但实际使用中也会有很多浅充浅放。"],
-      ["影响因素", "温度、充电速度、放电深度、SOC 区间、材料稳定性和制造一致性都会影响寿命。"],
-      ["普通人怎么理解", "电池像鞋底，每次使用都会有磨损。温和使用、避免极端温度和长期满电/亏电，通常有助于延缓磨损。"]
-    ]
-  },
-  {
-    id: "thermal-runaway",
-    category: "性能指标",
-    title: "热失控",
-    aliases: ["Thermal runaway", "起火", "过热", "热蔓延"],
-    oneLine: "热失控是电池内部发热反应失去控制，温度持续上升并可能引发冒烟、起火或相邻电芯热蔓延的危险状态。",
-    tags: ["安全", "过热", "热蔓延"],
-    sections: [
-      ["基本概念", "当电池受到内短路、过充、挤压、外部高温等影响时，内部副反应可能释放热量。如果热量来不及散掉，反应会进一步加速。"],
-      ["为什么危险", "温度升高会破坏隔膜、电解液和电极界面，产生更多热量，形成连锁反应。"],
-      ["如何降低风险", "材料稳定性、隔膜、保险丝、泄压设计、BMS、冷却系统和包级隔热都很重要。"],
-      ["普通人怎么理解", "热失控像锅里的油温越高越容易继续升温，一旦超过安全边界，就不能只靠自然冷却解决。"]
-    ]
-  },
-  {
-    id: "fast-charging",
-    category: "性能指标",
-    title: "快充",
-    aliases: ["Fast charging", "超充", "倍率充电", "锂析出"],
-    oneLine: "快充是在较短时间内向电池输入较大功率，便利性高，但必须控制发热、锂析出和电芯老化风险。",
-    tags: ["充电速度", "热管理", "锂析出"],
-    sections: [
-      ["基本概念", "快充不是简单把电流无限加大。电池能接受多快充电，取决于材料、温度、SOC、内阻和热管理。"],
-      ["主要风险", "温度过低或充电过快时，锂可能在负极表面析出，降低寿命并增加安全风险。"],
-      ["工程控制", "车辆通常会预热电池，并在不同 SOC 区间动态调整充电功率。"],
-      ["普通人怎么理解", "快充像快速往海绵里倒水。海绵太冷、太满或倒得太猛，水就容易积在表面而不是均匀吸进去。"]
-    ]
-  },
-  {
-    id: "soc",
-    category: "性能指标",
-    title: "SOC 荷电状态",
-    aliases: ["SOC", "State of Charge", "剩余电量", "电量百分比"],
-    oneLine: "SOC 是 State of Charge 的缩写，表示电池当前还剩多少可用电量，通常用百分比显示。",
-    tags: ["剩余电量", "BMS", "估算"],
-    sections: [
-      ["基本概念", "SOC 类似手机电量百分比，但它不是直接测出来的，而是 BMS 根据电压、电流、温度和模型估算出来的。"],
-      ["为什么不简单", "电池电压和剩余电量并不总是线性关系，温度、老化和放电电流都会影响估算。"],
-      ["普通人怎么理解", "SOC 像汽车油表，但电池的“油表”更难算，因为电池状态会随温度和老化变化。"]
-    ]
-  },
-  {
-    id: "soh",
-    category: "性能指标",
-    title: "SOH 健康状态",
-    aliases: ["SOH", "State of Health", "电池健康", "容量衰减"],
-    oneLine: "SOH 是 State of Health 的缩写，用来描述电池相对新电池还保留多少性能，常与容量衰减和内阻增加有关。",
-    tags: ["电池健康", "老化", "衰减"],
-    sections: [
-      ["基本概念", "SOH 不是剩余电量，而是电池老化程度。一个 SOC 100% 的旧电池，实际容量可能已经低于新电池。"],
-      ["影响因素", "高温、快充、长期满电、深度放电和循环次数都会影响 SOH。"],
-      ["普通人怎么理解", "SOC 是今天水杯里还剩多少水，SOH 是这个水杯本身有没有变小、有没有漏。"]
-    ]
-  },
-  {
-    id: "low-temperature",
-    category: "性能指标",
-    title: "低温性能",
-    aliases: ["Cold weather", "冬季续航", "低温衰减", "预热"],
-    oneLine: "低温性能指电池在寒冷环境下充放电、续航和寿命表现，低温会让离子移动变慢并增加内阻。",
-    tags: ["冬季续航", "热管理", "内阻"],
-    sections: [
-      ["基本概念", "温度降低时，离子在电解液和电极中的移动变慢，电池内阻上升，输出和充电能力下降。"],
-      ["对电动车影响", "冬季续航下降不仅来自电池本身，还来自座舱加热、电池预热、轮胎和道路条件。"],
-      ["改善方法", "热泵、电池预热、保温设计、低温电解液和更合适的材料体系都可能改善表现。"],
-      ["普通人怎么理解", "低温下电池像人在寒冷天气跑步，动作会变慢，还需要额外能量让身体热起来。"]
-    ]
-  },
-  {
-    id: "safety",
-    category: "性能指标",
-    title: "安全性",
-    aliases: ["Safety", "电池安全", "过充", "短路", "针刺"],
-    oneLine: "电池安全性不是单一指标，而是材料、结构、BMS、热管理、制造质量和使用场景共同决定的系统结果。",
-    tags: ["系统安全", "BMS", "热管理"],
-    sections: [
-      ["基本概念", "安全性包括防止过充、过放、短路、过热、机械损伤、热失控和热蔓延。"],
-      ["为什么是系统问题", "材料更稳定很重要，但如果制造有杂质、BMS 判断错误或散热不足，仍可能出现风险。"],
-      ["普通人怎么理解", "电池安全像汽车安全，不是只靠一个零件，而是材料、结构、传感器、控制软件和使用习惯一起工作。"]
-    ]
-  },
-  {
-    id: "thermal-management",
-    category: "性能指标",
-    title: "热管理",
-    aliases: ["Thermal Management", "冷却", "加热", "热泵", "液冷"],
-    oneLine: "热管理负责让电池保持在合适温度范围内，避免过冷、过热和电芯之间温差过大。",
-    tags: ["冷却", "加热", "寿命"],
-    sections: [
-      ["基本概念", "电池工作时会产热，寒冷时也需要加热。热管理系统通过风冷、液冷、热泵和控制策略调节温度。"],
-      ["为什么重要", "温度影响续航、快充、寿命和安全。电池包内部温差过大还会导致不同电芯老化不一致。"],
-      ["普通人怎么理解", "热管理像电池的空调系统，让它不要太冷也不要太热。"]
-    ]
-  },
-  {
-    id: "lithium",
-    category: "材料",
-    title: "锂 Lithium",
-    aliases: ["Lithium", "Li", "锂资源", "锂盐"],
-    oneLine: "锂是一种轻且电化学活性高的元素，因此非常适合高能量密度可充电电池，但资源、开采和价格波动也需要关注。",
-    tags: ["元素", "锂离子", "资源"],
-    sections: [["作用", "锂离子在正负极之间往返移动，是锂离子电池储能的核心载体。"], ["挑战", "锂资源分布、开采环境影响和价格波动会影响产业稳定。"], ["普通人怎么理解", "锂像电池里负责搬运能量的小载体，轻而高效，但供应链并不是无限简单。"]]
-  },
-  {
-    id: "sodium",
-    category: "材料",
-    title: "钠 Sodium",
-    aliases: ["Sodium", "Na", "钠资源"],
-    oneLine: "钠资源丰富且分布广，适合发展钠离子电池，但钠离子更大，材料设计难度也不同。",
-    tags: ["元素", "钠离子", "资源丰富"],
-    sections: [["作用", "在钠离子电池中，钠离子负责在正负极之间迁移。"], ["优势", "资源更丰富、供应分布更广，有潜在成本优势。"], ["挑战", "钠离子尺寸更大，往往带来较低能量密度和新的材料设计问题。"]]
-  },
-  {
-    id: "graphite",
-    category: "材料",
-    title: "石墨 Graphite",
-    aliases: ["Graphite", "石墨负极", "负极"],
-    oneLine: "石墨是当前最成熟、最常见的锂离子电池负极材料，稳定可靠，但理论容量有限。",
-    tags: ["负极", "成熟材料", "锂离子"],
-    sections: [["作用", "充电时，锂离子嵌入石墨层状结构；放电时再离开。"], ["优势", "成熟、稳定、效率高，供应链完善。"], ["挑战", "理论容量低于硅负极，快充时还要控制锂析出风险。"]]
-  },
-  {
-    id: "silicon",
-    category: "材料",
-    title: "硅 Silicon",
-    aliases: ["Silicon", "硅负极", "硅碳负极"],
-    oneLine: "硅负极理论容量很高，能提高电池能量密度，但充放电时体积变化很大，容易造成结构和界面损伤。",
-    tags: ["负极", "高容量", "体积膨胀"],
-    sections: [["作用", "硅可以储存大量锂，因此常作为石墨负极的添加材料。"], ["优势", "理论容量远高于石墨，有助于提高能量密度。"], ["挑战", "膨胀收缩明显，容易导致颗粒破裂、界面反复生成和寿命下降。"]]
-  },
-  {
-    id: "lfp-material",
-    category: "材料",
-    title: "LFP 正极材料",
-    aliases: ["磷酸铁锂材料", "LiFePO4", "LFP cathode"],
-    oneLine: "LFP 正极材料结构稳定、成本较低、安全性好，是磷酸铁锂电池的核心。",
-    tags: ["正极", "磷酸铁锂", "安全"],
-    sections: [["作用", "作为正极材料，参与锂离子的嵌入和脱出。"], ["优势", "P-O 键稳定，不依赖镍钴，寿命和安全性通常较好。"], ["挑战", "电压和能量密度低于高镍层状正极。"]]
-  },
-  {
-    id: "nmc-material",
-    category: "材料",
-    title: "NMC 正极材料",
-    aliases: ["三元材料", "镍钴锰", "NMC cathode"],
-    oneLine: "NMC 正极材料通过镍、钴、锰配比平衡能量密度、结构稳定和安全性，是三元锂电池的重要路线。",
-    tags: ["正极", "三元锂", "高能量"],
-    sections: [["作用", "提供较高电压和容量，是三元锂电池能量密度的重要来源。"], ["优势", "配方可调，能量密度较高。"], ["挑战", "成本、湿度敏感性、热稳定性和供应链问题需要管理。"]]
-  },
-  {
-    id: "solid-electrolyte",
-    category: "材料",
-    title: "固态电解质",
-    aliases: ["Solid electrolyte", "硫化物", "氧化物", "聚合物"],
-    oneLine: "固态电解质希望用固体材料传导离子，减少液态易燃成分并支持新型负极，但界面和制造仍是难点。",
-    tags: ["固态电池", "离子传导", "界面"],
-    sections: [["作用", "替代液态电解液，在固态电池中为离子提供通道。"], ["优势", "有潜力提高安全性，并支持锂金属等高容量负极。"], ["挑战", "固-固界面接触、脆性、湿敏性、压力控制和量产成本仍很难。"]]
-  }
-];
-
-const knowledgeById = new Map(knowledgeEntries.map((entry) => [entry.id, entry]));
-
-Object.assign(zhTranslations, {
-  "A student-built learning project exploring battery technologies, electric vehicles, and the materials behind future energy storage.": "一个由学生搭建的学习项目，探索电池技术、电动汽车，以及未来储能背后的材料。",
-  "EXPLORE BATTERIES": "探索电池",
-  "START LEARNING": "开始学习",
-  "LEARNING PATH": "学习路径",
-  "WHAT THIS WEBSITE": "这个网站",
-  "HELPS YOU UNDERSTAND": "帮助你理解什么",
-  "BATTERY BASICS": "电池基础",
-  "Understand voltage, capacity, energy density, and cycle life.": "理解电压、容量、能量密度和循环寿命。",
-  "Compare lead-acid, NiMH, LFP, NMC lithium-ion, sodium-ion, and solid-state batteries.": "比较铅酸、镍氢、磷酸铁锂、三元锂、钠离子和固态电池。",
-  "Learn how battery packs, thermal management, and range estimation work.": "了解电池包、热管理和续航估算如何工作。",
-  "MATERIALS SCIENCE": "材料科学",
-  "Explore cathodes, anodes, electrolytes, separators, and future battery materials.": "探索正极、负极、电解质、隔膜和未来电池材料。",
-  "KEY TAKEAWAY": "核心结论",
-  "Energy density matters for range, but safety, cost, cycle life, and temperature performance can be just as important.": "能量密度影响续航，但安全、成本、循环寿命和温度性能同样重要。",
-  "No battery type is best at everything. Engineers choose a chemistry for a specific application by balancing range, cost, safety, cycle life, charging speed, and temperature performance.": "没有一种电池能在所有方面做到最好。工程师会根据具体应用，在续航、成本、安全、寿命、充电速度和温度性能之间进行权衡。",
-  "Estimate how much electrical energy a battery can store from its voltage and amp-hour capacity.": "根据电压和安时容量，估算电池能够储存多少电能。",
-  "FORMULA": "公式",
-  "Energy (Wh) = Voltage (V) × Capacity (Ah)": "能量 (Wh) = 电压 (V) × 容量 (Ah)",
-  "EXAMPLE": "示例",
-  "A 12 V, 60 Ah battery stores about 720 Wh in this simplified model.": "在这个简化模型中，12 V、60 Ah 的电池约储存 720 Wh 能量。",
-  "Estimate driving range from usable battery energy and average vehicle consumption.": "根据可用电池能量和车辆平均能耗估算续航。",
-  "Range (km) = Battery Size (kWh) × 1000 ÷ Consumption (Wh/km)": "续航 (km) = 电池容量 (kWh) × 1000 ÷ 能耗 (Wh/km)",
-  "A 60 kWh pack at 170 Wh/km gives about 353 km before temperature adjustment.": "60 kWh 电池包在 170 Wh/km 能耗下，温度修正前约可行驶 353 km。",
-  "A battery pack is not simply one very large battery. It is a coordinated system that manages electricity, heat, safety, structure, and communication with the vehicle.": "电池包并不只是一块很大的电池，而是一个协调管理电能、热量、安全、结构和整车通信的系统。",
-  "A battery pack is a complete engineering system, not just a collection of cells.": "电池包是一套完整的工程系统，而不只是电芯的集合。",
-  "Battery performance begins with materials, but every improvement creates a new question about cost, manufacturing, safety, or durability.": "电池性能始于材料，但每项改进也会带来关于成本、制造、安全或耐久性的新问题。",
-  "QUESTION": "问题",
-  "Could sodium-ion batteries become important even if they have lower energy density?": "即使能量密度较低，钠离子电池仍可能变得重要吗？",
-  "Why do EVs lose range in cold weather?": "为什么电动车在寒冷天气中会损失续航？",
-  "Can heat from the battery pack or power electronics be reused in winter?": "冬季能否重新利用电池包或功率电子产生的热量？",
-  "Sodium-ion batteries may be valuable because engineering is often about choosing the right material for the right job.": "钠离子电池可能很有价值，因为工程往往是在为具体任务选择合适的材料。",
-  "TAKEAWAY": "一句话结论",
-  "WHAT IT IS": "它是什么",
-  "STRENGTHS": "优势",
-  "MAIN TRADE-OFF": "主要取舍",
-  "BEST FOR": "适合场景",
-  "WHY IT MATTERED": "为什么重要",
-  "ROLE IN BATTERY": "在电池中的作用",
-  "WHY IT MATTERS": "为什么重要",
-  "Battery Management System": "电池管理系统",
-  "Monitors voltage, current, and temperature; estimates battery state; and protects the pack when conditions become unsafe.": "监测电压、电流与温度，估算电池状态，并在条件不安全时保护电池包。",
-  "Thermal Management": "热管理系统",
-  "Moves heat away from cells and keeps temperature differences small so the pack can perform consistently and age more evenly.": "把热量从电芯带走，并缩小温差，使电池包性能更一致、老化更均匀。",
-  "Safety Structure": "安全结构",
-  "Uses the enclosure, insulation, fuses, contactors, and crash protection to reduce electrical, thermal, and mechanical risks.": "通过壳体、绝缘、保险丝、接触器和碰撞防护，降低电气、热与机械风险。",
-  "A mature rechargeable chemistry known for low cost and strong short bursts of current.": "一种成熟的可充电化学体系，以低成本和强大的瞬时放电能力著称。",
-  "Low cost, reliable high-current output, and a well-established recycling system.": "成本低、大电流输出可靠，并且拥有成熟的回收体系。",
-  "Heavy and relatively low in energy density; deep discharge can shorten its life.": "重量大、能量密度较低，深度放电会缩短寿命。",
-  "Vehicle starter batteries, UPS systems, backup power.": "汽车启动电池、UPS 不间断电源和备用电源。",
-  "Lead-acid is heavy, but it remains useful when low cost and high starting current matter most.": "铅酸电池虽然很重，但在低成本和高启动电流最重要的场景中仍很实用。",
-  "A durable rechargeable chemistry that remains useful where temperature tolerance and robustness matter.": "一种耐用的可充电体系，适合重视温度适应性和耐用性的场景。",
-  "Good abuse tolerance, wide operating temperature range, and proven reliability.": "抗滥用能力好、工作温区宽，可靠性经过长期验证。",
-  "Heavier and more prone to self-discharge than modern lithium-ion cells.": "比现代锂离子电池更重，自放电也更明显。",
-  "Hybrid vehicles, consumer rechargeable cells, industrial equipment.": "混合动力汽车、消费级充电电池和工业设备。",
-  "NiMH is not the lightest option, but it is robust and dependable across demanding conditions.": "镍氢电池并不轻，但在严苛条件下依然坚固可靠。",
-  "A lithium-ion chemistry built around a stable phosphate cathode and long cycle life.": "一种以稳定磷酸盐正极为基础、循环寿命较长的锂离子体系。",
-  "Strong thermal stability, long service life, and lower reliance on nickel and cobalt.": "热稳定性强、寿命长，对镍和钴的依赖较低。",
-  "Lower volumetric energy density and weaker cold-weather charging than high-nickel cells.": "体积能量密度较低，低温充电能力弱于高镍体系。",
-  "EVs, buses, stationary storage, power tools.": "电动汽车、公交车、固定式储能和电动工具。",
-  "LFP is not the lightest lithium-ion battery, but it is safe, durable, and cost-effective.": "磷酸铁锂不是最轻的锂电池，但它安全、耐用且经济。",
-  "A layered cathode chemistry that balances nickel, manganese, and cobalt for high specific energy.": "一种层状正极体系，通过镍、锰、钴的配合获得较高比能量。",
-  "High energy density supports longer range with less battery mass.": "较高能量密度能以更小电池质量支持更长续航。",
-  "Requires careful manufacturing, battery management, and thermal protection.": "对制造、电池管理和热保护要求较高。",
-  "Long-range EVs, laptops, drones, portable electronics.": "长续航电动车、笔记本电脑、无人机和便携电子设备。",
-  "NMC is valuable when range and low mass matter, but it needs careful thermal and safety control.": "三元锂适合重视续航和轻量化的场景，但需要精细的热管理与安全控制。",
-  "A developing rechargeable system that replaces lithium ions with more abundant sodium ions.": "一种仍在发展的可充电体系，用储量更丰富的钠离子替代锂离子。",
-  "Potentially lower material cost, diversified supply, and useful low-temperature behavior.": "材料成本可能更低，供应来源更分散，并具有较好的低温表现。",
-  "Current cells usually store less energy per kilogram than leading lithium-ion designs.": "现阶段每千克储能通常低于领先的锂离子方案。",
-  "Entry-level EVs, two-wheelers, stationary storage.": "入门级电动车、电动两轮车和固定式储能。",
-  "Sodium-ion trades some energy density for abundant materials, supply diversity, and potential cost advantages.": "钠离子电池牺牲部分能量密度，换取材料丰富、供应多元和潜在成本优势。",
-  "A family of developing batteries that uses a solid electrolyte instead of a conventional liquid one.": "一类使用固态电解质替代传统液态电解质、仍在发展的电池。",
-  "Could support lithium-metal anodes and improve the safety and energy ceiling.": "有望支持锂金属负极，并提高安全与能量上限。",
-  "Interface resistance, dendrites, pressure control, cost, and manufacturing yield remain difficult.": "界面阻抗、枝晶、压力控制、成本和制造良率仍然困难。",
-  "Future EVs, aviation, premium electronics; still developing.": "未来电动车、航空和高端电子产品；目前仍在发展。",
-  "Solid-state batteries have high potential, but manufacturing reliable interfaces at scale remains the real test.": "固态电池潜力很高，但能否规模化制造可靠界面才是真正考验。",
-  "Alessandro Volta stacked metal discs and electrolyte-soaked material to produce a continuous current.": "亚历山德罗·伏打把金属圆片与浸有电解液的材料堆叠，首次产生持续电流。",
-  "Gaston Planté developed the first practical rechargeable battery, a chemistry still used today.": "加斯东·普兰特发明了第一种实用可充电电池，这一体系至今仍在使用。",
-  "Rechargeable nickel-cadmium improved durability and power, although cadmium created environmental concerns.": "可充电镍镉电池改善了耐用性和功率，但镉带来了环境问题。",
-  "Commercial lithium-ion cells made portable electronics lighter and helped establish modern rechargeable devices.": "商用锂离子电池让便携电子产品更轻，并奠定了现代充电设备的基础。",
-  "Large-scale manufacturing, improved cells, and better battery management accelerated electric vehicles.": "规模化制造、电芯改进和更好的电池管理推动了电动车发展。",
-  "Sodium-ion moved from laboratories toward early commercial production for cost-sensitive applications.": "钠离子电池从实验室走向早期商业生产，面向成本敏感型应用。",
-  "Several companies are targeting solid-state commercialization, but timing depends on engineering and manufacturing progress.": "多家公司正在推进固态电池商业化，但时间取决于工程和制造进展。",
-  "LEVEL 01 / ELECTROCHEMISTRY": "层级 01 / 电化学",
-  "LEVEL 02 / INTEGRATION": "层级 02 / 集成",
-  "LEVEL 03 / VEHICLE SYSTEM": "层级 03 / 整车系统",
-  "Cell": "电芯",
-  "Module": "模组",
-  "Pack": "电池包",
-  "A cell is one electrochemical unit. Its cathode, anode, electrolyte, and separator determine voltage, energy, power, aging, and many safety limits.": "电芯是一个独立的电化学单元。正极、负极、电解质和隔膜决定电压、能量、功率、老化和许多安全边界。",
-  "A module connects multiple cells electrically and mechanically. It simplifies assembly, sensing, service, and structural support, although some modern packs use cell-to-pack designs without traditional modules.": "模组把多个电芯进行电气和机械连接，便于装配、传感、维护和结构支撑；一些现代电池包则采用无传统模组的 Cell-to-Pack 设计。",
-  "A pack combines cells or modules with a battery management system, cooling circuit, enclosure, contactors, fuses, insulation, and crash protection. System design can matter as much as cell chemistry.": "电池包把电芯或模组与 BMS、冷却回路、壳体、接触器、保险丝、绝缘和碰撞防护结合起来。系统设计与电芯化学同样重要。",
-  "Contains": "包含",
-  "Measured by": "常用指标",
-  "Key concern": "关键问题",
-  "Purpose": "作用",
-  "Connects to": "连接对象",
-  "Electrodes, electrolyte, separator": "电极、电解质、隔膜",
-  "Voltage, capacity, resistance": "电压、容量、内阻",
-  "Heat generation and consistency": "产热与一致性",
-  "Cells, busbars, sensors, frame": "电芯、汇流排、传感器、框架",
-  "Electrical and mechanical grouping": "电气与机械分组",
-  "Cell matching and heat spreading": "电芯匹配与热扩散",
-  "BMS, cooling, structure, safety": "BMS、冷却、结构、安全",
-  "Motor, charger, vehicle controls": "电机、充电器、整车控制",
-  "Thermal propagation and reliability": "热蔓延与可靠性",
-  "A charge-carrying element used across many rechargeable battery chemistries.": "多种可充电电池体系使用的载流元素。",
-  "High electrochemical potential and low atomic mass.": "电化学电势高，原子质量低。",
-  "Supply concentration, extraction impacts, and price volatility.": "供应集中、开采影响和价格波动。",
-  "A charge carrier in sodium-ion batteries.": "钠离子电池中的电荷载体。",
-  "Abundant and widely distributed resources.": "资源丰富且分布广泛。",
-  "Larger ion size can reduce energy density and changes material choices.": "离子尺寸较大，可能降低能量密度并改变材料选择。",
-  "The most common commercial anode material in lithium-ion batteries.": "锂离子电池中最常见的商业负极材料。",
-  "Stable, mature, efficient, and supported by large supply chains.": "稳定、成熟、高效，并有大规模供应链支持。",
-  "Limited theoretical capacity compared with silicon-rich anodes.": "理论容量低于富硅负极。",
-  "An anode material often blended with graphite to increase capacity.": "一种常与石墨混合以提高容量的负极材料。",
-  "Very high theoretical lithium-storage capacity.": "理论储锂容量非常高。",
-  "Large volume change during cycling can damage particles and interfaces.": "循环中的巨大体积变化会损伤颗粒和界面。",
-  "What does Wh measure?": "Wh 衡量什么？",
-  "Which battery family is commonly used in modern EV traction packs?": "现代电动车动力电池包通常使用哪类电池？",
-  "Why can cold weather reduce EV range?": "为什么寒冷天气会降低电动车续航？",
-  "What is a main role of the electrolyte?": "电解质的主要作用是什么？",
-  "What does BMS stand for?": "BMS 的全称是什么？",
-  "Battery Management System": "电池管理系统",
-  "Stored or delivered energy": "储存或释放的能量",
-  "Lithium-ion": "锂离子电池",
-  "Ion movement slows and heating uses energy": "离子移动变慢，同时加热会消耗能量",
-  "Carry ions between electrodes": "在电极之间传递离子",
-  "Anode": "负极",
-  "Cathode": "正极",
-  "Electrolyte": "电解质",
-  "Separator": "隔膜",
-  "Power Density": "功率密度",
-  "Thermal Management": "热管理",
-  "Fast Charging": "快速充电",
-  "Solid-state Battery": "固态电池",
-  "Sodium-ion Battery": "钠离子电池",
-  "A watt-hour is a unit of energy. It combines power in watts with time in hours.": "瓦时是能量单位，它把以瓦表示的功率与以小时表示的时间结合起来。",
-  "Most current EVs use lithium-ion families such as LFP or nickel-rich layered oxide chemistries.": "目前大多数电动车使用锂离子体系，例如磷酸铁锂或高镍层状氧化物。",
-  "Cold raises internal resistance and slows reaction kinetics, while cabin and battery heating also consume energy.": "低温会提高内阻并减慢反应动力学，同时座舱和电池加热也会消耗能量。",
-  "The electrolyte allows ions to move internally while electrons travel through the external circuit.": "电解质让离子在电池内部移动，而电子通过外部电路流动。",
-  "A Battery Management System monitors and controls conditions such as voltage, current, temperature, and state estimation.": "电池管理系统监测并控制电压、电流、温度和状态估算等条件。",
-  "Sodium-ion batteries may not completely replace lithium-ion batteries, and I do not think replacement is the most useful way to frame the question. Sodium is more abundant and could be valuable where low cost, supply stability, and cold-weather behavior matter more than maximum range.": "钠离子电池可能不会完全取代锂离子电池，我也认为“谁取代谁”并不是最有价值的提问方式。钠资源更丰富，在低成本、供应稳定和低温表现比极限续航更重要的场景中，它可能很有价值。",
-  "For stationary storage or smaller vehicles, accepting lower energy density may be reasonable if the overall system becomes cheaper and easier to scale. This helped me understand that engineering is often about matching a material to a job rather than finding one universal “best” material.": "对于固定式储能或小型车辆，如果整个系统因此更便宜、更容易规模化，接受较低能量密度可能是合理的。这让我理解，工程往往是在为任务匹配材料，而不是寻找一种万能的“最佳”材料。",
-  "Cold weather affects more than passenger comfort. Ion movement becomes slower, internal resistance rises, and the battery may need energy to warm itself before it can charge or deliver power efficiently.": "寒冷天气影响的不只是乘客舒适度。离子移动变慢、内阻升高，电池在高效充电或输出功率之前，还可能需要消耗能量为自己加热。",
-  "At the same time, cabin heating draws energy from the same pack. This is why winter range is a materials problem and a thermal-management problem. Better insulation, heat pumps, battery preconditioning, and cell chemistry all contribute to the result.": "与此同时，座舱供暖也从同一块电池包取能。因此冬季续航既是材料问题，也是热管理问题。更好的保温、热泵、电池预热和电芯化学都会影响最终结果。",
-  "I previously wondered whether heat produced by the battery pack could become part of the cabin heating system in winter. The idea is attractive because an EV already spends valuable energy creating heat.": "我之前思考过，电池包产生的热量能否在冬季成为座舱供暖的一部分。这个想法很有吸引力，因为电动车本来就要花费宝贵电能来制造热量。",
-  "However, useful heat is not always available at the right temperature or time. A practical system would need to combine battery heat, power-electronics heat, a heat pump, coolant routing, and careful controls. Recovering some heat may reduce waste, but battery safety and lifetime must remain the first priority.": "但可利用的热量并不总是在合适的温度和时间出现。实际系统需要结合电池热量、功率电子热量、热泵、冷却液回路和精确控制。回收部分热量可能减少浪费，但电池安全与寿命必须始终优先。",
-  "A possible direction may be to treat the whole vehicle as one thermal system, not as separate components.": "一个可能的方向，是把整辆车看作一个统一的热系统，而不是彼此分离的部件。",
-  "I am a high school student interested in Materials Science & Engineering and new-energy batteries. I built this website because batteries are not only electronic components; they combine chemistry, physics, engineering, safety design, and environmental thinking.": "我是一名对材料科学与工程和新能源电池感兴趣的高中生。我建立这个网站，是因为电池不只是电子元件，它同时结合了化学、物理、工程、安全设计和环境思考。",
-  "Building the calculators and comparison tools helped me move beyond collecting facts. I had to decide which assumptions were simplified, how temperature changes a system, and why the “best” material depends on its application.": "制作计算器和比较工具，让我不再只是收集事实。我需要判断哪些假设经过了简化、温度如何改变系统，以及为什么“最好”的材料取决于具体应用。",
-  "I hope to keep studying safer, more affordable, and more stable energy-storage materials. This website is one record of that learning process.": "我希望继续学习更安全、更经济、更稳定的储能材料。这个网站记录了我的一部分学习过程。"
-});
-
-Object.assign(zhTranslations, {
-  "Search NCM, LFP, SOC, electrolyte, separator…": "搜索三元锂、LFP、SOC、电解液、隔膜…",
-  "Try graphite, cathode, lithium…": "试试搜索石墨、正极、锂…",
-  "Search BMS, anode, cycle life…": "搜索 BMS、负极、循环寿命…",
-  "Find a term": "查找术语",
-  "Search knowledge entries": "搜索知识词条",
-  "Battery Knowledge Hub": "电池知识库",
-  "No entry found.": "没有找到相关词条。",
-  "Electrical resistance": "电阻",
-  "Charging speed only": "仅充电速度",
-  "Battery temperature": "电池温度",
-  "Zinc-carbon": "碳性锌锰电池",
-  "Silver oxide": "氧化银电池",
-  "Primary alkaline": "一次碱性电池",
-  "The wheels become smaller": "车轮会变小",
-  "Electrons stop existing": "电子会消失",
-  "The pack gains mass": "电池包质量会增加",
-  "Hold the vehicle body together": "支撑车身结构",
-  "Measure tire pressure": "测量胎压",
-  "Create mechanical braking": "产生机械制动",
-  "Battery Material Standard": "电池材料标准",
-  "Balanced Motor Supply": "平衡电机供电",
-  "Basic Module Structure": "基础模组结构",
-  "A phosphate cathode used in lithium iron phosphate cells.": "磷酸铁锂电池使用的磷酸盐正极材料。",
-  "Strong thermal stability, long life, and relatively low material cost.": "热稳定性强、寿命长，材料成本相对较低。",
-  "Lower voltage and energy density than high-nickel layered cathodes.": "电压和能量密度低于高镍层状正极。",
-  "A layered oxide cathode containing nickel, manganese, and cobalt.": "一种包含镍、锰、钴的层状氧化物正极材料。",
-  "High energy density with adjustable composition.": "能量密度高，配方比例可调。",
-  "Cost, sourcing, moisture sensitivity, and thermal-management demands.": "成本、资源供应、湿度敏感性和热管理要求较高。",
-  "A conductive salt solution that transports ions between electrodes.": "一种在电极之间传输离子的导电盐溶液。",
-  "High ionic conductivity and mature manufacturing.": "离子电导率高，制造工艺成熟。",
-  "Usually flammable and sensitive to voltage and temperature extremes.": "通常具有可燃性，并对极端电压和温度敏感。",
-  "A porous membrane that prevents direct electrode contact while allowing ion flow.": "一种多孔膜，阻止电极直接接触，同时允许离子通过。",
-  "Thin, light, and essential for electrical isolation.": "薄而轻，是电气隔离的关键部件。",
-  "Shrinkage, puncture, or contamination can create internal short circuits.": "收缩、刺穿或污染都可能造成内部短路。",
-  "A solid ceramic, sulfide, or polymer designed to conduct ions.": "一种用于传导离子的固态陶瓷、硫化物或聚合物材料。",
-  "May reduce flammable liquid content and support new anode designs.": "可能减少可燃液体成分，并支持新的负极设计。",
-  "Interfaces, brittleness, pressure, moisture sensitivity, and scale-up.": "界面、脆性、压力、湿敏性和规模化制造都是挑战。",
-  "The electrode where oxidation occurs. In a discharging lithium-ion cell, it releases lithium ions and electrons.": "发生氧化反应的电极。在锂离子电池放电时，负极释放锂离子和电子。",
-  "The electrode where reduction occurs during discharge. Cathode chemistry strongly influences voltage and energy.": "放电时发生还原反应的电极。正极化学体系会强烈影响电压和能量。",
-  "The ion-conducting material between electrodes. It may be liquid, gel, polymer, ceramic, or sulfide.": "电极之间传导离子的材料，可以是液体、凝胶、聚合物、陶瓷或硫化物。",
-  "A porous electrical insulator that keeps electrodes apart while allowing ions to move.": "一种多孔电绝缘材料，让电极保持隔离，同时允许离子移动。",
-  "How much energy a battery stores relative to mass or volume, often measured in Wh/kg or Wh/L.": "电池相对于质量或体积能储存多少能量，常用 Wh/kg 或 Wh/L 表示。",
-  "How quickly a battery can deliver energy relative to its mass or volume.": "电池相对于质量或体积能够多快释放能量。",
-  "The number of charge-discharge cycles before capacity or performance reaches a defined limit.": "在容量或性能下降到规定界限前，电池可经历的充放电次数。",
-  "Hardware and control strategies used to keep cells within a suitable temperature range.": "让电芯保持在合适温度范围内的硬件和控制策略。",
-  "Battery Management System: electronics and software that monitor, estimate, protect, and control a pack.": "电池管理系统：用于监测、估算、保护和控制电池包的电子硬件与软件。",
-  "State of Charge: an estimate of how much usable charge remains, usually expressed as a percentage.": "荷电状态：估算还剩多少可用电量，通常用百分比表示。",
-  "State of Health: an estimate of aging compared with a new battery's performance.": "健康状态：相对于新电池性能的老化程度估算。",
-  "Charging at high power. It can save time but requires careful control of heat and lithium plating risk.": "以较高功率充电。它能节省时间，但需要仔细控制发热和锂析出风险。",
-  "A battery family using a solid electrolyte. Designs and performance vary widely.": "一类使用固态电解质的电池，不同路线的设计和性能差异很大。",
-  "A rechargeable battery that moves sodium ions instead of lithium ions between electrodes.": "一种在电极之间移动钠离子而不是锂离子的可充电电池。"
-});
-
-const typeList = document.getElementById("type-list");
-const selectors = document.getElementById("battery-selectors");
-const materialsGrid = document.getElementById("materials-grid");
-const glossaryGrid = document.getElementById("glossary-grid");
-let radarChart;
-let barChart;
-
-function normalizeSearch(text) {
-  return String(text || "").toLowerCase().replace(/\s+/g, "");
+function t(path) {
+  return path.split(".").reduce((obj, key) => obj?.[key], ui[currentLang]) || path;
 }
 
-function knowledgeSearchText(entry) {
-  return normalizeSearch([
-    entry.title,
-    entry.category,
-    entry.oneLine,
-    ...(entry.aliases || []),
-    ...(entry.tags || []),
-    ...(entry.sections || []).flat()
-  ].join(" "));
+function entryText(entry) {
+  return entry[currentLang];
 }
 
-function renderKnowledgeResults() {
-  const input = document.getElementById("knowledge-search");
-  const results = document.getElementById("knowledge-results");
-  if (!input || !results) return;
-  const query = normalizeSearch(input.value);
-  const filtered = knowledgeEntries
-    .map((entry, index) => {
-      const title = normalizeSearch(entry.title);
-      const aliases = (entry.aliases || []).map(normalizeSearch);
-      let score = 0;
-      if (query && title === query) score += 80;
-      if (query && aliases.includes(query)) score += 70;
-      if (query && title.includes(query)) score += 45;
-      if (query && aliases.some((alias) => alias.includes(query))) score += 35;
-      if (query && entry.category.includes(input.value.trim())) score += 10;
-      return { entry, index, score };
-    })
-    .filter(({ entry }) => !query || knowledgeSearchText(entry).includes(query))
-    .sort((a, b) => b.score - a.score || a.index - b.index)
-    .map(({ entry }) => entry)
-    .slice(0, query ? 12 : 8);
-
-  results.innerHTML = filtered.map((entry) => `
-    <button class="knowledge-result" type="button" data-knowledge-id="${entry.id}">
-      <span>${entry.category}</span>
-      <strong>${entry.title}</strong>
-      <small>${entry.oneLine}</small>
-    </button>
-  `).join("") || `<p class="empty-state">没有找到相关词条。</p>`;
+function setLanguage(lang) {
+  currentLang = lang === "en" ? "en" : "zh";
+  localStorage.setItem("battery-lab-language", currentLang);
+  document.documentElement.lang = currentLang === "zh" ? "zh-CN" : "en";
+  document.title = currentLang === "zh" ? "Battery Lab — 电池科学博物馆" : "Battery Lab — Battery Science Museum";
+  document.querySelectorAll("[data-i18n]").forEach((node) => {
+    const value = t(node.dataset.i18n);
+    if (node.tagName === "OPTION") node.textContent = value;
+    else node.textContent = value;
+  });
+  document.querySelectorAll("[data-lang]").forEach((button) => button.classList.toggle("active", button.dataset.lang === currentLang));
+  const knowledgeSearch = document.getElementById("knowledge-search");
+  if (knowledgeSearch) knowledgeSearch.placeholder = t("knowledge.placeholder");
+  renderAll();
+  if (currentModalId) openKnowledge(currentModalId, false);
 }
 
-function openKnowledgeEntry(id) {
-  const entry = knowledgeById.get(id);
-  if (!entry) return;
-  const modal = document.getElementById("knowledge-modal");
-  document.getElementById("knowledge-category").textContent = entry.category;
-  document.getElementById("knowledge-title").textContent = entry.title;
-  document.getElementById("knowledge-one-line").textContent = entry.oneLine;
-  document.getElementById("knowledge-tags").innerHTML = (entry.tags || []).map((tag) => `<span>${tag}</span>`).join("");
-  document.getElementById("knowledge-metrics").innerHTML = (entry.metrics || []).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
-  document.getElementById("knowledge-body").innerHTML = (entry.sections || []).map(([heading, body]) => `
-    <section class="knowledge-block">
-      <h3>${heading}</h3>
-      <p>${body}</p>
-    </section>
-  `).join("");
-  modal.hidden = false;
-  document.body.classList.add("modal-open");
-  modal.querySelector(".knowledge-close").focus({ preventScroll: true });
-}
-
-function closeKnowledgeEntry() {
-  const modal = document.getElementById("knowledge-modal");
-  if (!modal) return;
-  modal.hidden = true;
-  document.body.classList.remove("modal-open");
-}
-
-function setupKnowledgeBase() {
+function renderAll() {
+  renderStats();
+  renderBatteries();
+  renderSelectors();
+  renderMaterials();
+  renderPackTabs();
+  renderFuture();
   renderKnowledgeResults();
-  document.getElementById("knowledge-search")?.addEventListener("input", renderKnowledgeResults);
-  document.addEventListener("click", (event) => {
-    const opener = event.target.closest("[data-knowledge-id]");
-    if (opener) {
-      event.preventDefault();
-      openKnowledgeEntry(opener.dataset.knowledgeId);
-    }
-    if (event.target.closest("[data-close-knowledge]")) closeKnowledgeEntry();
-  });
-  document.addEventListener("keydown", (event) => {
-    if ((event.key === "Enter" || event.key === " ") && event.target.closest(".glossary-card[data-knowledge-id]")) {
-      event.preventDefault();
-      openKnowledgeEntry(event.target.closest(".glossary-card").dataset.knowledgeId);
-      return;
-    }
-    if (event.key === "Escape") closeKnowledgeEntry();
-  });
+  renderQuiz();
+  renderResearch();
+  updateCharts();
 }
 
-function renderBatteryTypes() {
-  typeList.innerHTML = batteryTypes.map((battery, index) => `
-    <article class="type-card reveal" data-type="${battery.id}">
-      <span>${String(index + 1).padStart(2, "0")}</span>
-      <h3>${battery.name}</h3>
-      <div class="type-summary"><small>WHAT IT IS</small><p>${battery.description}</p></div>
-      <div class="type-density"><strong>${battery.density}</strong><p>Approximate typical range</p></div>
-      <button class="type-toggle" type="button" aria-expanded="false" aria-label="Show details for ${battery.name}"></button>
-      <div class="type-details">
-        <div><small>STRENGTHS</small><p>${battery.advantage}</p></div>
-        <div><small>MAIN TRADE-OFF</small><p>${battery.limitation}</p></div>
-        <div><small>BEST FOR</small><p>${battery.applications}</p></div>
-        <div class="type-takeaway"><small>TAKEAWAY</small><p>${battery.takeaway}</p></div>
-        <button class="inline-more" type="button" data-knowledge-id="${battery.knowledgeId}">了解更多</button>
-      </div>
-    </article>
-  `).join("");
+function renderStats() {
+  document.getElementById("impact-stats").innerHTML = stats.map((stat) => `<article><strong>${stat.value}</strong><span>${stat[currentLang]}</span></article>`).join("");
+}
 
-  typeList.querySelectorAll(".type-card").forEach((card) => {
-    card.addEventListener("click", (event) => {
-      const knowledgeButton = event.target.closest("[data-knowledge-id]");
-      if (knowledgeButton) {
-        event.stopPropagation();
-        openKnowledgeEntry(knowledgeButton.dataset.knowledgeId);
-        return;
-      }
-      if (event.target.closest("a")) return;
-      const open = card.classList.toggle("open");
-      card.querySelector(".type-toggle").setAttribute("aria-expanded", String(open));
-    });
-  });
+function renderBatteries() {
+  document.getElementById("battery-rail").innerHTML = batteries.map((battery, index) => {
+    const text = entryText(battery);
+    return `
+      <article class="battery-card" data-open-knowledge="${battery.id}">
+        <div><span class="battery-index">${String(index + 1).padStart(2, "0")}</span></div>
+        <div>
+          <h3>${text.title}</h3>
+          <p>${text.desc}</p>
+          <div class="battery-meta">${text.tags.map((tag) => `<span>${tag}</span>`).join("")}</div>
+        </div>
+        <button class="text-link" type="button"><span>${t("labels.learnMore")}</span><i>→</i></button>
+      </article>
+    `;
+  }).join("");
 }
 
 function renderSelectors() {
   const defaults = new Set(["lfp", "nmc", "sodium"]);
-  selectors.innerHTML = Object.entries(comparisonData).map(([id, item], index) => `
+  const selected = new Set([...document.querySelectorAll("#battery-selectors input:checked")].map((input) => input.value));
+  const active = selected.size ? selected : defaults;
+  document.getElementById("battery-selectors").innerHTML = batteries.map((battery) => `
     <label class="selector-item">
-      <input type="checkbox" value="${id}" ${defaults.has(id) ? "checked" : ""}>
-      <span class="selector-index">${String(index + 1).padStart(2, "0")}</span>
-      <span class="selector-name">${item.label}</span>
-      <span class="selector-box" aria-hidden="true"></span>
+      <input type="checkbox" value="${battery.id}" ${active.has(battery.id) ? "checked" : ""}>
+      <span class="selector-dot"></span>
+      <span>${battery.short}</span>
+      <span class="selector-check"></span>
     </label>
   `).join("");
-  selectors.addEventListener("change", (event) => {
-    const checked = [...selectors.querySelectorAll("input:checked")];
-    if (checked.length > 4) {
-      event.target.checked = false;
-      return;
-    }
-    if (checked.length === 0) {
-      event.target.checked = true;
-      return;
-    }
-    updateCharts();
-  });
 }
 
-function selectedComparisonIds() {
-  return [...selectors.querySelectorAll("input:checked")].map((input) => input.value);
+function selectedIds() {
+  return [...document.querySelectorAll("#battery-selectors input:checked")].map((input) => input.value);
 }
 
-function chartDefaults() {
-  Chart.defaults.color = "#b8b8b8";
-  Chart.defaults.font.family = "Arial, Helvetica, sans-serif";
-  Chart.defaults.font.size = 10;
-  Chart.defaults.borderColor = "rgba(255,255,255,.12)";
+function renderMaterials() {
+  document.getElementById("material-mosaic").innerHTML = materials.map((material) => {
+    const [title, body] = material[currentLang];
+    return `<article class="material-card" data-open-knowledge="${material.id}"><div class="material-symbol">${material.symbol}</div><h3>${title}</h3><p>${body}</p><button class="text-link" type="button"><span>${t("labels.learnMore")}</span><i>→</i></button></article>`;
+  }).join("");
 }
 
-function createCharts() {
-  if (typeof Chart === "undefined") return;
-  chartDefaults();
-  const ids = selectedComparisonIds();
+function renderPackTabs(active = document.querySelector(".pack-tab.active")?.dataset.pack || "cell") {
+  document.getElementById("pack-tabs").innerHTML = packItems.map((item) => `<button class="pack-tab ${item.id === active ? "active" : ""}" type="button" data-pack="${item.id}">${item[currentLang][0]}</button>`).join("");
+  renderPackDetail(active);
+}
+
+function renderPackDetail(id) {
+  const item = packItems.find((pack) => pack.id === id) || packItems[0];
+  const [title, body] = item[currentLang];
+  document.getElementById("pack-detail").innerHTML = `<h3>${title}</h3><p>${body}</p>`;
+  document.querySelectorAll(".pack-tab").forEach((button) => button.classList.toggle("active", button.dataset.pack === id));
+}
+
+function renderFuture() {
+  document.getElementById("future-grid").innerHTML = futureItems.map((item, index) => {
+    const [title, body] = item[currentLang];
+    return `<article class="future-card"><span>${String(index + 1).padStart(2, "0")}</span><h3>${title}</h3><p>${body}</p></article>`;
+  }).join("");
+}
+
+function normalize(value) {
+  return String(value || "").toLowerCase().replace(/\s+/g, "");
+}
+
+function searchable(entry) {
+  const data = entryText(entry);
+  return normalize([data.title, data.desc, entry.short, ...(data.tags || []), ...(data.sections || []).flat()].join(" "));
+}
+
+function renderKnowledgeResults() {
+  const query = normalize(document.getElementById("knowledge-search")?.value || "");
+  const entries = knowledgeEntries
+    .map((entry, index) => {
+      const data = entryText(entry);
+      const title = normalize(data.title);
+      const short = normalize(entry.short);
+      let score = 0;
+      if (query && title === query) score += 100;
+      if (query && short === query) score += 90;
+      if (query && title.includes(query)) score += 60;
+      if (query && short.includes(query)) score += 50;
+      return { entry, index, score };
+    })
+    .filter(({ entry }) => !query || searchable(entry).includes(query))
+    .sort((a, b) => b.score - a.score || a.index - b.index)
+    .slice(0, query ? 12 : 8);
+  document.getElementById("knowledge-results").innerHTML = entries.length
+    ? entries.map(({ entry }) => {
+      const data = entryText(entry);
+      return `<button class="knowledge-result" type="button" data-open-knowledge="${entry.id}"><span>${entry.category[currentLang]}</span><strong>${data.title}</strong><small>${data.desc}</small></button>`;
+    }).join("")
+    : `<p class="empty-state">${t("knowledge.empty")}</p>`;
+}
+
+function openKnowledge(id, focus = true) {
+  const entry = knowledgeMap.get(id);
+  if (!entry) return;
+  currentModalId = id;
+  const data = entryText(entry);
+  document.getElementById("modal-category").textContent = entry.category[currentLang];
+  document.getElementById("knowledge-title").textContent = data.title;
+  document.getElementById("modal-summary").textContent = data.desc;
+  document.getElementById("modal-tags").innerHTML = (data.tags || []).map((tag) => `<span>${tag}</span>`).join("");
+  document.getElementById("modal-metrics").innerHTML = (data.metrics || []).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
+  document.getElementById("modal-body").innerHTML = (data.sections || []).map(([heading, body]) => `<section class="modal-block"><h3>${heading}</h3><p>${body}</p></section>`).join("");
+  const modal = document.getElementById("knowledge-modal");
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+  if (focus) modal.querySelector(".modal-close").focus({ preventScroll: true });
+}
+
+function closeModal() {
+  document.getElementById("knowledge-modal").hidden = true;
+  document.body.classList.remove("modal-open");
+  currentModalId = null;
+}
+
+function renderQuiz() {
+  document.getElementById("quiz-questions").innerHTML = quizData.map((item, index) => {
+    const data = item[currentLang];
+    return `
+      <article class="quiz-question" data-question="${index}">
+        <h3>${String(index + 1).padStart(2, "0")} · ${data.q}</h3>
+        <div class="quiz-options">${data.options.map((option, optionIndex) => `<label class="quiz-option"><input type="radio" name="q-${index}" value="${optionIndex}"><span>${option}</span></label>`).join("")}</div>
+        <p class="quiz-explanation" hidden></p>
+      </article>
+    `;
+  }).join("");
+  document.getElementById("quiz-result").innerHTML = "";
+}
+
+function renderResearch() {
+  document.getElementById("research-list").innerHTML = researchItems.map((item, index) => {
+    const [title, body] = item[currentLang];
+    return `<article class="research-note"><span>${String(index + 1).padStart(2, "0")}</span><h3>${title}</h3><p>${body}</p></article>`;
+  }).join("");
+}
+
+function setupCharts() {
+  if (typeof Chart === "undefined") {
+    document.querySelectorAll(".chart-box").forEach((box) => { box.innerHTML = `<p class="empty-state">${t("labels.chartsFail")}</p>`; });
+    return;
+  }
+  Chart.defaults.color = "#aaa";
+  Chart.defaults.font.family = getComputedStyle(document.body).fontFamily;
+  const ids = selectedIds();
   radarChart = new Chart(document.getElementById("radar-chart"), {
     type: "radar",
-    data: buildRadarData(ids),
+    data: radarData(ids),
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      animation: { duration: 450 },
-      scales: { r: { min: 0, max: 10, ticks: { display: false, stepSize: 2 }, grid: { color: "rgba(255,255,255,.14)" }, angleLines: { color: "rgba(255,255,255,.14)" }, pointLabels: { color: "#b8b8b8", font: { size: 9 } } } },
-      plugins: { legend: { position: "bottom", labels: { boxWidth: 8, boxHeight: 2, padding: 18 } }, tooltip: { backgroundColor: "#111111" } }
+      scales: { r: { min: 0, max: 10, ticks: { display: false }, grid: { color: "rgba(255,255,255,.12)" }, angleLines: { color: "rgba(255,255,255,.12)" }, pointLabels: { color: "#b8b8b8", font: { size: 10 } } } },
+      plugins: { legend: { position: "bottom", labels: { boxWidth: 10, boxHeight: 2 } }, tooltip: { backgroundColor: "#111" } }
     }
   });
   barChart = new Chart(document.getElementById("bar-chart"), {
     type: "bar",
-    data: buildBarData(ids),
+    data: barData(ids),
     options: {
       responsive: true,
       maintainAspectRatio: false,
       indexAxis: "y",
-      animation: { duration: 450 },
-      scales: { x: { beginAtZero: true, grid: { color: "rgba(255,255,255,.1)" }, title: { display: true, text: tr("Wh/kg · approximate midpoint") } }, y: { grid: { display: false } } },
-      plugins: { legend: { display: false }, tooltip: { backgroundColor: "#111111" } }
+      scales: { x: { beginAtZero: true, grid: { color: "rgba(255,255,255,.1)" }, title: { display: true, text: t("labels.whkg") } }, y: { grid: { display: false } } },
+      plugins: { legend: { display: false }, tooltip: { backgroundColor: "#111" } }
     }
   });
 }
 
-function buildRadarData(ids) {
+function radarData(ids) {
+  const labels = currentLang === "zh" ? ["能量密度", "成本", "安全性", "循环寿命", "快充", "低温"] : ["Energy Density", "Cost", "Safety", "Cycle Life", "Charging", "Cold Weather"];
   return {
-    labels: ["Energy Density", "Cost", "Safety", "Cycle Life", "Charging", "Cold Weather"].map(tr),
-    datasets: ids.map((id) => {
-      const item = comparisonData[id];
-      return {
-        label: tr(item.label),
-        data: item.scores,
-        borderColor: item.color,
-        backgroundColor: `${item.color}20`,
-        pointBackgroundColor: item.color,
-        borderWidth: 1.5,
-        pointRadius: 2
-      };
-    })
+    labels,
+    datasets: ids.map((id) => ({
+      label: batteries.find((battery) => battery.id === id)?.short || id,
+      data: comparisonData[id].scores,
+      borderColor: comparisonData[id].color,
+      backgroundColor: `${comparisonData[id].color}22`,
+      pointBackgroundColor: comparisonData[id].color,
+      borderWidth: 1.6,
+      pointRadius: 2
+    }))
   };
 }
 
-function buildBarData(ids) {
+function barData(ids) {
   return {
-    labels: ids.map((id) => tr(comparisonData[id].label)),
-    datasets: [{ data: ids.map((id) => comparisonData[id].midpoint), backgroundColor: ids.map((id) => comparisonData[id].color), borderWidth: 0, barThickness: 16 }]
+    labels: ids.map((id) => batteries.find((battery) => battery.id === id)?.short || id),
+    datasets: [{ data: ids.map((id) => comparisonData[id].midpoint), backgroundColor: ids.map((id) => comparisonData[id].color), barThickness: 16 }]
   };
 }
 
 function updateCharts() {
   if (!radarChart || !barChart) return;
-  const ids = selectedComparisonIds();
-  radarChart.data = buildRadarData(ids);
-  barChart.data = buildBarData(ids);
-  barChart.options.scales.x.title.text = tr("Wh/kg · approximate midpoint");
+  const ids = selectedIds();
+  radarChart.data = radarData(ids);
+  barChart.data = barData(ids);
+  barChart.options.scales.x.title.text = t("labels.whkg");
   radarChart.update();
   barChart.update();
+}
+
+function number(value) {
+  return new Intl.NumberFormat(currentLang === "zh" ? "zh-CN" : "en-US", { maximumFractionDigits: 1 }).format(value);
 }
 
 function setupCalculators() {
@@ -1249,279 +756,72 @@ function setupCalculators() {
     const error = document.getElementById("energy-error");
     const result = document.getElementById("energy-result");
     if (!Number.isFinite(voltage) || !Number.isFinite(capacity) || voltage <= 0 || capacity <= 0) {
-      error.textContent = currentLanguage === "zh" ? "请输入大于零的电压和容量。" : "Enter voltage and capacity values greater than zero.";
+      error.textContent = t("calc.invalidEnergy");
       return;
     }
     const energy = voltage * capacity;
     error.textContent = "";
-    result.querySelector("strong").textContent = `${formatNumber(energy)} Wh`;
-    result.querySelector("p").textContent = currentLanguage === "zh"
-      ? `理论上，这块电池可以用 ${formatNumber(energy)} 瓦的功率持续供电 1 小时；真实可用能量通常更低。`
-      : `This battery could theoretically supply ${formatNumber(energy)} watts for 1 hour. Real usable energy is usually lower.`;
-    animateResult(result);
+    result.querySelector("strong").textContent = `${number(energy)} Wh`;
+    result.querySelector("p").textContent = t("calc.energyText").replace("{value}", number(energy));
   });
-  energyForm.addEventListener("reset", () => resetResult("energy-result", "— Wh", tr("Enter valid values to estimate stored energy."), "energy-error"));
+  energyForm.addEventListener("reset", () => setTimeout(() => {
+    document.getElementById("energy-error").textContent = "";
+    document.querySelector("#energy-result strong").textContent = "— Wh";
+    document.querySelector("#energy-result p").textContent = t("calc.energyHint");
+  }));
 
   rangeForm.addEventListener("submit", (event) => {
     event.preventDefault();
-    const batterySize = Number(document.getElementById("battery-size").value);
+    const size = Number(document.getElementById("battery-size").value);
     const consumption = Number(document.getElementById("consumption").value);
     const factor = Number(document.getElementById("temperature").value);
     const error = document.getElementById("range-error");
     const result = document.getElementById("range-result");
-    if (!Number.isFinite(batterySize) || !Number.isFinite(consumption) || batterySize <= 0 || consumption <= 0) {
-      error.textContent = currentLanguage === "zh" ? "请输入大于零的电池容量和能耗。" : "Enter battery size and consumption values greater than zero.";
+    if (!Number.isFinite(size) || !Number.isFinite(consumption) || size <= 0 || consumption <= 0) {
+      error.textContent = t("calc.invalidRange");
       return;
     }
-    const baseRange = batterySize * 1000 / consumption;
-    const adjusted = baseRange * factor;
+    const base = size * 1000 / consumption;
+    const adjusted = base * factor;
     error.textContent = "";
-    result.querySelector("strong").textContent = `${formatNumber(adjusted)} km`;
-    result.querySelector("p").textContent = currentLanguage === "zh"
-      ? `基础估算：${formatNumber(baseRange)} km。温度模型：${Math.round(factor * 100)}%。真实续航还取决于车速、轮胎、地形、空调和电池状态。`
-      : `Base estimate: ${formatNumber(baseRange)} km. Temperature model: ${Math.round(factor * 100)}%. Real range also depends on speed, tires, terrain, HVAC use, and battery condition.`;
-    animateResult(result);
+    result.querySelector("strong").textContent = `${number(adjusted)} km`;
+    result.querySelector("p").textContent = t("calc.rangeText").replace("{base}", number(base)).replace("{factor}", Math.round(factor * 100));
   });
-  rangeForm.addEventListener("reset", () => resetResult("range-result", "— km", tr("Real range also depends on speed, tires, terrain, HVAC use, and battery condition."), "range-error"));
-}
-
-function formatNumber(value) {
-  return new Intl.NumberFormat(currentLanguage === "zh" ? "zh-CN" : "en-US", { maximumFractionDigits: 1 }).format(value);
-}
-
-function animateResult(result) {
-  result.classList.remove("updated");
-  requestAnimationFrame(() => result.classList.add("updated"));
-}
-
-function resetResult(resultId, value, text, errorId) {
-  requestAnimationFrame(() => {
-    const result = document.getElementById(resultId);
-    result.querySelector("strong").textContent = value;
-    result.querySelector("p").textContent = text;
-    document.getElementById(errorId).textContent = "";
-  });
-}
-
-function renderTimeline() {
-  const timeline = document.getElementById("battery-timeline");
-  timeline.innerHTML = timelineData.map(([year, title, detail], index) => `
-    <article class="timeline-item reveal ${year === "1991" ? "active" : ""}">
-      <button class="timeline-button" type="button" aria-expanded="${year === "1991"}">
-        <span class="timeline-year">${year}</span>
-        <span class="timeline-dot"></span>
-        <h3>${title}</h3>
-        <div class="timeline-detail"><small>WHY IT MATTERED</small><p>${detail}</p></div>
-      </button>
-    </article>
-  `).join("");
-  timeline.querySelectorAll(".timeline-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      timeline.querySelectorAll(".timeline-item").forEach((item) => {
-        item.classList.remove("active");
-        item.querySelector("button").setAttribute("aria-expanded", "false");
-      });
-      button.closest(".timeline-item").classList.add("active");
-      button.setAttribute("aria-expanded", "true");
-    });
-  });
-}
-
-function setupPackExplorer() {
-  const explanation = document.getElementById("pack-explanation");
-  const buttons = [...document.querySelectorAll("[data-pack-level]")];
-  function render(level) {
-    const item = packContent[level];
-    explanation.innerHTML = `
-      <span>${item.code}</span>
-      <h3>${item.title}</h3>
-      <p>${item.text}</p>
-      <div class="pack-facts">${item.facts.map(([label, value]) => `<div><small>${label}</small><strong>${value}</strong></div>`).join("")}</div>
-    `;
-    buttons.forEach((button) => button.classList.toggle("active", button.dataset.packLevel === level));
-  }
-  buttons.forEach((button) => button.addEventListener("click", () => render(button.dataset.packLevel)));
-  render("cell");
-}
-
-function renderMaterialFilters() {
-  const categories = ["All", "Cathode", "Anode", "Electrolyte", "Separator", "Element"];
-  document.getElementById("material-filters").innerHTML = categories.map((category) => `<button class="filter-button ${category === "All" ? "active" : ""}" type="button" data-category="${category}">${category}</button>`).join("");
-}
-
-function renderMaterials() {
-  const query = document.getElementById("material-search").value.trim().toLowerCase();
-  const active = document.querySelector(".filter-button.active")?.dataset.category || "All";
-  const filtered = materials.filter((material) => {
-    const categoryMatch = active === "All" || material.category === active;
-    const entry = knowledgeById.get(materialKnowledgeMap[material.name]);
-    const searchMatch = [material.name, material.category, material.role, material.advantage, material.challenge, entry?.title, ...(entry?.aliases || [])].join(" ").toLowerCase().includes(query);
-    return categoryMatch && searchMatch;
-  });
-  materialsGrid.innerHTML = filtered.map((material) => `
-    <article class="material-card reveal visible">
-      <span>${material.category}</span><h3>${material.name}</h3><p class="material-role"><small>ROLE IN BATTERY</small>${material.role}</p>
-      <dl><dt>WHY IT MATTERS</dt><dd>${material.advantage}</dd><dt>CHALLENGE</dt><dd>${material.challenge}</dd></dl>
-      <button class="inline-more" type="button" data-knowledge-id="${materialKnowledgeMap[material.name] || "cathode"}">查看词条</button>
-    </article>
-  `).join("");
-  document.getElementById("materials-empty").hidden = filtered.length !== 0;
-}
-
-function setupMaterials() {
-  renderMaterialFilters();
-  renderMaterials();
-  document.getElementById("material-search").addEventListener("input", renderMaterials);
-  document.getElementById("material-filters").addEventListener("click", (event) => {
-    const button = event.target.closest("[data-category]");
-    if (!button) return;
-    document.querySelectorAll(".filter-button").forEach((item) => item.classList.remove("active"));
-    button.classList.add("active");
-    renderMaterials();
-  });
-}
-
-function renderQuiz() {
-  document.getElementById("quiz-questions").innerHTML = quizData.map((item, index) => `
-    <article class="quiz-question" data-question="${index}">
-      <header><span>${String(index + 1).padStart(2, "0")}</span><h3>${item.question}</h3></header>
-      <div class="quiz-options">${item.options.map((option, optionIndex) => `
-        <label class="quiz-option"><input type="radio" name="question-${index}" value="${optionIndex}"><span>${option}</span></label>
-      `).join("")}</div>
-      <p class="quiz-explanation" hidden></p>
-    </article>
-  `).join("");
+  rangeForm.addEventListener("reset", () => setTimeout(() => {
+    document.getElementById("range-error").textContent = "";
+    document.querySelector("#range-result strong").textContent = "— km";
+    document.querySelector("#range-result p").textContent = t("calc.rangeHint");
+  }));
 }
 
 function setupQuiz() {
-  const form = document.getElementById("quiz-form");
-  form.addEventListener("submit", (event) => {
+  document.getElementById("quiz-form").addEventListener("submit", (event) => {
     event.preventDefault();
     let score = 0;
     quizData.forEach((item, index) => {
-      const question = form.querySelector(`[data-question="${index}"]`);
+      const question = document.querySelector(`[data-question="${index}"]`);
       const selected = question.querySelector("input:checked");
+      const data = item[currentLang];
       const correct = selected && Number(selected.value) === item.answer;
       if (correct) score += 1;
-      question.classList.toggle("correct", Boolean(correct));
-      question.classList.toggle("incorrect", !correct);
       const explanation = question.querySelector(".quiz-explanation");
       explanation.hidden = false;
-      explanation.textContent = currentLanguage === "zh"
-        ? `${correct ? "回答正确。" : `正确答案：${tr(item.options[item.answer])}。`} ${tr(item.explanation)}`
-        : `${correct ? "Correct." : `Answer: ${item.options[item.answer]}.`} ${item.explanation}`;
+      explanation.textContent = correct ? `${t("quiz.correct")} ${data.exp}` : `${t("quiz.answer")}: ${data.options[item.answer]}。 ${data.exp}`;
     });
-    const feedback = currentLanguage === "zh"
-      ? (score === quizData.length ? "很好，你已经连接起这些关键概念。" : "阅读解释后，可以再次尝试。")
-      : (score === quizData.length ? "Excellent. You connected the key ideas." : "Review the explanations and try again when ready.");
-    document.getElementById("quiz-result").innerHTML = `<strong>${score} / ${quizData.length}</strong> — ${feedback}`;
+    document.getElementById("quiz-result").innerHTML = `<strong>${score} / ${quizData.length}</strong> — ${score === quizData.length ? t("quiz.scorePerfect") : t("quiz.scoreAgain")}`;
   });
   document.getElementById("quiz-restart").addEventListener("click", () => {
-    form.reset();
-    form.querySelectorAll(".quiz-question").forEach((question) => question.classList.remove("correct", "incorrect"));
-    form.querySelectorAll(".quiz-explanation").forEach((text) => { text.hidden = true; text.textContent = ""; });
+    document.getElementById("quiz-form").reset();
+    document.querySelectorAll(".quiz-explanation").forEach((node) => { node.hidden = true; node.textContent = ""; });
     document.getElementById("quiz-result").innerHTML = "";
   });
 }
 
-function renderGlossary() {
-  const query = document.getElementById("glossary-search").value.trim().toLowerCase();
-  const filtered = glossary.filter((item) => {
-    const entry = knowledgeById.get(glossaryKnowledgeMap[item.term]);
-    return `${item.term} ${item.definition} ${entry?.title || ""} ${(entry?.aliases || []).join(" ")}`.toLowerCase().includes(query);
-  });
-  glossaryGrid.innerHTML = filtered.map((item) => `
-    <article class="glossary-card" data-knowledge-id="${glossaryKnowledgeMap[item.term] || ""}" tabindex="0" role="button">
-      <h3>${item.term}</h3>
-      <p>${item.definition}</p>
-      <span class="glossary-more">查看详细解释</span>
-    </article>
-  `).join("");
-  document.getElementById("glossary-empty").hidden = filtered.length !== 0;
-}
-
-const originalTextNodes = new Map();
-const originalAttributes = new Map();
-let languageMutationLock = false;
-
-function translateTextNode(node) {
-  if (!originalTextNodes.has(node)) originalTextNodes.set(node, node.nodeValue);
-  const original = originalTextNodes.get(node);
-  if (currentLanguage === "en") {
-    if (node.nodeValue !== original) node.nodeValue = original;
-    return;
-  }
-  const trimmed = original.trim();
-  const translated = zhTranslations[trimmed];
-  if (!translated) return;
-  const leading = original.match(/^\s*/)?.[0] || "";
-  const trailing = original.match(/\s*$/)?.[0] || "";
-  const next = `${leading}${translated}${trailing}`;
-  if (node.nodeValue !== next) node.nodeValue = next;
-}
-
-function translateAttributes(root) {
-  const elements = root.nodeType === Node.ELEMENT_NODE ? [root, ...root.querySelectorAll("*")] : [];
-  elements.forEach((element) => {
-    ["placeholder", "aria-label", "title"].forEach((attribute) => {
-      if (!element.hasAttribute(attribute)) return;
-      if (!originalAttributes.has(element)) originalAttributes.set(element, {});
-      const originals = originalAttributes.get(element);
-      if (!(attribute in originals)) originals[attribute] = element.getAttribute(attribute);
-      const original = originals[attribute];
-      element.setAttribute(attribute, currentLanguage === "zh" ? (zhTranslations[original] || original) : original);
-    });
-  });
-}
-
-function translateTree(root = document.body) {
-  languageMutationLock = true;
-  if (root.nodeType === Node.TEXT_NODE) {
-    translateTextNode(root);
-  } else {
-    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-    let node = walker.nextNode();
-    while (node) {
-      if (!node.parentElement?.closest("script, style, canvas")) translateTextNode(node);
-      node = walker.nextNode();
-    }
-    translateAttributes(root);
-  }
-  languageMutationLock = false;
-}
-
-function setLanguage(language) {
-  currentLanguage = language === "zh" ? "zh" : "en";
-  localStorage.setItem("battery-lab-language", currentLanguage);
-  document.documentElement.lang = currentLanguage === "zh" ? "zh-CN" : "en";
-  document.title = currentLanguage === "zh" ? "Battery Lab — 能源储存学习与研究" : "Battery Lab — Energy Storage Learning Hub";
-  document.querySelectorAll("[data-language]").forEach((button) => {
-    const active = button.dataset.language === currentLanguage;
-    button.classList.toggle("active", active);
-    button.setAttribute("aria-pressed", String(active));
-  });
-  translateTree(document.body);
-  updateCharts();
-}
-
-function setupLanguage() {
-  document.querySelectorAll("[data-language]").forEach((button) => {
-    button.addEventListener("click", () => setLanguage(button.dataset.language));
-  });
-  const observer = new MutationObserver((mutations) => {
-    if (languageMutationLock || currentLanguage !== "zh") return;
-    mutations.forEach((mutation) => {
-      mutation.addedNodes.forEach((node) => translateTree(node));
-    });
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-  setLanguage(currentLanguage);
-}
-
-function setupNavigation() {
+function setupInteractions() {
   const header = document.getElementById("site-header");
-  const toggle = document.querySelector(".menu-toggle");
+  const toggle = document.getElementById("menu-toggle");
   const nav = document.getElementById("nav-links");
+  window.addEventListener("scroll", () => header.classList.toggle("scrolled", window.scrollY > 12), { passive: true });
   toggle.addEventListener("click", () => {
     const open = nav.classList.toggle("open");
     toggle.classList.toggle("active", open);
@@ -1532,24 +832,31 @@ function setupNavigation() {
     toggle.classList.remove("active");
     toggle.setAttribute("aria-expanded", "false");
   }));
-  window.addEventListener("scroll", () => header.classList.toggle("scrolled", window.scrollY > 24), { passive: true });
-
-  const sectionMap = { overview: "overview", types: "types", calculator: "calculator", materials: "materials", research: "research", quiz: "quiz" };
-  const links = [...nav.querySelectorAll("a")];
-  const observer = new IntersectionObserver((entries) => {
-    const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-    if (!visible) return;
-    links.forEach((link) => link.classList.toggle("active", link.getAttribute("href") === `#${visible.target.id}`));
-  }, { rootMargin: "-18% 0px -68% 0px", threshold: [0.01, 0.2] });
-  Object.keys(sectionMap).forEach((id) => {
-    const section = document.getElementById(id);
-    if (section) observer.observe(section);
+  document.querySelectorAll("[data-lang]").forEach((button) => button.addEventListener("click", () => setLanguage(button.dataset.lang)));
+  document.addEventListener("click", (event) => {
+    const opener = event.target.closest("[data-open-knowledge]");
+    if (opener) openKnowledge(opener.dataset.openKnowledge);
+    if (event.target.closest("[data-close-modal]")) closeModal();
+    const packButton = event.target.closest("[data-pack]");
+    if (packButton) renderPackDetail(packButton.dataset.pack);
   });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeModal();
+  });
+  document.getElementById("knowledge-search").addEventListener("input", renderKnowledgeResults);
+  document.getElementById("battery-selectors").addEventListener("change", (event) => {
+    const checked = [...document.querySelectorAll("#battery-selectors input:checked")];
+    if (checked.length > 4) event.target.checked = false;
+    if (checked.length === 0) event.target.checked = true;
+    updateCharts();
+  });
+  document.querySelector(".rail-prev").addEventListener("click", () => document.getElementById("battery-rail").scrollBy({ left: -360, behavior: "smooth" }));
+  document.querySelector(".rail-next").addEventListener("click", () => document.getElementById("battery-rail").scrollBy({ left: 360, behavior: "smooth" }));
 }
 
 function setupReveal() {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    document.querySelectorAll(".reveal").forEach((item) => item.classList.add("visible"));
+    document.querySelectorAll(".reveal").forEach((node) => node.classList.add("visible"));
     return;
   }
   const observer = new IntersectionObserver((entries) => {
@@ -1559,40 +866,17 @@ function setupReveal() {
         observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.08 });
-  document.querySelectorAll(".reveal").forEach((item) => {
-    const rect = item.getBoundingClientRect();
-    if (rect.top < window.innerHeight && rect.bottom > 0) {
-      item.classList.add("visible");
-      item.style.opacity = "1";
-      item.style.transform = "none";
-      item.style.transition = "none";
-    } else {
-      observer.observe(item);
-    }
-  });
+  }, { threshold: 0.12 });
+  document.querySelectorAll(".reveal").forEach((node) => observer.observe(node));
 }
 
 function init() {
-  renderBatteryTypes();
-  setupKnowledgeBase();
-  renderSelectors();
+  setLanguage(currentLang);
+  setupInteractions();
   setupCalculators();
-  renderTimeline();
-  setupPackExplorer();
-  setupMaterials();
-  renderQuiz();
   setupQuiz();
-  renderGlossary();
-  document.getElementById("glossary-search").addEventListener("input", renderGlossary);
-  setupNavigation();
-  setupLanguage();
   setupReveal();
-  if (typeof Chart === "undefined") {
-    document.querySelectorAll(".chart-box").forEach((box) => box.innerHTML = "<p class='empty-state'>Charts could not load. Check your internet connection and refresh.</p>");
-  } else {
-    createCharts();
-  }
+  setupCharts();
 }
 
 document.addEventListener("DOMContentLoaded", init);
