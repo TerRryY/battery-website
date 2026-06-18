@@ -461,12 +461,12 @@ const knowledgeEntries = [
 const knowledgeMap = new Map(knowledgeEntries.map((entry) => [entry.id, entry]));
 
 const comparisonData = {
-  lead: { color: "#777", midpoint: 40, scores: [2, 10, 7, 5, 4, 7] },
-  nimh: { color: "#a8a8a8", midpoint: 90, scores: [4, 6, 8, 6, 5, 8] },
-  lfp: { color: "#fff", midpoint: 125, scores: [6, 8, 9, 9, 8, 6] },
-  nmc: { color: "#d8d8d8", midpoint: 240, scores: [9, 5, 6, 6, 8, 5] },
-  sodium: { color: "#b8b8b8", midpoint: 140, scores: [5, 8, 8, 7, 7, 9] },
-  solid: { color: "#8fc7ff", midpoint: 330, scores: [10, 2, 8, 7, 8, 6] }
+  lead: { color: "#b9a38f", midpoint: 40, scores: [2, 10, 7, 5, 4, 7] },
+  nimh: { color: "#d5aa5e", midpoint: 90, scores: [4, 6, 8, 6, 5, 8] },
+  lfp: { color: "#67c18c", midpoint: 125, scores: [6, 8, 9, 9, 8, 6] },
+  nmc: { color: "#df786f", midpoint: 240, scores: [9, 5, 6, 6, 8, 5] },
+  sodium: { color: "#72a9d6", midpoint: 140, scores: [5, 8, 8, 7, 7, 9] },
+  solid: { color: "#ad8bd4", midpoint: 330, scores: [10, 2, 8, 7, 8, 6] }
 };
 
 const quizData = [
@@ -561,7 +561,7 @@ function renderSelectors() {
   const selected = new Set([...document.querySelectorAll("#battery-selectors input:checked")].map((input) => input.value));
   const active = selected.size ? selected : defaults;
   document.getElementById("battery-selectors").innerHTML = batteries.map((battery) => `
-    <label class="selector-item">
+    <label class="selector-item" style="--series-color: ${comparisonData[battery.id].color}">
       <input type="checkbox" value="${battery.id}" ${active.has(battery.id) ? "checked" : ""}>
       <span class="selector-dot"></span>
       <span>${battery.short}</span>
@@ -717,10 +717,14 @@ function radarData(ids) {
       label: batteries.find((battery) => battery.id === id)?.short || id,
       data: comparisonData[id].scores,
       borderColor: comparisonData[id].color,
-      backgroundColor: `${comparisonData[id].color}22`,
+      backgroundColor: "transparent",
       pointBackgroundColor: comparisonData[id].color,
-      borderWidth: 1.6,
-      pointRadius: 2
+      pointBorderColor: "#050505",
+      pointBorderWidth: 1.5,
+      borderWidth: 2.25,
+      pointRadius: 3,
+      pointHoverRadius: 4,
+      fill: false
     }))
   };
 }

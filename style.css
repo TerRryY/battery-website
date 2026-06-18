@@ -71,11 +71,22 @@ p { text-wrap: pretty; }
   gap: 34px;
 }
 .brand {
-  font-size: 16px;
-  font-weight: 800;
-  letter-spacing: -.04em;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  font-weight: 760;
+  letter-spacing: .08em;
   white-space: nowrap;
 }
+.brand img {
+  width: 42px;
+  height: 28px;
+  flex: 0 0 auto;
+  object-fit: contain;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.brand:hover img { opacity: .82; transform: translateX(2px); }
 .nav-links {
   margin-left: auto;
   display: flex;
@@ -421,8 +432,8 @@ p { text-wrap: pretty; }
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: currentColor;
-  opacity: .42;
+  background: var(--series-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--series-color) 14%, transparent);
 }
 .selector-item:has(input:checked) { color: #fff; }
 .selector-check {
@@ -431,7 +442,11 @@ p { text-wrap: pretty; }
   border: 1px solid rgba(255,255,255,.34);
   border-radius: 50%;
 }
-.selector-item:has(input:checked) .selector-check { background: #fff; box-shadow: inset 0 0 0 5px #050505; }
+.selector-item:has(input:checked) .selector-check {
+  border-color: var(--series-color);
+  background: var(--series-color);
+  box-shadow: inset 0 0 0 5px #050505;
+}
 .comparison-lab small {
   display: block;
   margin-top: 22px;
@@ -820,6 +835,8 @@ select { color-scheme: dark; }
 @media (max-width: 760px) {
   :root { --header: 66px; --space: 88px; }
   .nav-shell { justify-content: space-between; }
+  .brand { gap: 9px; font-size: 12px; }
+  .brand img { width: 36px; height: 24px; }
   .menu-toggle {
     width: 42px;
     height: 42px;
