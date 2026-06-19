@@ -3,13 +3,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Battery Lab is a cinematic learning website about battery technologies, materials science, EV systems, and future energy storage.">
+  <meta name="description" content="Battery Lab 是一个关于电池体系、材料科学、电动车电池包与未来储能技术的双语互动科普网站。">
+  <meta name="keywords" content="电池科学,锂离子电池,磷酸铁锂,三元锂,钠离子电池,固态电池,材料科学,电动车电池包,BMS">
+  <meta name="author" content="Terry Wang">
+  <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#000000">
+  <link rel="canonical" href="https://terrryy.github.io/battery-website/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Battery Lab">
+  <meta property="og:title" content="Battery Lab — 电池科学博物馆">
+  <meta property="og:description" content="从电池化学、材料机理到 BMS 与热管理，用互动方式理解现代储能技术。">
+  <meta property="og:url" content="https://terrryy.github.io/battery-website/">
+  <meta property="og:image" content="https://terrryy.github.io/battery-website/assets/battery-pack-cinematic.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Battery Lab — 电池科学博物馆">
+  <meta name="twitter:description" content="一个面向普通读者的双语电池科学学习网站。">
+  <meta name="twitter:image" content="https://terrryy.github.io/battery-website/assets/battery-pack-cinematic.png">
   <title>Battery Lab — 电池科学博物馆</title>
   <link rel="icon" type="image/svg+xml" href="favicon.svg?v=5">
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
+  <script src="learning-content.js" defer></script>
   <script src="script.js" defer></script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "LearningResource",
+      "name": "Battery Lab",
+      "url": "https://terrryy.github.io/battery-website/",
+      "description": "A bilingual interactive learning resource about battery chemistry, materials science, EV battery packs, and future energy storage.",
+      "author": { "@type": "Person", "name": "Terry Wang" },
+      "educationalLevel": "Secondary education",
+      "inLanguage": ["zh-CN", "en"]
+    }
+  </script>
 </head>
 <body>
   <a class="skip-link" href="#main">跳到主要内容</a>
@@ -75,6 +102,7 @@
         <div class="battery-rail" id="battery-rail" tabindex="0" aria-label="Battery type gallery"></div>
         <button class="rail-arrow rail-next" type="button" aria-label="Next battery">›</button>
       </div>
+      <div class="chemistry-learning reveal" id="chemistry-learning"></div>
     </section>
 
     <section class="comparison-section museum-section" id="comparison">
@@ -107,6 +135,7 @@
         <p data-i18n="materials.body">正极、负极、电解质和隔膜共同决定电池的容量、安全、成本和寿命。材料不是列表，而是性能的源头。</p>
       </div>
       <div class="material-mosaic reveal" id="material-mosaic"></div>
+      <div class="materials-deep-dive reveal" id="materials-deep-dive"></div>
     </section>
 
     <section class="pack-museum museum-section" id="pack">
@@ -125,6 +154,7 @@
         </div>
         <article class="pack-detail" id="pack-detail" aria-live="polite"></article>
       </div>
+      <div class="pack-engineering reveal" id="pack-engineering"></div>
     </section>
 
     <section class="future-section museum-section" id="future">
@@ -134,6 +164,7 @@
         <p data-i18n="future.body">固态、钠离子、硅负极、锂硫、锂空气和更智能的能量管理，都在从不同方向逼近更安全、更便宜、更稳定的储能系统。</p>
       </div>
       <div class="future-grid reveal" id="future-grid"></div>
+      <div class="future-maturity reveal" id="future-maturity"></div>
     </section>
 
     <section class="tools-section museum-section" id="tools">
@@ -157,10 +188,12 @@
         <article class="calculator-panel">
           <h3 data-i18n="calc.energyTitle">电池能量计算器</h3>
           <p data-i18n="calc.energyBody">用电压和安时容量估算电池储存的电能。</p>
+          <p class="calculator-formula">E (Wh) = U (V) × C (Ah)</p>
           <form id="energy-form" novalidate>
             <label><span data-i18n="calc.voltage">电压</span><input id="voltage" type="number" min="0" step="any" placeholder="12"></label>
             <label><span data-i18n="calc.capacity">容量 Ah</span><input id="capacity" type="number" min="0" step="any" placeholder="60"></label>
             <button class="text-link form-link" type="submit"><span data-i18n="calc.calculate">计算</span><i>→</i></button>
+            <button class="quiet-button sample-button" type="button" data-calculator-sample="energy" data-i18n="calc.example">加载示例</button>
             <button class="quiet-button" type="reset" data-i18n="calc.reset">重置</button>
             <p class="form-error" id="energy-error" role="alert"></p>
           </form>
@@ -169,11 +202,13 @@
         <article class="calculator-panel">
           <h3 data-i18n="calc.rangeTitle">电动车续航计算器</h3>
           <p data-i18n="calc.rangeBody">用电池容量、能耗和低温系数估算续航。</p>
+          <p class="calculator-formula">Range (km) = Pack (kWh) × 1000 ÷ Consumption (Wh/km)</p>
           <form id="range-form" novalidate>
             <label><span data-i18n="calc.size">电池容量 kWh</span><input id="battery-size" type="number" min="0" step="any" placeholder="60"></label>
             <label><span data-i18n="calc.consumption">能耗 Wh/km</span><input id="consumption" type="number" min="0" step="any" placeholder="170"></label>
             <label><span data-i18n="calc.temperature">温度模型</span><select id="temperature"><option value="1" data-i18n="calc.normal">常温 · 100%</option><option value="0.85" data-i18n="calc.cold">寒冷 · 85%</option><option value="0.7" data-i18n="calc.veryCold">严寒 · 70%</option></select></label>
             <button class="text-link form-link" type="submit"><span data-i18n="calc.estimate">估算</span><i>→</i></button>
+            <button class="quiet-button sample-button" type="button" data-calculator-sample="range" data-i18n="calc.example">加载示例</button>
             <button class="quiet-button" type="reset" data-i18n="calc.reset">重置</button>
             <p class="form-error" id="range-error" role="alert"></p>
           </form>
@@ -197,6 +232,10 @@
       </section>
     </section>
 
+    <section class="references-section museum-section" id="references">
+      <div class="references-content reveal" id="references-content"></div>
+    </section>
+
     <section class="research-section museum-section" id="research">
       <div class="section-intro reveal">
         <p class="section-kicker" data-i18n="research.kicker">个人研究思考</p>
@@ -214,9 +253,11 @@
     <div class="footer-links">
       <span data-i18n="footer.built">Built by Terry Wang</span>
       <a href="#knowledge" data-i18n="footer.search">知识库</a>
+      <button class="footer-share" id="share-site" type="button" data-i18n="footer.share">分享网站</button>
       <a href="#home" data-i18n="footer.top">回到顶部 ↑</a>
     </div>
   </footer>
+  <p class="share-status" id="share-status" role="status" aria-live="polite"></p>
 
   <div class="knowledge-modal" id="knowledge-modal" hidden role="dialog" aria-modal="true" aria-labelledby="knowledge-title">
     <button class="modal-backdrop" type="button" data-close-modal aria-label="Close"></button>

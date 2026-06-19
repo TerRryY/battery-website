@@ -5,12 +5,18 @@ A student-built interactive website about battery technologies, energy storage, 
 ## Features
 
 - Battery type overview
+- Visible chemistry comparison table with simplified reactions and typical ranges
+- NCM 111 / 523 / 622 / 811 composition explainer
 - Interactive comparison charts
 - Battery energy calculator
 - EV range and cold-weather calculator
 - Battery innovation timeline
 - Cell-to-pack visualization
 - Battery materials database
+- Materials mechanism deep dives covering crystal structures, SEI, silicon expansion, electrolytes, and separators
+- Pack engineering notes on BMS estimation, thermal management, structural integration, and layered safety
+- Future-technology maturity and bottleneck tracking
+- Peer-reviewed and industry reference list
 - Battery quiz
 - Searchable glossary
 - Personal research thoughts

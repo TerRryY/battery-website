@@ -5,6 +5,8 @@ if (!["zh", "en"].includes(currentLang)) currentLang = "zh";
 let radarChart;
 let barChart;
 let currentModalId = null;
+let lastModalTrigger = null;
+const depthContent = window.BATTERY_DEPTH_CONTENT;
 
 const ui = {
   zh: {
@@ -61,6 +63,7 @@ const ui = {
       voltage: "电压 V",
       capacity: "容量 Ah",
       calculate: "计算",
+      example: "加载示例",
       reset: "重置",
       result: "结果",
       energyHint: "输入数值后显示估算结果。",
@@ -82,7 +85,7 @@ const ui = {
     quiz: { kicker: "知识小测", title: "你真的理解电池了吗？", submit: "提交答案", restart: "重新开始", correct: "回答正确。", scorePerfect: "很好，你已经连接起这些关键概念。", scoreAgain: "阅读解释后，可以再次尝试。", answer: "正确答案" },
     research: { kicker: "个人研究思考", title: "材料、热管理和系统问题，是我最想继续研究的方向。" },
     modal: { close: "关闭" },
-    footer: { body: "一个关于电池技术、材料科学与能源储存的学生学习项目。", built: "Terry Wang 制作", search: "知识库", top: "回到顶部 ↑" },
+    footer: { body: "一个关于电池技术、材料科学与能源储存的学生学习项目。", built: "Terry Wang 制作", search: "知识库", share: "分享网站", copied: "链接已复制", top: "回到顶部 ↑" },
     labels: { learnMore: "了解更多", approximate: "典型范围", whkg: "Wh/kg · 近似中值", chartsFail: "图表加载失败，请检查网络连接后刷新。", noCharts: "无图表" }
   },
   en: {
@@ -139,6 +142,7 @@ const ui = {
       voltage: "Voltage V",
       capacity: "Capacity Ah",
       calculate: "Calculate",
+      example: "Load Example",
       reset: "Reset",
       result: "Result",
       energyHint: "Enter values to show an estimate.",
@@ -160,7 +164,7 @@ const ui = {
     quiz: { kicker: "Knowledge check", title: "Do you really understand batteries?", submit: "Submit Answers", restart: "Restart", correct: "Correct.", scorePerfect: "Excellent. You connected the key ideas.", scoreAgain: "Review the explanations and try again.", answer: "Answer" },
     research: { kicker: "Personal research thoughts", title: "Materials, thermal management, and system questions are what I want to keep studying." },
     modal: { close: "Close" },
-    footer: { body: "A student learning project about battery technology, materials science, and energy storage.", built: "Built by Terry Wang", search: "Knowledge base", top: "Back to top ↑" },
+    footer: { body: "A student learning project about battery technology, materials science, and energy storage.", built: "Built by Terry Wang", search: "Knowledge base", share: "Share site", copied: "Link copied", top: "Back to top ↑" },
     labels: { learnMore: "Learn More", approximate: "Typical range", whkg: "Wh/kg · approximate midpoint", chartsFail: "Charts could not load. Check your connection and refresh.", noCharts: "No chart" }
   }
 };
@@ -458,6 +462,8 @@ const knowledgeEntries = [
   { id: "soh", category: { zh: "性能指标", en: "Performance term" }, short: "SOH", zh: { title: "SOH 健康状态", desc: "表示电池相对于新电池的健康程度。", tags: ["老化", "容量衰减"], metrics: [], sections: [["基本概念", "SOH 不是剩余电量，而是电池老化程度。"], ["影响因素", "高温、快充、长期满电和深度放电都会影响 SOH。"], ["普通人怎么理解", "SOC 是杯子里还有多少水，SOH 是杯子有没有变小。"]] }, en: { title: "SOH State of Health", desc: "An estimate of battery aging compared with a new battery.", tags: ["Aging", "Capacity fade"], metrics: [], sections: [["Concept", "SOH is not remaining charge; it is the battery's aging condition."], ["Factors", "Heat, fast charging, long high SOC, and deep discharge affect SOH."], ["Analogy", "SOC is how much water is in the cup; SOH is whether the cup has shrunk."]] } }
 ];
 
+if (depthContent?.glossary) knowledgeEntries.push(...depthContent.glossary);
+
 const knowledgeMap = new Map(knowledgeEntries.map((entry) => [entry.id, entry]));
 
 const comparisonData = {
@@ -525,14 +531,51 @@ function setLanguage(lang) {
 function renderAll() {
   renderStats();
   renderBatteries();
+  renderChemistryLearning();
   renderSelectors();
   renderMaterials();
+  renderMaterialsDeepDive();
   renderPackTabs();
+  renderPackEngineering();
   renderFuture();
+  renderFutureMaturity();
+  renderReferences();
   renderKnowledgeResults();
   renderQuiz();
   renderResearch();
   updateCharts();
+}
+
+function depthLabels() {
+  return depthContent.labels[currentLang];
+}
+
+function renderTermButtons(terms = []) {
+  const labels = depthLabels();
+  return terms.map((term) => `<button class="term-trigger" type="button" data-open-knowledge="${term.id}" aria-label="${labels.openTerm}: ${term[currentLang]}">${term[currentLang]}<span>↗</span></button>`).join("");
+}
+
+function renderChemistryLearning() {
+  const labels = depthLabels();
+  const rows = depthContent.chemistries.map((item) => {
+    const values = item[currentLang];
+    return `<tr data-open-knowledge="${item.id}">
+      <th scope="row"><button type="button" data-open-knowledge="${item.id}">${item.name}<span>↗</span></button></th>
+      ${values.map((value, index) => `<td data-label="${labels.columns[index + 1]}">${value}</td>`).join("")}
+    </tr>`;
+  }).join("");
+  const ratios = depthContent.ncmRatios.map((item) => {
+    const [title, body] = item[currentLang];
+    return `<article class="ratio-card">
+      <div class="ratio-head"><strong>NCM ${item.ratio}</strong><span>Ni ${item.ni}%</span></div>
+      <div class="ratio-bar"><i style="width:${item.ni}%"></i></div>
+      <h4>${title}</h4><p>${body}</p>
+    </article>`;
+  }).join("");
+  document.getElementById("chemistry-learning").innerHTML = `
+    <div class="learning-heading"><h3>${labels.chemistryTitle}</h3><p>${labels.chemistryNote}</p></div>
+    <div class="chemistry-table-wrap"><table class="chemistry-table"><thead><tr>${labels.columns.map((column) => `<th scope="col">${column}</th>`).join("")}</tr></thead><tbody>${rows}</tbody></table></div>
+    <div class="ncm-explainer"><div><h3>${labels.ncmTitle}</h3><p>${labels.ncmBody}</p></div><div class="ratio-grid">${ratios}</div></div>`;
 }
 
 function renderStats() {
@@ -581,6 +624,18 @@ function renderMaterials() {
   }).join("");
 }
 
+function renderMaterialsDeepDive() {
+  const labels = depthLabels();
+  const articles = depthContent.materials.map((item, index) => {
+    const [mechanism, consequence, response] = item[currentLang];
+    return `<article class="mechanism-row">
+      <div class="mechanism-title"><span>${String(index + 1).padStart(2, "0")}</span><h3>${item.title[currentLang]}</h3>${renderTermButtons(item.terms)}</div>
+      <dl><div><dt>${labels.mechanism}</dt><dd>${mechanism}</dd></div><div><dt>${labels.consequence}</dt><dd>${consequence}</dd></div><div><dt>${labels.response}</dt><dd>${response}</dd></div></dl>
+    </article>`;
+  }).join("");
+  document.getElementById("materials-deep-dive").innerHTML = `<div class="learning-heading"><h3>${labels.materialsTitle}</h3><p>${labels.materialsBody}</p></div><div class="mechanism-list">${articles}</div>`;
+}
+
 function renderPackTabs(active = document.querySelector(".pack-tab.active")?.dataset.pack || "cell") {
   document.getElementById("pack-tabs").innerHTML = packItems.map((item) => `<button class="pack-tab ${item.id === active ? "active" : ""}" type="button" data-pack="${item.id}">${item[currentLang][0]}</button>`).join("");
   renderPackDetail(active);
@@ -593,11 +648,36 @@ function renderPackDetail(id) {
   document.querySelectorAll(".pack-tab").forEach((button) => button.classList.toggle("active", button.dataset.pack === id));
 }
 
+function renderPackEngineering() {
+  const labels = depthLabels();
+  const items = depthContent.pack.map((item, index) => `<article class="engineering-topic">
+    <header><span>${String(index + 1).padStart(2, "0")}</span><h3>${item.title[currentLang]}</h3></header>
+    <div class="term-row">${renderTermButtons(item.terms)}</div>
+    <ol>${item[currentLang].map((point) => `<li>${point}</li>`).join("")}</ol>
+  </article>`).join("");
+  document.getElementById("pack-engineering").innerHTML = `<div class="learning-heading"><h3>${labels.packTitle}</h3><p>${labels.packBody}</p></div><div class="engineering-grid">${items}</div>`;
+}
+
 function renderFuture() {
   document.getElementById("future-grid").innerHTML = futureItems.map((item, index) => {
     const [title, body] = item[currentLang];
     return `<article class="future-card"><span>${String(index + 1).padStart(2, "0")}</span><h3>${title}</h3><p>${body}</p></article>`;
   }).join("");
+}
+
+function renderFutureMaturity() {
+  const labels = depthLabels();
+  const items = depthContent.future.map((item) => {
+    const [bottleneck, approach] = item[currentLang];
+    return `<article class="maturity-row"><div><h3>${item.name[currentLang]}</h3><span>${item.level[currentLang]}</span></div><dl><div><dt>${labels.bottleneck}</dt><dd>${bottleneck}</dd></div><div><dt>${labels.approach}</dt><dd>${approach}</dd></div></dl></article>`;
+  }).join("");
+  document.getElementById("future-maturity").innerHTML = `<div class="learning-heading"><h3>${labels.futureTitle}</h3><p>${labels.futureBody}</p></div><div class="maturity-list">${items}</div>`;
+}
+
+function renderReferences() {
+  const labels = depthLabels();
+  const links = depthContent.sources.map((source, index) => `<a href="${source.url}" target="_blank" rel="noreferrer"><span>${String(index + 1).padStart(2, "0")}</span><strong>${source.title}</strong><small>${source.note[currentLang]}</small><i>↗</i></a>`).join("");
+  document.getElementById("references-content").innerHTML = `<div class="learning-heading"><h3>${labels.sourcesTitle}</h3><p>${labels.sourcesBody}</p></div><div class="source-list">${links}</div>`;
 }
 
 function normalize(value) {
@@ -646,6 +726,7 @@ function openKnowledge(id, focus = true) {
   document.getElementById("modal-metrics").innerHTML = (data.metrics || []).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   document.getElementById("modal-body").innerHTML = (data.sections || []).map(([heading, body]) => `<section class="modal-block"><h3>${heading}</h3><p>${body}</p></section>`).join("");
   const modal = document.getElementById("knowledge-modal");
+  if (focus) lastModalTrigger = document.activeElement;
   modal.hidden = false;
   document.body.classList.add("modal-open");
   if (focus) modal.querySelector(".modal-close").focus({ preventScroll: true });
@@ -655,6 +736,8 @@ function closeModal() {
   document.getElementById("knowledge-modal").hidden = true;
   document.body.classList.remove("modal-open");
   currentModalId = null;
+  if (lastModalTrigger?.isConnected) lastModalTrigger.focus({ preventScroll: true });
+  lastModalTrigger = null;
 }
 
 function renderQuiz() {
@@ -796,6 +879,46 @@ function setupCalculators() {
     document.querySelector("#range-result strong").textContent = "— km";
     document.querySelector("#range-result p").textContent = t("calc.rangeHint");
   }));
+
+  document.querySelectorAll("[data-calculator-sample]").forEach((button) => {
+    button.addEventListener("click", () => {
+      if (button.dataset.calculatorSample === "energy") {
+        document.getElementById("voltage").value = "12";
+        document.getElementById("capacity").value = "60";
+        energyForm.requestSubmit();
+        return;
+      }
+      document.getElementById("battery-size").value = "60";
+      document.getElementById("consumption").value = "170";
+      document.getElementById("temperature").value = "0.85";
+      rangeForm.requestSubmit();
+    });
+  });
+}
+
+function setupSharing() {
+  const button = document.getElementById("share-site");
+  const status = document.getElementById("share-status");
+  if (!button || !status) return;
+  button.addEventListener("click", async () => {
+    const shareData = {
+      title: document.title,
+      text: document.querySelector('meta[name="description"]')?.content || "Battery Lab",
+      url: window.location.href.split("#")[0]
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        return;
+      }
+      await navigator.clipboard.writeText(shareData.url);
+      status.textContent = t("footer.copied");
+      status.classList.add("visible");
+      window.setTimeout(() => status.classList.remove("visible"), 2200);
+    } catch (error) {
+      if (error.name !== "AbortError") status.textContent = shareData.url;
+    }
+  });
 }
 
 function setupQuiz() {
@@ -878,6 +1001,7 @@ function init() {
   setLanguage(currentLang);
   setupInteractions();
   setupCalculators();
+  setupSharing();
   setupQuiz();
   setupReveal();
   setupCharts();

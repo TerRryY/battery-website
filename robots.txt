@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://terrryy.github.io/battery-website/sitemap.xml
