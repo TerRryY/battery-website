@@ -7,10 +7,13 @@ let barChart;
 let currentModalId = null;
 let lastModalTrigger = null;
 const depthContent = window.BATTERY_DEPTH_CONTENT;
+const experienceContent = window.BATTERY_EXPERIENCE;
+let activeMechanism = "intercalation";
+let bookmarks = new Set(JSON.parse(localStorage.getItem("battery-lab-bookmarks") || "[]"));
 
 const ui = {
   zh: {
-    nav: { story: "故事", types: "电池", materials: "材料", pack: "电池包", future: "未来", tools: "工具" },
+    nav: { story: "故事", types: "电池", materials: "材料", pack: "电池包", future: "未来", tools: "工具", search: "搜索" },
     hero: {
       title: "电池科学",
       sub: "探索驱动手机、电动汽车与未来能源系统的核心技术。",
@@ -71,6 +74,9 @@ const ui = {
       rangeBody: "用电池容量、能耗和低温系数估算续航。",
       size: "电池容量 kWh",
       consumption: "能耗 Wh/km",
+      speed: "平均车速 km/h",
+      hvac: "空调平均功率 kW",
+      usable: "可用容量比例 %",
       temperature: "温度模型",
       normal: "常温 · 100%",
       cold: "寒冷 · 85%",
@@ -84,12 +90,13 @@ const ui = {
     },
     quiz: { kicker: "知识小测", title: "你真的理解电池了吗？", submit: "提交答案", restart: "重新开始", correct: "回答正确。", scorePerfect: "很好，你已经连接起这些关键概念。", scoreAgain: "阅读解释后，可以再次尝试。", answer: "正确答案" },
     research: { kicker: "个人研究思考", title: "材料、热管理和系统问题，是我最想继续研究的方向。" },
+    experience: { basics: "基础", systems: "体系", materials: "材料", pack: "系统", frontier: "前沿", tools: "工具", sohKicker: "SOH 简易估算", sohTitle: "容量还剩多少，不等于电量还剩多少。", sohBody: "用当前满充容量与新电池额定容量估算容量型 SOH。这是教育模型，不替代专业诊断。", rated: "新电池额定容量 Ah", current: "当前满充容量 Ah", estimateSoh: "估算 SOH", capacitySoh: "容量型 SOH", sohHint: "它只反映容量衰减，不代表内阻、功率和安全状态。", searchTitle: "搜索整个知识库", keyword: "关键词", searchHelp: "按 / 随时打开 · 收藏保存在当前浏览器" },
     modal: { close: "关闭" },
     footer: { body: "一个关于电池技术、材料科学与能源储存的学生学习项目。", built: "Terry Wang 制作", search: "知识库", share: "分享网站", copied: "链接已复制", top: "回到顶部 ↑" },
     labels: { learnMore: "了解更多", approximate: "典型范围", whkg: "Wh/kg · 近似中值", chartsFail: "图表加载失败，请检查网络连接后刷新。", noCharts: "无图表" }
   },
   en: {
-    nav: { story: "Story", types: "Batteries", materials: "Materials", pack: "Pack", future: "Future", tools: "Tools" },
+    nav: { story: "Story", types: "Batteries", materials: "Materials", pack: "Pack", future: "Future", tools: "Tools", search: "Search" },
     hero: {
       title: "Battery Science",
       sub: "Exploring the technologies behind smartphones, electric vehicles, and future energy systems.",
@@ -150,6 +157,9 @@ const ui = {
       rangeBody: "Estimate range from pack size, consumption, and a cold-weather factor.",
       size: "Battery Size kWh",
       consumption: "Consumption Wh/km",
+      speed: "Average Speed km/h",
+      hvac: "Average HVAC Power kW",
+      usable: "Usable Capacity %",
       temperature: "Temperature Model",
       normal: "Normal · 100%",
       cold: "Cold · 85%",
@@ -163,6 +173,7 @@ const ui = {
     },
     quiz: { kicker: "Knowledge check", title: "Do you really understand batteries?", submit: "Submit Answers", restart: "Restart", correct: "Correct.", scorePerfect: "Excellent. You connected the key ideas.", scoreAgain: "Review the explanations and try again.", answer: "Answer" },
     research: { kicker: "Personal research thoughts", title: "Materials, thermal management, and system questions are what I want to keep studying." },
+    experience: { basics: "Basics", systems: "Types", materials: "Materials", pack: "Systems", frontier: "Frontier", tools: "Tools", sohKicker: "Simple SOH estimate", sohTitle: "Capacity health is not the same as charge remaining.", sohBody: "Estimate capacity-based SOH from current full-charge capacity versus new rated capacity. This educational model is not a professional diagnosis.", rated: "New rated capacity Ah", current: "Current full-charge capacity Ah", estimateSoh: "Estimate SOH", capacitySoh: "Capacity-based SOH", sohHint: "This reflects capacity fade only, not resistance, power capability, or safety condition.", searchTitle: "Search the full knowledge base", keyword: "Keyword", searchHelp: "Press / anytime · bookmarks stay in this browser" },
     modal: { close: "Close" },
     footer: { body: "A student learning project about battery technology, materials science, and energy storage.", built: "Built by Terry Wang", search: "Knowledge base", share: "Share site", copied: "Link copied", top: "Back to top ↑" },
     labels: { learnMore: "Learn More", approximate: "Typical range", whkg: "Wh/kg · approximate midpoint", chartsFail: "Charts could not load. Check your connection and refresh.", noCharts: "No chart" }
@@ -524,6 +535,8 @@ function setLanguage(lang) {
   document.querySelectorAll("[data-lang]").forEach((button) => button.classList.toggle("active", button.dataset.lang === currentLang));
   const knowledgeSearch = document.getElementById("knowledge-search");
   if (knowledgeSearch) knowledgeSearch.placeholder = t("knowledge.placeholder");
+  const globalSearch = document.getElementById("global-search-input");
+  if (globalSearch) globalSearch.placeholder = currentLang === "zh" ? "搜索硅负极、CTP、热失控、SOC…" : "Search silicon anodes, CTP, thermal runaway, SOC…";
   renderAll();
   if (currentModalId) openKnowledge(currentModalId, false);
 }
@@ -540,6 +553,7 @@ function renderAll() {
   renderFuture();
   renderFutureMaturity();
   renderReferences();
+  renderExperience();
   renderKnowledgeResults();
   renderQuiz();
   renderResearch();
@@ -680,6 +694,23 @@ function renderReferences() {
   document.getElementById("references-content").innerHTML = `<div class="learning-heading"><h3>${labels.sourcesTitle}</h3><p>${labels.sourcesBody}</p></div><div class="source-list">${links}</div>`;
 }
 
+function mechanismGraphic(id) {
+  if (id === "sei") return `<div class="sei-graphic" aria-hidden="true"><div class="electrode-surface"></div><div class="sei-film"></div>${Array.from({ length: 8 }, (_, index) => `<i style="--i:${index}"></i>`).join("")}</div>`;
+  if (id === "runaway") return `<div class="runaway-graphic" aria-hidden="true">${Array.from({ length: 7 }, (_, index) => `<i style="--i:${index}"></i>`).join("")}<span class="heat-wave one"></span><span class="heat-wave two"></span></div>`;
+  return `<div class="ion-graphic" aria-hidden="true"><div class="lattice cathode-lattice"></div><div class="separator-line"></div><div class="lattice anode-lattice"></div>${Array.from({ length: 7 }, (_, index) => `<i style="--i:${index}"></i>`).join("")}<svg viewBox="0 0 640 240" preserveAspectRatio="none"><path d="M70 45 C210 0 430 0 570 45"/></svg></div>`;
+}
+
+function renderExperience() {
+  if (!experienceContent) return;
+  document.getElementById("primer-block").innerHTML = `<div class="learning-heading"><h3>${currentLang === "zh" ? "先建立四个基础概念" : "Four ideas to learn first"}</h3><p>${currentLang === "zh" ? "不需要先学完整电化学，也能读懂后面的材料与系统。" : "You do not need a full electrochemistry course before exploring the rest of the site."}</p></div><div class="primer-grid">${experienceContent.primer.map((item) => `<article><span>${item.key}</span><h4>${item[currentLang][0]}</h4><p>${item[currentLang][1]}</p></article>`).join("")}</div>`;
+  const mechanism = experienceContent.mechanisms.find((item) => item.id === activeMechanism) || experienceContent.mechanisms[0];
+  document.getElementById("mechanism-studio").innerHTML = `<div class="learning-heading"><h3>${currentLang === "zh" ? "机理动态演示" : "Mechanism studio"}</h3><p>${currentLang === "zh" ? "切换三个过程，观察离子、界面膜与热量如何演化。" : "Switch between three processes to see ions, interface films, and heat evolve."}</p></div><div class="mechanism-tabs">${experienceContent.mechanisms.map((item) => `<button type="button" data-mechanism="${item.id}" class="${item.id === activeMechanism ? "active" : ""}">${item[currentLang][0]}</button>`).join("")}</div><div class="mechanism-stage">${mechanismGraphic(mechanism.id)}<article><span>${currentLang === "zh" ? "工作过程" : "Process"}</span><h3>${mechanism[currentLang][0]}</h3><p class="mechanism-lead">${mechanism[currentLang][1]}</p><p>${mechanism[currentLang][2]}</p></article></div>`;
+  document.getElementById("industry-cases").innerHTML = `<div class="learning-heading"><h3>${currentLang === "zh" ? "产业落地观察" : "Industry deployment watch"}</h3><p>${currentLang === "zh" ? "时间、成熟度与证据来源并列展示。厂商公布指标不等同于独立实测。" : "Dates, maturity, and evidence are shown together. Manufacturer claims are not independent test results."}</p></div><div class="case-list">${experienceContent.cases.map((item) => `<article><div><time>${item.date}</time><span>${item.stage[currentLang]}</span></div><h3>${item.title[currentLang]}</h3><p>${item.body[currentLang]}</p><a href="${item.url}" target="_blank" rel="noreferrer">${item.source} ↗</a></article>`).join("")}</div><div class="sector-strip">${experienceContent.sectors.map((item) => `<article><h3>${item[currentLang][0]}</h3><p>${item[currentLang][1]}</p></article>`).join("")}</div>`;
+  const maintenance = experienceContent.maintenance;
+  document.getElementById("maintenance-note").innerHTML = `<div><span>${currentLang === "zh" ? "最后复核" : "Last reviewed"}</span><strong>${maintenance.reviewed}</strong></div><article><h3>${maintenance[currentLang][0]}</h3><p>${maintenance[currentLang][1]}</p><p>${maintenance[currentLang][2]}</p></article>`;
+  renderGlobalSearchResults();
+}
+
 function normalize(value) {
   return String(value || "").toLowerCase().replace(/\s+/g, "");
 }
@@ -714,6 +745,55 @@ function renderKnowledgeResults() {
     : `<p class="empty-state">${t("knowledge.empty")}</p>`;
 }
 
+function matchingKnowledgeEntries(query) {
+  const normalized = normalize(query);
+  return knowledgeEntries.filter((entry) => !normalized || searchable(entry).includes(normalized)).slice(0, 14);
+}
+
+function renderGlobalSearchResults() {
+  const input = document.getElementById("global-search-input");
+  const target = document.getElementById("global-search-results");
+  if (!input || !target) return;
+  const query = input.value;
+  const entries = matchingKnowledgeEntries(query);
+  const saved = knowledgeEntries.filter((entry) => bookmarks.has(entry.id));
+  target.innerHTML = `${!query && saved.length ? `<div class="saved-heading">${currentLang === "zh" ? "已收藏" : "Saved"}</div>${saved.map(globalResultMarkup).join("")}` : ""}${entries.length ? entries.map(globalResultMarkup).join("") : `<p class="empty-state">${t("knowledge.empty")}</p>`}`;
+}
+
+function globalResultMarkup(entry) {
+  const data = entryText(entry);
+  return `<button type="button" data-open-knowledge="${entry.id}"><span>${entry.category[currentLang]}</span><strong>${data.title}</strong><small>${data.desc}</small><i>${bookmarks.has(entry.id) ? "★" : "↗"}</i></button>`;
+}
+
+function openGlobalSearch() {
+  const dialog = document.getElementById("global-search");
+  dialog.hidden = false;
+  document.body.classList.add("modal-open");
+  renderGlobalSearchResults();
+  requestAnimationFrame(() => document.getElementById("global-search-input").focus());
+}
+
+function closeGlobalSearch() {
+  document.getElementById("global-search").hidden = true;
+  if (document.getElementById("knowledge-modal").hidden) document.body.classList.remove("modal-open");
+}
+
+function toggleBookmark() {
+  if (!currentModalId) return;
+  if (bookmarks.has(currentModalId)) bookmarks.delete(currentModalId);
+  else bookmarks.add(currentModalId);
+  localStorage.setItem("battery-lab-bookmarks", JSON.stringify([...bookmarks]));
+  updateBookmarkButton();
+  renderGlobalSearchResults();
+}
+
+function updateBookmarkButton() {
+  const button = document.getElementById("modal-bookmark");
+  if (!button || !currentModalId) return;
+  const saved = bookmarks.has(currentModalId);
+  button.textContent = currentLang === "zh" ? (saved ? "★ 已收藏" : "＋ 收藏词条") : (saved ? "★ Saved" : "+ Save entry");
+}
+
 function openKnowledge(id, focus = true) {
   const entry = knowledgeMap.get(id);
   if (!entry) return;
@@ -725,6 +805,7 @@ function openKnowledge(id, focus = true) {
   document.getElementById("modal-tags").innerHTML = (data.tags || []).map((tag) => `<span>${tag}</span>`).join("");
   document.getElementById("modal-metrics").innerHTML = (data.metrics || []).map(([label, value]) => `<div><span>${label}</span><strong>${value}</strong></div>`).join("");
   document.getElementById("modal-body").innerHTML = (data.sections || []).map(([heading, body]) => `<section class="modal-block"><h3>${heading}</h3><p>${body}</p></section>`).join("");
+  updateBookmarkButton();
   const modal = document.getElementById("knowledge-modal");
   if (focus) lastModalTrigger = document.activeElement;
   modal.hidden = false;
@@ -861,18 +942,24 @@ function setupCalculators() {
     event.preventDefault();
     const size = Number(document.getElementById("battery-size").value);
     const consumption = Number(document.getElementById("consumption").value);
+    const speed = Number(document.getElementById("average-speed").value);
+    const hvac = Number(document.getElementById("hvac-power").value);
+    const usable = Number(document.getElementById("usable-capacity").value) / 100;
     const factor = Number(document.getElementById("temperature").value);
     const error = document.getElementById("range-error");
     const result = document.getElementById("range-result");
-    if (!Number.isFinite(size) || !Number.isFinite(consumption) || size <= 0 || consumption <= 0) {
+    if (![size, consumption, speed, hvac, usable, factor].every(Number.isFinite) || size <= 0 || consumption <= 0 || speed < 10 || usable <= 0 || usable > 1) {
       error.textContent = t("calc.invalidRange");
       return;
     }
+    const speedPenalty = speed > 80 ? Math.pow(speed / 80, 2) * 14 : 0;
+    const hvacPerKm = hvac * 1000 / speed;
+    const adjustedConsumption = consumption + speedPenalty + hvacPerKm;
     const base = size * 1000 / consumption;
-    const adjusted = base * factor;
+    const adjusted = size * usable * 1000 * factor / adjustedConsumption;
     error.textContent = "";
     result.querySelector("strong").textContent = `${number(adjusted)} km`;
-    result.querySelector("p").textContent = t("calc.rangeText").replace("{base}", number(base)).replace("{factor}", Math.round(factor * 100));
+    result.querySelector("p").textContent = `${t("calc.rangeText").replace("{base}", number(base)).replace("{factor}", Math.round(factor * 100))} ${currentLang === "zh" ? `模型能耗：${number(adjustedConsumption)} Wh/km。` : `Model consumption: ${number(adjustedConsumption)} Wh/km.`}`;
   });
   rangeForm.addEventListener("reset", () => setTimeout(() => {
     document.getElementById("range-error").textContent = "";
@@ -890,9 +977,26 @@ function setupCalculators() {
       }
       document.getElementById("battery-size").value = "60";
       document.getElementById("consumption").value = "170";
+      document.getElementById("average-speed").value = "90";
+      document.getElementById("hvac-power").value = "1.5";
+      document.getElementById("usable-capacity").value = "95";
       document.getElementById("temperature").value = "0.85";
       rangeForm.requestSubmit();
     });
+  });
+
+  const sohForm = document.getElementById("soh-form");
+  sohForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const rated = Number(document.getElementById("rated-capacity").value);
+    const current = Number(document.getElementById("current-capacity").value);
+    const error = document.getElementById("soh-error");
+    if (![rated, current].every(Number.isFinite) || rated <= 0 || current <= 0 || current > rated * 1.1) {
+      error.textContent = currentLang === "zh" ? "请输入合理的额定容量和当前满充容量。" : "Enter plausible rated and current full-charge capacities.";
+      return;
+    }
+    error.textContent = "";
+    document.querySelector("#soh-result strong").textContent = `${number(Math.min(110, current / rated * 100))} %`;
   });
 }
 
@@ -962,15 +1066,40 @@ function setupInteractions() {
   document.querySelectorAll("[data-lang]").forEach((button) => button.addEventListener("click", () => setLanguage(button.dataset.lang)));
   document.addEventListener("click", (event) => {
     const opener = event.target.closest("[data-open-knowledge]");
-    if (opener) openKnowledge(opener.dataset.openKnowledge);
+    if (opener) {
+      if (opener.closest("#global-search")) closeGlobalSearch();
+      openKnowledge(opener.dataset.openKnowledge);
+    }
     if (event.target.closest("[data-close-modal]")) closeModal();
+    if (event.target.closest("[data-close-search]")) closeGlobalSearch();
+    const mechanismButton = event.target.closest("[data-mechanism]");
+    if (mechanismButton) {
+      activeMechanism = mechanismButton.dataset.mechanism;
+      renderExperience();
+    }
     const packButton = event.target.closest("[data-pack]");
     if (packButton) renderPackDetail(packButton.dataset.pack);
   });
   document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeModal();
+    if (event.key === "/" && !/input|textarea|select/i.test(document.activeElement?.tagName || "")) {
+      event.preventDefault();
+      openGlobalSearch();
+    }
+    if (event.key === "Escape") {
+      closeModal();
+      closeGlobalSearch();
+    }
   });
   document.getElementById("knowledge-search").addEventListener("input", renderKnowledgeResults);
+  document.getElementById("global-search-input").addEventListener("input", renderGlobalSearchResults);
+  document.getElementById("open-global-search").addEventListener("click", openGlobalSearch);
+  document.getElementById("modal-bookmark").addEventListener("click", toggleBookmark);
+  document.querySelectorAll("[data-font-scale]").forEach((button) => button.addEventListener("click", () => {
+    const current = Number(localStorage.getItem("battery-lab-font-scale") || 1);
+    const next = Math.max(.92, Math.min(1.14, current + (button.dataset.fontScale === "up" ? .06 : -.06)));
+    document.documentElement.style.setProperty("--reader-scale", next);
+    localStorage.setItem("battery-lab-font-scale", next);
+  }));
   document.getElementById("battery-selectors").addEventListener("change", (event) => {
     const checked = [...document.querySelectorAll("#battery-selectors input:checked")];
     if (checked.length > 4) event.target.checked = false;
@@ -979,6 +1108,12 @@ function setupInteractions() {
   });
   document.querySelector(".rail-prev").addEventListener("click", () => document.getElementById("battery-rail").scrollBy({ left: -360, behavior: "smooth" }));
   document.querySelector(".rail-next").addEventListener("click", () => document.getElementById("battery-rail").scrollBy({ left: 360, behavior: "smooth" }));
+  const sectionObserver = new IntersectionObserver((entries) => {
+    const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+    if (!visible) return;
+    document.querySelectorAll("[data-section-link]").forEach((link) => link.classList.toggle("active", link.dataset.sectionLink === visible.target.id));
+  }, { rootMargin: "-25% 0px -60%", threshold: [0, .1, .4] });
+  ["story", "types", "materials", "pack", "future", "tools"].forEach((id) => sectionObserver.observe(document.getElementById(id)));
 }
 
 function setupReveal() {
@@ -998,6 +1133,7 @@ function setupReveal() {
 }
 
 function init() {
+  document.documentElement.style.setProperty("--reader-scale", localStorage.getItem("battery-lab-font-scale") || 1);
   setLanguage(currentLang);
   setupInteractions();
   setupCalculators();

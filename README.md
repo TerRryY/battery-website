@@ -20,6 +20,14 @@ A student-built interactive website about battery technologies, energy storage, 
 - Battery quiz
 - Searchable glossary
 - Personal research thoughts
+- Global search with `/` shortcut and local bookmarks
+- Animated intercalation, SEI, and thermal-propagation explainers
+- Multi-variable EV range simulation and capacity-based SOH estimator
+- Dated industry deployment cases and a visible maintenance policy
+
+## Content Maintenance
+
+Fundamentals are checked against textbooks and review literature. Industry claims are linked to original company or institutional sources and labeled as manufacturer-published data when independent validation is not available. Links, production status, and numerical ranges should be reviewed quarterly; the current website shows its latest review date.
 
 ## Tech Stack
 

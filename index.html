@@ -24,6 +24,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
   <script src="learning-content.js" defer></script>
+  <script src="experience-content.js" defer></script>
   <script src="script.js" defer></script>
   <script type="application/ld+json">
     {
@@ -57,6 +58,7 @@
         <a href="#pack" data-i18n="nav.pack">电池包</a>
         <a href="#future" data-i18n="nav.future">未来</a>
         <a href="#tools" data-i18n="nav.tools">工具</a>
+        <button class="nav-search" id="open-global-search" type="button" data-i18n="nav.search">搜索</button>
       </div>
       <div class="language-switch" role="group" aria-label="Language switch">
         <button class="language-option" type="button" data-lang="en">EN</button>
@@ -89,6 +91,8 @@
         <p data-i18n="story.body">电池不是一个孤立零件。它连接材料科学、能源系统、交通方式和安全工程。理解电池，就是理解现代技术如何储存、释放和管理能量。</p>
       </div>
       <div class="stat-row reveal" id="impact-stats"></div>
+      <div class="primer-block reveal" id="primer-block"></div>
+      <div class="mechanism-studio reveal" id="mechanism-studio"></div>
     </section>
 
     <section class="battery-gallery museum-section" id="types">
@@ -165,6 +169,7 @@
       </div>
       <div class="future-grid reveal" id="future-grid"></div>
       <div class="future-maturity reveal" id="future-maturity"></div>
+      <div class="industry-cases reveal" id="industry-cases"></div>
     </section>
 
     <section class="tools-section museum-section" id="tools">
@@ -206,6 +211,9 @@
           <form id="range-form" novalidate>
             <label><span data-i18n="calc.size">电池容量 kWh</span><input id="battery-size" type="number" min="0" step="any" placeholder="60"></label>
             <label><span data-i18n="calc.consumption">能耗 Wh/km</span><input id="consumption" type="number" min="0" step="any" placeholder="170"></label>
+            <label><span data-i18n="calc.speed">平均车速 km/h</span><input id="average-speed" type="number" min="10" max="160" step="any" value="90"></label>
+            <label><span data-i18n="calc.hvac">空调平均功率 kW</span><input id="hvac-power" type="number" min="0" max="10" step="any" value="1.5"></label>
+            <label><span data-i18n="calc.usable">可用容量比例 %</span><input id="usable-capacity" type="number" min="50" max="100" step="any" value="95"></label>
             <label><span data-i18n="calc.temperature">温度模型</span><select id="temperature"><option value="1" data-i18n="calc.normal">常温 · 100%</option><option value="0.85" data-i18n="calc.cold">寒冷 · 85%</option><option value="0.7" data-i18n="calc.veryCold">严寒 · 70%</option></select></label>
             <button class="text-link form-link" type="submit"><span data-i18n="calc.estimate">估算</span><i>→</i></button>
             <button class="quiet-button sample-button" type="button" data-calculator-sample="range" data-i18n="calc.example">加载示例</button>
@@ -215,6 +223,21 @@
           <div class="result-display" id="range-result"><small data-i18n="calc.result">结果</small><strong>— km</strong><p data-i18n="calc.rangeHint">真实续航还受车速、空调、轮胎、地形和电池状态影响。</p></div>
         </article>
       </div>
+
+      <section class="soh-tool reveal" id="soh-tool">
+        <div>
+          <p class="section-kicker" data-i18n="experience.sohKicker">SOH 简易估算</p>
+          <h2 data-i18n="experience.sohTitle">容量还剩多少，不等于电量还剩多少。</h2>
+          <p data-i18n="experience.sohBody">用当前满充容量与新电池额定容量估算容量型 SOH。这是教育模型，不替代专业诊断。</p>
+        </div>
+        <form id="soh-form" novalidate>
+          <label><span data-i18n="experience.rated">新电池额定容量 Ah</span><input id="rated-capacity" type="number" min="0" step="any" placeholder="100"></label>
+          <label><span data-i18n="experience.current">当前满充容量 Ah</span><input id="current-capacity" type="number" min="0" step="any" placeholder="86"></label>
+          <button class="text-link form-link" type="submit"><span data-i18n="experience.estimateSoh">估算 SOH</span><i>→</i></button>
+          <p class="form-error" id="soh-error" role="alert"></p>
+          <div class="result-display" id="soh-result"><small data-i18n="experience.capacitySoh">容量型 SOH</small><strong>— %</strong><p data-i18n="experience.sohHint">它只反映容量衰减，不代表内阻、功率和安全状态。</p></div>
+        </form>
+      </section>
 
       <section class="quiz-panel reveal" id="quiz">
         <div>
@@ -234,6 +257,7 @@
 
     <section class="references-section museum-section" id="references">
       <div class="references-content reveal" id="references-content"></div>
+      <div class="maintenance-note reveal" id="maintenance-note"></div>
     </section>
 
     <section class="research-section museum-section" id="research">
@@ -263,6 +287,7 @@
     <button class="modal-backdrop" type="button" data-close-modal aria-label="Close"></button>
     <article class="modal-panel" role="document">
       <button class="modal-close" type="button" data-close-modal data-i18n="modal.close">关闭</button>
+      <button class="modal-bookmark" id="modal-bookmark" type="button">＋ 收藏词条</button>
       <p class="modal-category" id="modal-category"></p>
       <h2 id="knowledge-title"></h2>
       <p class="modal-summary" id="modal-summary"></p>
@@ -270,6 +295,16 @@
       <div class="modal-metrics" id="modal-metrics"></div>
       <div class="modal-body" id="modal-body"></div>
     </article>
+  </div>
+
+  <div class="global-search" id="global-search" hidden role="dialog" aria-modal="true" aria-labelledby="global-search-title">
+    <button class="modal-backdrop" type="button" data-close-search aria-label="关闭搜索"></button>
+    <section class="global-search-panel">
+      <header><h2 id="global-search-title" data-i18n="experience.searchTitle">搜索整个知识库</h2><button type="button" data-close-search>ESC</button></header>
+      <label><span data-i18n="experience.keyword">关键词</span><input id="global-search-input" type="search" placeholder="搜索硅负极、CTP、热失控、SOC…" autocomplete="off"></label>
+      <div class="global-search-results" id="global-search-results" aria-live="polite"></div>
+      <p class="search-help"><span data-i18n="experience.searchHelp">按 / 随时打开 · 收藏保存在当前浏览器</span></p>
+    </section>
   </div>
 </body>
 </html>
