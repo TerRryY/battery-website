@@ -6,35 +6,36 @@ const css = fs.readFileSync(new URL("../style.css", import.meta.url), "utf8");
 const script = fs.readFileSync(new URL("../script.js", import.meta.url), "utf8");
 const readme = fs.readFileSync(new URL("../README.md", import.meta.url), "utf8");
 
-for (const id of ["open-search", "search-modal", "global-search-input", "detail-modal", "energy-form", "range-form"]) {
+for (const id of ["open-search", "search-modal", "global-search-input", "detail-modal", "energy-form", "range-form", "usable-capacity", "quiz-retry"]) {
   assert.match(html, new RegExp(`id=["']${id}["']`), `missing ${id}`);
 }
 
-for (const asset of ["battery-pack-cinematic.png", "battery-production.png", "battery-pack-cat.png", "ev-manufacturing.png"]) {
-  assert.ok(html.includes(asset) || css.includes(asset), `missing curated image asset ${asset}`);
+for (const asset of ["battery-pack-cinematic.png", "battery-production.png", "ev-manufacturing.png", "logo-mark.svg"]) {
+  assert.ok(html.includes(asset) || css.includes(asset), `missing curated asset ${asset}`);
 }
 
-assert.doesNotMatch(html, /class="reading-rail"/, "obsolete floating reading rail should be removed");
 assert.doesNotMatch(html, /ENERGY STORAGE MAP/, "dashboard-like hero map should not return");
+assert.doesNotMatch(script, /window\.alert|\balert\(/, "browser alerts should not be used");
+assert.doesNotMatch(html, /Chart\.js|chart\.umd/, "comparison should not depend on a heavy chart CDN");
 
-for (const behavior of [
-  "calculateEnergy",
-  "calculateRange",
-  "renderMaterials",
-  "renderQuiz",
-  "scoreQuiz",
-  "renderSearchResults",
-  "renderThermal",
-  "renderSystem",
-  "setAttribute(\"open\""
-]) {
-  assert.ok(script.includes(behavior), `missing behavior: ${behavior}`);
+assert.match(html, /Terry Wang/);
+assert.ok(html.includes("Independent Project") || script.includes("Independent Project"));
+assert.match(html, /application\/ld\+json/);
+assert.match(html, /rel="canonical"/);
+assert.match(html, /twitter:card/);
+assert.match(html, /class="[^"]*system-static-fallback[^"]*"/);
+assert.match(html, /data-system-stage="cell"/);
+assert.match(html, /data-system-stage="vehicle"/);
+
+assert.match(css, /body\.js-ready \.reveal/, "progressive enhancement fallback missing");
+assert.match(css, /prefers-reduced-motion/, "motion accessibility fallback missing");
+assert.match(css, /@media \(max-width: 430px\)/, "phone layout missing");
+assert.match(css, /overflow-x: clip/, "horizontal overflow guard missing");
+
+for (const behavior of ["aria-current", "aria-pressed", "lastDialogTrigger", "requestAnimationFrame", "history.replaceState", "CSS.escape"]) {
+  assert.ok(script.includes(behavior), `missing accessible behavior: ${behavior}`);
 }
 
-assert.match(css, /cinema-image/, "cinematic image treatment missing");
-assert.match(css, /prefers-reduced-motion/, "motion accessibility fallback missing");
-assert.match(css, /@media \(max-width: 720px\)/, "mobile layout missing");
-assert.match(css, /overflow-x: hidden/, "horizontal overflow guard missing");
-assert.ok(readme.includes("Interactive battery exploded-view explorer"), "README missing redesigned feature list");
+assert.ok(readme.includes("Battery Lab"), "README should remain present during redesign");
 
-console.log("Battery Lab experience upgrade checks passed.");
+console.log("Battery Materials Lab experience checks passed.");

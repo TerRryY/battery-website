@@ -1,322 +1,479 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Battery Lab 是 Terry Wang 制作的互动式电池学习网站，探索电池化学、材料科学、电动车系统、热管理和未来储能技术。">
-  <meta name="keywords" content="Battery Lab, 电池科学, 材料科学, 锂离子电池, 磷酸铁锂, 三元锂, 钠离子, 固态电池, EV battery, BMS">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Explore battery materials, electrochemistry, cell design, battery packs, thermal management, and electric vehicle systems through an interactive project created by Terry Wang.">
   <meta name="author" content="Terry Wang">
-  <meta name="theme-color" content="#050608">
+  <meta name="theme-color" content="#030405">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://terrryy.github.io/battery-website/">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Battery Lab — Interactive Battery Learning">
-  <meta property="og:description" content="A premium student-built interactive learning project about batteries, materials science, and EV energy systems.">
-  <meta property="og:image" content="assets/battery-pack-cinematic.png">
-  <title>Battery Lab — Interactive Battery Learning</title>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=6">
-  <link rel="stylesheet" href="style.css?v=20260708a">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" defer></script>
-  <script src="script.js?v=20260708a" defer></script>
+  <meta property="og:site_name" content="Battery Materials Lab">
+  <meta property="og:title" content="Battery Materials Lab — Interactive Battery Engineering by Terry Wang">
+  <meta property="og:description" content="An interactive journey from electrode materials and ion movement to battery packs, thermal systems, and electric vehicles.">
+  <meta property="og:url" content="https://terrryy.github.io/battery-website/">
+  <meta property="og:image" content="https://terrryy.github.io/battery-website/assets/battery-pack-cinematic.png">
+  <meta property="og:image:width" content="1672">
+  <meta property="og:image:height" content="941">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Battery Materials Lab — Terry Wang">
+  <meta name="twitter:description" content="An interactive student project about battery materials, electrochemistry, packs, and EV systems.">
+  <meta name="twitter:image" content="https://terrryy.github.io/battery-website/assets/battery-pack-cinematic.png">
+  <title>Battery Materials Lab — Interactive Battery Engineering by Terry Wang</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=20260711">
+  <link rel="preload" as="image" href="assets/battery-pack-cinematic.png" fetchpriority="high">
+  <link rel="stylesheet" href="style.css?v=20260711">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://terrryy.github.io/battery-website/#website",
+        "url": "https://terrryy.github.io/battery-website/",
+        "name": "Battery Materials Lab",
+        "inLanguage": ["zh-CN", "en"]
+      },
+      {
+        "@type": "Person",
+        "@id": "https://terrryy.github.io/battery-website/#terry-wang",
+        "name": "Terry Wang",
+        "description": "Student interested in Materials Science, Battery Engineering, and Interactive Technology."
+      },
+      {
+        "@type": ["CreativeWork", "EducationalApplication"],
+        "@id": "https://terrryy.github.io/battery-website/#project",
+        "name": "Battery Materials Lab",
+        "url": "https://terrryy.github.io/battery-website/",
+        "author": { "@id": "https://terrryy.github.io/battery-website/#terry-wang" },
+        "isAccessibleForFree": true,
+        "learningResourceType": "Interactive learning project",
+        "educationalUse": "Self-directed learning",
+        "about": ["Battery engineering", "Materials science", "Electrochemistry", "Electric vehicles"]
+      }
+    ]
+  }
+  </script>
+  <script src="experience-content.js?v=20260711" defer></script>
+  <script src="learning-content.js?v=20260711" defer></script>
+  <script src="data/sources.js?v=20260711" defer></script>
+  <script src="data/technologies.js?v=20260711" defer></script>
+  <script src="data/materials.js?v=20260711" defer></script>
+  <script src="script.js?v=20260711" defer></script>
 </head>
 <body>
-  <a class="skip-link" href="#main">跳到主要内容</a>
+  <a class="skip-link" href="#main" data-i18n="a11y.skip">跳到主要内容</a>
 
   <header class="site-header" id="site-header">
-    <nav class="nav-shell" aria-label="主导航">
-      <a class="brand" href="#home" aria-label="Battery Lab home">
-        <svg class="brand-mark" viewBox="0 0 64 36" aria-hidden="true">
-          <rect x="3" y="8" width="50" height="20" rx="6"></rect>
-          <path d="M10 19h10l5-7 8 15 5-8h8"></path>
-          <rect x="54" y="15" width="7" height="7" rx="1.5"></rect>
-        </svg>
+    <nav class="nav-shell" aria-label="主导航" data-i18n-aria="a11y.nav">
+      <a class="brand" href="#home" aria-label="Battery Materials Lab 首页" data-i18n-aria="a11y.home">
+        <img src="logo-mark.svg" alt="" width="48" height="30" aria-hidden="true">
         <span>BATTERY LAB</span>
       </a>
-      <button class="menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="打开导航菜单">
+
+      <button class="menu-toggle" id="menu-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="打开导航菜单" data-i18n-aria="a11y.menuOpen">
         <span></span><span></span>
       </button>
+
       <div class="nav-links" id="nav-links">
-        <a href="#overview" data-nav data-i18n="nav.overview">概览</a>
-        <a href="#explorer" data-nav data-i18n="nav.explorer">探索器</a>
-        <a href="#types" data-nav data-i18n="nav.types">电池体系</a>
-        <a href="#compare" data-nav data-i18n="nav.compare">对比</a>
-        <a href="#tools" data-nav data-i18n="nav.tools">工具</a>
-        <a href="#materials" data-nav data-i18n="nav.materials">材料</a>
-        <a href="#research" data-nav data-i18n="nav.research">研究</a>
-        <button class="nav-search" id="open-search" type="button" data-i18n="nav.search">搜索</button>
+        <a href="#overview" data-nav data-i18n="nav.overview">项目概览</a>
+        <a href="#inside" data-nav data-i18n="nav.inside">电池内部</a>
+        <a href="#chemistries" data-nav data-i18n="nav.chemistries">电池体系</a>
+        <a href="#cell-to-vehicle" data-nav data-i18n="nav.system">从电芯到整车</a>
+        <a href="#materials" data-nav data-i18n="nav.materials">材料数据库</a>
+        <a href="#research" data-nav data-i18n="nav.research">研究思考</a>
+        <a href="#tools" data-nav data-i18n="nav.tools">学习工具</a>
+        <a href="#about" data-nav data-i18n="nav.about">关于项目</a>
       </div>
-      <div class="language-switch" role="group" aria-label="切换语言">
-        <button type="button" data-lang="zh" class="active">中文</button>
-        <button type="button" data-lang="en">EN</button>
+
+      <div class="nav-actions">
+        <button class="search-trigger" id="open-search" type="button" aria-label="搜索知识库" data-i18n-aria="a11y.search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"></circle><path d="m16 16 4 4"></path></svg>
+          <span data-i18n="nav.search">搜索</span>
+        </button>
+        <div class="language-switch" role="group" aria-label="切换语言" data-i18n-aria="a11y.language">
+          <button type="button" data-lang="zh" aria-pressed="true">中文</button>
+          <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        </div>
       </div>
     </nav>
   </header>
 
   <main id="main">
-    <!-- Hero -->
-    <section class="hero section" id="home">
+    <section class="hero" id="home" aria-labelledby="hero-title">
       <div class="hero-media" aria-hidden="true">
         <div class="hero-image"></div>
-        <div class="ion-field">
-          <span></span><span></span><span></span><span></span><span></span><span></span>
-        </div>
+        <div class="hero-structure"></div>
+        <div class="hero-light"></div>
       </div>
-      <div class="hero-content reveal">
-        <p class="project-label" data-i18n="hero.label">材料科学 · 电动车系统</p>
-        <h1 data-i18n="hero.title">能源储存研究</h1>
-        <p data-i18n="hero.subtitle">从材料、结构到整车系统，理解电池为什么工作、为什么失效、又如何变得更安全。</p>
-        <div class="hero-actions">
-          <a class="primary-action" href="#explorer" data-i18n="hero.start">开始</a>
-          <a class="secondary-action" href="#compare" data-i18n="hero.compare">对比</a>
-        </div>
-        <div class="hero-tags" aria-label="Project focus">
-          <span data-i18n="hero.tag1">材料科学</span>
-          <span data-i18n="hero.tag2">电动车系统</span>
-          <span data-i18n="hero.tag3">互动学习</span>
-        </div>
-      </div>
-      <div class="scroll-cue" aria-hidden="true">SCROLL</div>
-    </section>
-
-    <!-- Overview -->
-    <section class="overview section" id="overview">
-      <div class="chapter-heading reveal">
-        <span>CHAPTER 01</span>
-        <h2 data-i18n="overview.title">为什么电池重要？</h2>
-        <p data-i18n="overview.body">电池把材料科学、电化学、安全工程和能源系统连在一起。它不是一个“装电的盒子”，而是现代交通、电子设备和可再生能源背后的基础设施。</p>
-      </div>
-      <div class="impact-grid reveal" id="impact-grid"></div>
-      <div class="foundation-strip reveal" id="foundation-strip"></div>
-      <figure class="cinema-image reveal">
-        <img src="assets/battery-production.png" alt="Robotic arms assembling an electric vehicle battery pack in a clean industrial battery production line" loading="lazy">
-        <figcaption data-i18n="overview.imageCaption">电池不只存在于实验室。真正的工程价值，要在制造、装配和质量控制中被验证。</figcaption>
-      </figure>
-    </section>
-
-    <!-- Battery Explorer -->
-    <section class="explorer section" id="explorer">
-      <div class="chapter-heading reveal">
-        <span>CHAPTER 02</span>
-        <h2 data-i18n="explorer.title">拆开一颗电池，看见材料如何工作。</h2>
-        <p data-i18n="explorer.body">点击每一层，了解它负责什么、为什么重要、工程难点在哪里，以及常见材料是什么。</p>
-      </div>
-      <div class="explorer-stage reveal">
-        <div class="layer-stack" id="layer-stack" aria-label="电池分层探索器"></div>
-        <article class="layer-panel" id="layer-panel" aria-live="polite"></article>
-      </div>
-      <div class="ion-demo reveal" id="ion-demo">
-        <div class="ion-copy">
-          <span class="eyebrow" data-i18n="ion.eyebrow">离子运动</span>
-          <h3 data-i18n="ion.title">充电和放电，其实是离子在两端之间往返。</h3>
-          <p id="ion-description"></p>
-          <div class="segmented-control" role="group" aria-label="Charge state">
-            <button type="button" data-ion-mode="charge" class="active" data-i18n="ion.charge">充电</button>
-            <button type="button" data-ion-mode="discharge" data-i18n="ion.discharge">放电</button>
+      <div class="hero-content">
+        <div class="hero-main">
+          <p class="hero-kicker"><span>Terry Wang</span><span data-i18n="hero.identity">独立项目 · 高中生作品</span></p>
+          <h1 id="hero-title" data-i18n="hero.title">拆开一块电池</h1>
+          <p class="hero-summary" data-i18n="hero.subtitle">看见材料如何驱动一辆汽车。从电极材料到整车系统，理解性能背后的工程取舍。</p>
+          <div class="hero-actions">
+            <a class="action primary" href="#inside" data-i18n="hero.explore">开始探索电池</a>
           </div>
         </div>
-        <div class="ion-canvas" data-mode="charge" aria-hidden="true">
-          <div class="electrode cathode"><span>CATHODE</span></div>
-          <div class="separator"></div>
-          <div class="electrode anode"><span>ANODE</span></div>
-          <i></i><i></i><i></i><i></i><i></i><i></i>
+      </div>
+      <a class="scroll-cue" href="#overview" aria-label="继续浏览" data-i18n-aria="a11y.scroll"><span></span><small data-i18n="hero.scroll">向下探索</small></a>
+    </section>
+
+    <section class="section overview" id="overview" aria-labelledby="overview-title">
+      <div class="chapter-label"><span>01</span><span data-i18n="chapters.overview">项目概览</span></div>
+      <div class="overview-intro reveal">
+        <h2 id="overview-title" data-i18n="overview.title">一块电池的性能，<br>从来不由一个数字决定。</h2>
+        <div class="overview-copy">
+          <p data-i18n="overview.body">能量密度、安全、寿命、快充、低温与成本彼此牵制。这个项目把材料选择放回电芯、电池包和整车系统中，帮助普通读者看懂“性能更好”究竟意味着什么。</p>
+          <p class="project-thesis" data-i18n="overview.thesis">核心问题：材料层面的优势，如何在真实系统中转化，又在哪里被抵消？</p>
+        </div>
+      </div>
+      <dl class="project-metrics reveal" id="overview-metrics" aria-label="项目内容统计"></dl>
+      <div class="learning-map reveal">
+        <ol id="learning-map-list"></ol>
+        <figure class="editorial-image">
+          <img src="assets/battery-production.png" alt="机器人在清洁产线中组装电动车电池包" data-i18n-alt="alt.production" width="1546" height="866" loading="lazy" decoding="async">
+          <figcaption data-i18n="overview.caption">材料只有经过制造、装配、检测和系统控制，才会成为可靠的电池产品。</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="section inside" id="inside" aria-labelledby="inside-title">
+      <span class="anchor-alias" id="explorer" aria-hidden="true"></span>
+      <div class="chapter-label"><span>02</span><span data-i18n="chapters.inside">电池内部</span></div>
+      <header class="section-opener reveal">
+        <p data-i18n="inside.eyebrow">从材料开始</p>
+        <h2 id="inside-title" data-i18n="inside.title">点击一层，<br>理解一个工程决定。</h2>
+        <p data-i18n="inside.body">一颗电芯不是六张薄片的简单叠加。每一层都在容量、阻抗、寿命和安全之间承担不同任务。</p>
+      </header>
+
+      <div class="explorer-stage reveal">
+        <div class="layer-visual">
+          <div class="layer-stack" id="layer-stack" role="tablist" aria-orientation="vertical" aria-label="电池分层探索器" data-i18n-aria="a11y.layerExplorer"></div>
+          <div class="layer-axis" aria-hidden="true"><span>+</span><i></i><span>−</span></div>
+        </div>
+        <article class="layer-panel" id="layer-panel" role="tabpanel" tabindex="0" aria-live="polite"></article>
+      </div>
+
+      <div class="ion-demo reveal" id="ion-demo">
+        <div class="ion-copy">
+          <p class="eyebrow" data-i18n="ion.eyebrow">离子与电子的两条路</p>
+          <h3 data-i18n="ion.title">电池内部传离子，<br>外部电路传电子。</h3>
+          <p id="ion-description"></p>
+          <div class="ion-controls">
+            <div class="segmented-control" role="group" aria-label="充放电模式" data-i18n-aria="a11y.ionMode">
+              <button type="button" data-ion-mode="charge" aria-pressed="true" data-i18n="ion.charge">充电</button>
+              <button type="button" data-ion-mode="discharge" aria-pressed="false" data-i18n="ion.discharge">放电</button>
+            </div>
+            <button class="pause-control" id="ion-pause" type="button" aria-pressed="false" data-i18n="ion.pause">暂停动画</button>
+          </div>
+          <ol class="ion-steps" id="ion-steps"></ol>
+        </div>
+        <div class="ion-stage" data-mode="charge">
+          <svg id="ion-svg" viewBox="0 0 900 520" role="img" aria-labelledby="ion-svg-title ion-svg-desc">
+            <title id="ion-svg-title">充放电时离子和电子的运动路径</title>
+            <desc id="ion-svg-desc">锂离子穿过电解液和隔膜，电子沿外部电路移动。</desc>
+            <defs>
+              <marker id="ion-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z"></path></marker>
+              <marker id="electron-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z"></path></marker>
+            </defs>
+            <rect class="electrode-block cathode-block" x="70" y="190" width="190" height="230" rx="14"></rect>
+            <rect class="electrolyte-block" x="260" y="190" width="380" height="230"></rect>
+            <rect class="separator-block" x="435" y="190" width="30" height="230"></rect>
+            <rect class="electrode-block anode-block" x="640" y="190" width="190" height="230" rx="14"></rect>
+            <text class="stage-label" x="165" y="460" text-anchor="middle" data-ion-label="cathode">正极</text>
+            <text class="stage-label" x="450" y="460" text-anchor="middle" data-ion-label="separator">隔膜 / 电解液</text>
+            <text class="stage-label" x="735" y="460" text-anchor="middle" data-ion-label="anode">负极</text>
+            <path id="electron-path" class="electron-path" d="M165 190 C165 55 735 55 735 190" marker-end="url(#electron-arrow)"></path>
+            <path id="ion-path" class="ion-path" d="M225 292 H675" marker-end="url(#ion-arrow)"></path>
+            <g class="ion-particles" aria-hidden="true">
+              <circle r="8"><animateMotion dur="3.8s" begin="0s" repeatCount="indefinite"><mpath href="#ion-path"></mpath></animateMotion></circle>
+              <circle r="8"><animateMotion dur="3.8s" begin="-1.25s" repeatCount="indefinite"><mpath href="#ion-path"></mpath></animateMotion></circle>
+              <circle r="8"><animateMotion dur="3.8s" begin="-2.5s" repeatCount="indefinite"><mpath href="#ion-path"></mpath></animateMotion></circle>
+            </g>
+            <g class="electron-particles" aria-hidden="true">
+              <circle r="5"><animateMotion dur="3s" begin="0s" repeatCount="indefinite"><mpath href="#electron-path"></mpath></animateMotion></circle>
+              <circle r="5"><animateMotion dur="3s" begin="-1s" repeatCount="indefinite"><mpath href="#electron-path"></mpath></animateMotion></circle>
+              <circle r="5"><animateMotion dur="3s" begin="-2s" repeatCount="indefinite"><mpath href="#electron-path"></mpath></animateMotion></circle>
+            </g>
+            <text class="path-label electron-label" x="450" y="65" text-anchor="middle" data-i18n="ion.electrons">电子 · 外部电路</text>
+            <text class="path-label ion-label" x="450" y="265" text-anchor="middle" data-i18n="ion.ions">锂离子 · 电池内部</text>
+          </svg>
+          <p class="model-note" data-i18n="ion.note">简化教学模型：真实电极是多孔复合结构，离子运动也不是一条直线。</p>
         </div>
       </div>
     </section>
 
-    <!-- Battery Types -->
-    <section class="types section" id="types">
-      <div class="chapter-heading reveal">
-        <span>CHAPTER 03</span>
-        <h2 data-i18n="types.title">不同电池体系，不同工程取舍。</h2>
-        <p data-i18n="types.body">有些体系追求高能量密度，有些追求安全寿命，有些追求成本和资源稳定。点击卡片查看完整知识页。</p>
-      </div>
-      <div class="technology-rail reveal" id="technology-rail"></div>
-      <div class="wide-table reveal">
-        <header>
-          <h3 data-i18n="types.tableTitle">快速建立全局认知</h3>
-          <p data-i18n="types.tableNote">范围是教育用途的典型估计，真实数值取决于设计、供应商和测试条件。</p>
-        </header>
-        <div class="table-wrap">
+    <section class="section chemistries" id="chemistries" aria-labelledby="chemistries-title">
+      <span class="anchor-alias" id="types" aria-hidden="true"></span>
+      <div class="chapter-label"><span>03</span><span data-i18n="chapters.chemistries">电池体系</span></div>
+      <header class="section-opener split reveal">
+        <h2 id="chemistries-title" data-i18n="chemistries.title">没有“最好”的电池，<br>只有更适合的取舍。</h2>
+        <p data-i18n="chemistries.body">高能量、安全、寿命、快充、低温、成本与资源无法同时达到极值。先建立全局坐标，再进入每一种材料体系。</p>
+      </header>
+      <div class="technology-rail reveal" id="technology-rail" aria-label="电池体系浏览"></div>
+
+      <div class="chemistry-table-wrap reveal">
+        <div class="table-heading">
+          <h3 data-i18n="chemistries.tableTitle">可直接扫读的全局对照</h3>
+          <p data-i18n="chemistries.tableNote">范围用于建立数量级直觉，不是单一产品规格；点击体系可查看测试条件与来源。</p>
+        </div>
+        <div class="table-scroll" tabindex="0" role="region" aria-label="电池体系对比表" data-i18n-aria="a11y.techTable">
           <table id="tech-table"></table>
         </div>
       </div>
-      <div class="knowledge-deep reveal">
+
+      <div class="comparison-studio reveal" id="compare">
         <header>
-          <h3 data-i18n="types.deepTitle">继续往下看：真正的差异来自材料结构</h3>
-          <p data-i18n="types.deepBody">同样叫“锂电池”，内部材料、离子通道、热管理和封装方式可能完全不同。下面这几组概念，是读懂电池新闻和技术路线的入口。</p>
+          <p class="eyebrow" data-i18n="compare.eyebrow">互动比较</p>
+          <h3 data-i18n="compare.title">把数字与判断分开看。</h3>
+          <p data-i18n="compare.body">质量能量密度使用范围图；安全、快充、低温、资源、成本与成熟度使用定性等级。最多选择四种技术。</p>
         </header>
-        <div class="deep-grid" id="deep-grid"></div>
+        <div class="compare-controls">
+          <div id="tech-selectors" role="group" aria-label="选择要比较的电池体系" data-i18n-aria="a11y.techSelect"></div>
+          <button type="button" id="clear-comparison" class="text-button" data-i18n="compare.clear">清除选择</button>
+          <p id="comparison-status" class="inline-status" role="status" aria-live="polite"></p>
+        </div>
+        <div class="compare-layout">
+          <figure class="range-chart">
+            <figcaption data-i18n="compare.rangeTitle">典型电芯质量能量密度范围</figcaption>
+            <svg id="energy-range-chart" viewBox="0 0 900 430" role="img" aria-labelledby="range-title range-desc">
+              <title id="range-title">电池质量能量密度范围比较</title>
+              <desc id="range-desc">横向范围条展示所选电池体系的典型电芯级质量能量密度。</desc>
+            </svg>
+          </figure>
+          <div class="qualitative-panel">
+            <h4 data-i18n="compare.matrixTitle">教学性定性比较</h4>
+            <div class="table-scroll" tabindex="0"><table id="qualitative-table"></table></div>
+          </div>
+        </div>
+        <article class="comparison-insight" id="comparison-insight" aria-live="polite"></article>
+        <p class="data-boundary" data-i18n="compare.boundary">Low / Medium / High 是基于材料特性、商业成熟度和常见系统表现的教学概括，不是认证评级。</p>
       </div>
     </section>
 
-    <!-- Comparison -->
-    <section class="compare section" id="compare">
-      <div class="chapter-heading reveal">
-        <span>CHAPTER 04</span>
-        <h2 data-i18n="compare.title">用图表看懂取舍。</h2>
-        <p data-i18n="compare.body">最多选择 4 种技术。雷达图显示相对评分，柱状图显示典型能量密度中值。所有分数都是简化学习模型，不是工业规格。</p>
+    <section class="system-story" id="cell-to-vehicle" aria-labelledby="system-title">
+      <span class="anchor-alias" id="pack" aria-hidden="true"></span>
+      <div class="system-heading section">
+        <div class="chapter-label"><span>04</span><span data-i18n="chapters.system">从电芯到整车</span></div>
+        <header class="section-opener reveal">
+          <p data-i18n="system.eyebrow">网站核心交互</p>
+          <h2 id="system-title" data-i18n="system.title">一颗电芯的成绩，<br>不等于一辆车的表现。</h2>
+          <p data-i18n="system.body">向下滚动，观察电压与容量如何组合，结构与热管理为何占据质量，能量又如何进入电机并返回电池。</p>
+        </header>
       </div>
-      <div class="comparison-lab reveal">
-        <aside class="selector-panel">
-          <h3 data-i18n="compare.select">选择技术</h3>
-          <div id="tech-selectors"></div>
-          <p class="hint" data-i18n="compare.hint">相对评分：1 较低，10 较高。成本分数越高表示越经济。</p>
-        </aside>
-        <div class="chart-panel">
-          <div class="chart-card">
-            <h3 data-i18n="compare.radar">综合雷达图</h3>
-            <canvas id="radar-chart"></canvas>
-          </div>
-          <div class="chart-card">
-            <h3 data-i18n="compare.bar">典型能量密度</h3>
-            <canvas id="bar-chart"></canvas>
-          </div>
-          <article class="comparison-insight" id="comparison-insight"></article>
-        </div>
-      </div>
-    </section>
 
-    <!-- Pack System -->
-    <section class="pack section" id="pack">
-      <div class="chapter-heading reveal">
-        <span>CHAPTER 05</span>
-        <h2 data-i18n="pack.title">从电芯到整车，电池才真正变成系统。</h2>
-        <p data-i18n="pack.body">电芯只是起点。模组、电池包、BMS、热管理和整车能耗共同决定真实续航、安全和寿命。</p>
-      </div>
-      <div class="system-diagram reveal">
-        <div class="system-steps" id="system-steps"></div>
-        <article class="system-detail" id="system-detail" aria-live="polite"></article>
-      </div>
-      <div class="thermal-lab reveal" id="thermal">
-        <div>
-          <span class="eyebrow" data-i18n="thermal.eyebrow">冬季续航</span>
-          <h3 data-i18n="thermal.title">为什么电动车冬天续航会下降？</h3>
-          <p id="thermal-copy"></p>
-          <div class="segmented-control" id="thermal-control" role="group" aria-label="Temperature mode"></div>
+      <div class="system-scroll" id="system-scroll">
+        <div class="system-sticky">
+          <div class="system-progress" aria-label="系统阶段进度" data-i18n-aria="a11y.systemProgress">
+            <span id="system-progress-bar"></span>
+            <div id="system-steps"></div>
+          </div>
+          <div class="system-visual" id="system-visual" data-stage="cell">
+            <svg viewBox="0 0 1000 680" role="img" aria-labelledby="system-svg-title system-svg-desc">
+              <title id="system-svg-title">从电芯到整车的电池系统结构</title>
+              <desc id="system-svg-desc">动画依次展示单颗电芯、模组、电池包和车辆能量流。</desc>
+              <defs>
+                <linearGradient id="cell-metal" x1="0" x2="1"><stop stop-color="#313945"></stop><stop offset=".5" stop-color="#aeb9c5"></stop><stop offset="1" stop-color="#242a32"></stop></linearGradient>
+                <marker id="flow-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0 0 8 4 0 8Z"></path></marker>
+              </defs>
+              <g class="system-art cell-art">
+                <rect x="395" y="155" width="210" height="350" rx="28" fill="url(#cell-metal)"></rect>
+                <rect x="422" y="185" width="156" height="290" rx="15" class="cell-window"></rect>
+                <path d="M442 215h116M442 245h116M442 275h116M442 305h116M442 335h116M442 365h116M442 395h116M442 425h116" class="cell-layers"></path>
+                <circle cx="452" cy="146" r="17" class="terminal positive"></circle><circle cx="548" cy="146" r="17" class="terminal negative"></circle>
+              </g>
+              <g class="system-art module-art">
+                <rect x="205" y="175" width="590" height="330" rx="36" class="module-frame"></rect>
+                <g id="module-cells"></g>
+                <path d="M245 145H755" class="busbar"></path>
+                <text x="500" y="555" text-anchor="middle" class="art-label">SERIES + PARALLEL</text>
+              </g>
+              <g class="system-art pack-art">
+                <path d="M135 155H835L900 230V510L830 570H150L95 510V225Z" class="pack-shell"></path>
+                <g id="pack-modules"></g>
+                <path d="M160 505H835" class="cooling-plate"></path>
+                <rect x="710" y="200" width="130" height="76" rx="12" class="bms-box"></rect>
+                <text x="775" y="245" text-anchor="middle" class="art-label">BMS</text>
+                <path d="M215 305H700" class="high-voltage"></path>
+              </g>
+              <g class="system-art vehicle-art">
+                <path d="M85 235Q120 130 300 105H690Q830 125 905 260L940 440Q840 525 745 548H230Q120 520 65 430Z" class="vehicle-outline"></path>
+                <path d="M300 170H690L790 245H205Z" class="cabin-outline"></path>
+                <rect x="245" y="310" width="500" height="150" rx="28" class="vehicle-pack"></rect>
+                <circle cx="220" cy="500" r="68" class="wheel"></circle><circle cx="780" cy="500" r="68" class="wheel"></circle>
+                <circle cx="835" cy="315" r="48" class="motor"></circle>
+                <path d="M740 380Q820 365 830 330" class="drive-flow" marker-end="url(#flow-arrow)"></path>
+                <path d="M835 345Q755 420 670 420" class="regen-flow" marker-end="url(#flow-arrow)"></path>
+                <path d="M500 305V235" class="heat-flow" marker-end="url(#flow-arrow)"></path>
+              </g>
+            </svg>
+            <div class="system-equation" id="system-equation"></div>
+          </div>
+          <article class="system-copy" id="system-detail" aria-live="polite"></article>
         </div>
-        <div class="range-visual">
-          <div class="range-bar"><span id="thermal-bar"></span></div>
+
+        <div class="system-stage-markers" aria-hidden="true">
+          <div data-system-stage="cell"></div>
+          <div data-system-stage="module"></div>
+          <div data-system-stage="pack"></div>
+          <div data-system-stage="vehicle"></div>
+        </div>
+      </div>
+
+      <div class="system-static-fallback section" aria-label="从电芯到整车四个阶段">
+        <div id="system-mobile-stages"></div>
+      </div>
+
+      <div class="thermal-lab section reveal" id="thermal">
+        <div class="thermal-copy">
+          <p class="eyebrow" data-i18n="thermal.eyebrow">冬季续航实验</p>
+          <h3 data-i18n="thermal.title">为什么温度下降，<br>可用续航也会下降？</h3>
+          <p id="thermal-description"></p>
+          <div class="segmented-control" id="thermal-control" role="group" aria-label="温度条件" data-i18n-aria="a11y.temperature"></div>
+        </div>
+        <div class="thermal-visual">
+          <div class="temperature-readout"><span id="thermal-temp">20°C</span><small data-i18n="thermal.model">简化教学情景</small></div>
+          <div class="range-track"><span id="thermal-bar"></span></div>
           <strong id="thermal-percent">100%</strong>
           <ol id="thermal-chain"></ol>
         </div>
       </div>
-      <figure class="cinema-image reveal">
-        <img src="assets/battery-pack-cat.png" alt="A silver electric vehicle battery pack with visible structural casing and terminals" loading="lazy">
-        <figcaption data-i18n="pack.imageCaption">从电芯到电池包，结构、热管理和安全设计共同决定它能否进入真实车辆。</figcaption>
-      </figure>
     </section>
 
-    <!-- Tools -->
-    <section class="tools section" id="tools">
-      <div class="chapter-heading reveal">
-        <span>CHAPTER 06</span>
-        <h2 data-i18n="tools.title">把公式变成直觉。</h2>
-        <p data-i18n="tools.body">两个小工具帮助你快速理解 Wh、kWh、能耗和温度折减之间的关系。</p>
-      </div>
-      <div class="calculator-grid reveal">
-        <article class="tool-card">
-          <h3 data-i18n="calc.energyTitle">电池能量计算器</h3>
-          <p data-i18n="calc.energyBody">输入电压和容量，估算储存能量。</p>
-          <form id="energy-form" class="tool-form" novalidate>
-            <label><span data-i18n="calc.voltage">电压 V</span><input id="voltage" type="number" min="0" step="any" value="12"></label>
-            <label><span data-i18n="calc.capacity">容量 Ah</span><input id="capacity" type="number" min="0" step="any" value="60"></label>
-            <p class="form-error" id="energy-error" role="alert"></p>
-          </form>
-          <div class="meter"><span id="energy-meter"></span></div>
-          <div class="result-card" id="energy-result"></div>
-        </article>
-        <article class="tool-card">
-          <h3 data-i18n="calc.rangeTitle">电动车续航计算器</h3>
-          <p data-i18n="calc.rangeBody">输入电池容量、能耗和温度模式，估算续航。</p>
-          <form id="range-form" class="tool-form" novalidate>
-            <label><span data-i18n="calc.size">电池容量 kWh</span><input id="battery-size" type="number" min="0" step="any" value="60"></label>
-            <label><span data-i18n="calc.consumption">能耗 Wh/km</span><input id="consumption" type="number" min="0" step="any" value="170"></label>
-            <label><span data-i18n="calc.temp">温度模式</span><select id="temperature"></select></label>
-            <p class="form-error" id="range-error" role="alert"></p>
-          </form>
-          <div class="meter"><span id="range-meter"></span></div>
-          <div class="result-card" id="range-result"></div>
-        </article>
-      </div>
-    </section>
-
-    <!-- Materials -->
-    <section class="materials section" id="materials">
-      <div class="chapter-heading reveal">
-        <span>CHAPTER 07</span>
-        <h2 data-i18n="materials.title">电池里面到底有什么？</h2>
-        <p data-i18n="materials.body">材料库不是简单罗列名词，而是解释每种材料在电池中的角色、优势、挑战和应用位置。</p>
-      </div>
-      <div class="search-panel reveal">
-        <label>
-          <span data-i18n="materials.search">搜索材料或术语</span>
-          <input id="material-search" type="search" placeholder="搜索 石墨、硅、LFP、电解液、隔膜…">
+    <section class="section materials" id="materials" aria-labelledby="materials-title">
+      <div class="chapter-label"><span>05</span><span data-i18n="chapters.materials">材料数据库</span></div>
+      <header class="section-opener split reveal">
+        <h2 id="materials-title" data-i18n="materials.title">把材料名词，<br>变成可以查询的研究线索。</h2>
+        <p data-i18n="materials.body">搜索中文名、英文名、缩写或化学式。列表只显示核心角色；完整的性质、局限、可持续性与来源放在详情中。</p>
+      </header>
+      <div class="material-toolbar reveal">
+        <label class="material-search">
+          <span data-i18n="materials.searchLabel">搜索材料</span>
+          <input id="material-search" type="search" autocomplete="off" placeholder="例如：LFP、LiFePO₄、石墨、solid electrolyte" data-i18n-placeholder="materials.placeholder">
         </label>
-        <div class="filter-row" id="material-filters"></div>
+        <div class="filter-row" id="material-filters" aria-label="材料分类" data-i18n-aria="a11y.materialFilters"></div>
+        <button id="material-reset" class="text-button" type="button" data-i18n="materials.reset">重置</button>
       </div>
-      <div class="material-grid reveal" id="material-grid"></div>
+      <div class="material-index-meta reveal"><span id="material-count"></span><span data-i18n="materials.openHint">选择一项查看完整研究信息与来源</span></div>
+      <div class="material-index reveal" id="material-grid"></div>
+      <div class="empty-state" id="material-empty" hidden>
+        <strong data-i18n="materials.emptyTitle">没有找到相符材料</strong>
+        <p data-i18n="materials.emptyBody">尝试缩写、化学式或更宽的分类。</p>
+        <button type="button" data-reset-materials data-i18n="materials.reset">重置</button>
+      </div>
     </section>
 
-    <!-- Research -->
-    <section class="research section" id="research">
-      <div class="chapter-heading reveal">
-        <span>CHAPTER 08</span>
-        <h2 data-i18n="research.title">我的研究思考。</h2>
-        <p data-i18n="research.body">这部分保留学生项目的真实感：不是把资料复制成百科，而是记录我如何理解材料、热管理和系统工程之间的联系。</p>
-      </div>
-      <div class="notebook-grid reveal" id="research-grid"></div>
-      <figure class="cinema-image reveal">
-        <img src="assets/ev-manufacturing.png" alt="Top-down view of an electric vehicle production line with robotic arms assembling vehicle bodies" loading="lazy">
-        <figcaption data-i18n="research.imageCaption">材料问题最终会进入产业系统：产线、供应链、热管理、安全验证和整车设计一起决定技术能走多远。</figcaption>
+    <section class="section research" id="research" aria-labelledby="research-title">
+      <div class="chapter-label"><span>06</span><span data-i18n="chapters.research">研究思考</span></div>
+      <header class="section-opener reveal">
+        <p data-i18n="research.eyebrow">从“是什么”走向“为什么”</p>
+        <h2 id="research-title" data-i18n="research.title">真正值得研究的，<br>往往是取舍之间的连接。</h2>
+      </header>
+      <div class="research-editorial reveal" id="research-notes"></div>
+      <figure class="research-image reveal">
+        <img src="assets/ev-manufacturing.png" alt="俯视汽车工厂，机器人围绕车身生产线工作" data-i18n-alt="alt.manufacturing" width="1342" height="760" loading="lazy" decoding="async">
+        <figcaption data-i18n="research.caption">材料性能最终要穿过制造、结构、安全、热管理和整车效率，才能成为真实产品。</figcaption>
       </figure>
+      <div class="case-strip reveal" id="industry-cases"></div>
+      <div class="source-library reveal">
+        <div>
+          <p class="eyebrow" data-i18n="sources.eyebrow">证据与边界</p>
+          <h3 data-i18n="sources.title">每一个数字，都应该带着条件阅读。</h3>
+          <p data-i18n="sources.body">来源优先使用论文、政府/研究机构和制造商原始资料。制造商数据会明确标注，材料级结果不会冒充整车表现。</p>
+        </div>
+        <div id="source-list"></div>
+      </div>
+      <aside class="data-disclaimer" id="data-disclaimer">
+        <strong data-i18n="sources.disclaimerTitle">数据使用说明</strong>
+        <p data-i18n="sources.disclaimer">本网站中的性能数据用于教学和比较。实际结果会受到电芯设计、测试温度、充放电倍率、循环深度、制造工艺和系统集成方式影响。不同来源的数据不应在缺少测试条件时直接比较。</p>
+      </aside>
+    </section>
+
+    <section class="section tools" id="tools" aria-labelledby="tools-title">
+      <div class="chapter-label"><span>07</span><span data-i18n="chapters.tools">学习工具</span></div>
+      <header class="section-opener split reveal">
+        <h2 id="tools-title" data-i18n="tools.title">把公式、历史与判断，<br>变成可以亲手验证的直觉。</h2>
+        <p data-i18n="tools.body">计算器是简化教育模型；测验提供解释而不只给对错。所有结果都明确显示使用条件。</p>
+      </header>
+      <div class="calculator-lab reveal">
+        <article class="calculator" aria-labelledby="energy-title">
+          <header><span>01</span><div><h3 id="energy-title" data-i18n="calc.energyTitle">电池能量计算</h3><p>Energy = Voltage × Capacity</p></div></header>
+          <form id="energy-form" novalidate>
+            <label for="voltage"><span data-i18n="calc.voltage">电压</span><div><input id="voltage" type="number" inputmode="decimal" min="0.1" max="1000" step="0.1" value="12"><b>V</b></div></label>
+            <label for="capacity"><span data-i18n="calc.capacity">容量</span><div><input id="capacity" type="number" inputmode="decimal" min="0.1" max="10000" step="0.1" value="60"><b>Ah</b></div></label>
+            <p class="form-error" id="energy-error" role="alert" aria-live="polite"></p>
+          </form>
+          <div class="calculator-output" id="energy-result" aria-live="polite"></div>
+          <div class="energy-gauge" aria-hidden="true"><span id="energy-meter"></span></div>
+        </article>
+        <article class="calculator" aria-labelledby="range-title-calc">
+          <header><span>02</span><div><h3 id="range-title-calc" data-i18n="calc.rangeTitle">电动车续航估算</h3><p>Range ≈ usable kWh ÷ Wh/km</p></div></header>
+          <form id="range-form" novalidate>
+            <label for="battery-size"><span data-i18n="calc.batterySize">电池容量</span><div><input id="battery-size" type="number" inputmode="decimal" min="1" max="300" step="1" value="60"><b>kWh</b></div></label>
+            <label for="consumption"><span data-i18n="calc.consumption">车辆能耗</span><div><input id="consumption" type="number" inputmode="decimal" min="50" max="600" step="1" value="170"><b>Wh/km</b></div></label>
+            <label for="usable-capacity"><span data-i18n="calc.usable">可用容量</span><div><input id="usable-capacity" type="number" inputmode="decimal" min="50" max="100" step="1" value="90"><b>%</b></div></label>
+            <label for="temperature"><span data-i18n="calc.temperature">温度条件</span><select id="temperature"></select></label>
+            <p class="form-error" id="range-error" role="alert" aria-live="polite"></p>
+          </form>
+          <div class="calculator-output" id="range-result" aria-live="polite"></div>
+          <div class="energy-gauge" aria-hidden="true"><span id="range-meter"></span></div>
+        </article>
+      </div>
+
       <div class="timeline reveal">
-        <h3 data-i18n="timeline.title">电池技术时间线</h3>
+        <header><p class="eyebrow" data-i18n="timeline.eyebrow">技术时间线</p><h3 data-i18n="timeline.title">每一次突破，都改变了可用场景。</h3></header>
         <div id="timeline-list"></div>
       </div>
-    </section>
 
-    <!-- Knowledge Check -->
-    <section class="quiz section" id="quiz">
-      <div class="chapter-heading reveal">
-        <span>CHAPTER 09</span>
-        <h2 data-i18n="quiz.title">知识检查。</h2>
-        <p data-i18n="quiz.body">答题后会看到解释。目标不是考倒你，而是确认关键概念真的连起来了。</p>
-      </div>
-      <form class="quiz-card reveal" id="quiz-form">
+      <form class="quiz reveal" id="quiz-form" novalidate>
+        <header><p class="eyebrow" data-i18n="quiz.eyebrow">知识检查</p><h3 data-i18n="quiz.title">你能把材料、结构与系统连接起来吗？</h3><p data-i18n="quiz.body">提交后会显示答案与原因；错题可以单独重试。</p></header>
         <div id="quiz-questions"></div>
         <div class="quiz-actions">
-          <button class="primary-action" type="submit" data-i18n="quiz.submit">提交答案</button>
-          <button class="secondary-action" id="quiz-reset" type="button" data-i18n="quiz.reset">重新开始</button>
+          <button class="action primary" type="submit" data-i18n="quiz.submit">提交答案</button>
+          <button class="action secondary" id="quiz-retry" type="button" data-i18n="quiz.retry" hidden>只重试错题</button>
+          <button class="text-button" id="quiz-reset" type="button" data-i18n="quiz.reset">重新开始</button>
         </div>
-        <div class="quiz-result" id="quiz-result" aria-live="polite"></div>
+        <div class="quiz-result" id="quiz-result" role="status" aria-live="polite"></div>
       </form>
+    </section>
+
+    <section class="section about" id="about" aria-labelledby="about-title">
+      <div class="chapter-label"><span>08</span><span data-i18n="chapters.about">关于项目</span></div>
+      <header class="about-hero reveal">
+        <p class="eyebrow" data-i18n="about.eyebrow">Why I Built This</p>
+        <h2 id="about-title" data-i18n="about.title">我为什么制作<br>这个项目</h2>
+        <p data-i18n="about.intro">我对材料科学感兴趣，因为一种材料的微观结构，最终会改变一辆车的续航、安全和使用方式。编写这个网站，让我能把研究、视觉表达和编程放进同一个长期项目。</p>
+      </header>
+      <div class="project-story reveal">
+        <nav id="story-nav" aria-label="项目故事目录" data-i18n-aria="a11y.storyNav"></nav>
+        <div id="story-content"></div>
+      </div>
+      <div class="author-line reveal">
+        <div><span data-i18n="about.authorLabel">作者</span><strong>Terry Wang</strong></div>
+        <p data-i18n="about.author">一名对材料科学、电池工程与互动技术感兴趣的高中生。</p>
+        <a href="https://github.com/TerRryY/battery-website" target="_blank" rel="noopener">GitHub ↗</a>
+      </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div>
-      <a class="brand footer-brand" href="#home">
-        <svg class="brand-mark" viewBox="0 0 64 36" aria-hidden="true"><rect x="3" y="8" width="50" height="20" rx="6"></rect><path d="M10 19h10l5-7 8 15 5-8h8"></path><rect x="54" y="15" width="7" height="7" rx="1.5"></rect></svg>
-        <span>BATTERY LAB</span>
-      </a>
-      <p data-i18n="footer.body">一个关于电池技术、材料科学与能源系统的学生互动学习项目。</p>
-    </div>
-    <div class="footer-links">
-      <span data-i18n="footer.built">Built by Terry Wang</span>
-      <a href="#materials" data-i18n="footer.materials">材料库</a>
-      <a href="#quiz" data-i18n="footer.quiz">知识小测</a>
-      <a href="#home" data-i18n="footer.top">回到顶部 ↑</a>
-    </div>
+    <a class="brand" href="#home"><img src="logo-mark.svg" alt="" width="48" height="30"><span>BATTERY LAB</span></a>
+    <p data-i18n="footer.body">由 Terry Wang 独立设计与开发的材料科学互动学习项目。</p>
+    <div><a href="#data-disclaimer" data-i18n="footer.sources">数据与来源</a><a href="#about" data-i18n="footer.about">项目故事</a><a href="#home" data-i18n="footer.top">回到顶部 ↑</a></div>
   </footer>
 
-  <dialog class="detail-modal" id="detail-modal">
-    <button class="modal-close" id="modal-close" type="button" aria-label="关闭">×</button>
+  <dialog class="detail-modal" id="detail-modal" aria-labelledby="detail-title">
+    <button class="modal-close" id="modal-close" type="button" aria-label="关闭详情" data-i18n-aria="a11y.close">×</button>
     <article id="modal-content"></article>
   </dialog>
 
-  <dialog class="search-modal" id="search-modal">
-    <button class="modal-close" id="search-close" type="button" aria-label="关闭">×</button>
-    <h2 data-i18n="search.title">搜索整个知识库</h2>
-    <input id="global-search-input" type="search" placeholder="搜索 NCM、LFP、SOC、热失控、BMS…">
-    <div id="global-search-results"></div>
+  <dialog class="search-modal" id="search-modal" aria-labelledby="search-title">
+    <button class="modal-close" id="search-close" type="button" aria-label="关闭搜索" data-i18n-aria="a11y.close">×</button>
+    <header><p class="eyebrow" data-i18n="search.eyebrow">知识检索</p><h2 id="search-title" data-i18n="search.title">搜索整个实验室</h2></header>
+    <label for="global-search-input" class="search-field"><span class="sr-only" data-i18n="search.label">输入关键词</span><input id="global-search-input" type="search" autocomplete="off" placeholder="NCM、LFP、SOC、热失控、BMS…" data-i18n-placeholder="search.placeholder"></label>
+    <div id="global-search-results" aria-live="polite"></div>
   </dialog>
 </body>
 </html>

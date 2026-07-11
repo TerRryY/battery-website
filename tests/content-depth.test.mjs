@@ -1,48 +1,60 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import vm from "node:vm";
 
 const root = resolve(import.meta.dirname, "..");
 const html = readFileSync(resolve(root, "index.html"), "utf8");
 const script = readFileSync(resolve(root, "script.js"), "utf8");
 
+const loadData = (file, key) => {
+  const context = { window: {} };
+  vm.runInNewContext(readFileSync(resolve(root, file), "utf8"), context);
+  return context.window[key];
+};
+
+const technologies = loadData("data/technologies.js", "BATTERY_TECHNOLOGIES");
+const materials = loadData("data/materials.js", "BATTERY_MATERIALS");
+const sources = loadData("data/sources.js", "BATTERY_SOURCES");
+
 for (const id of [
-  "explorer",
-  "layer-stack",
-  "ion-demo",
-  "technology-rail",
-  "tech-table",
-  "compare",
-  "tech-selectors",
-  "system-steps",
-  "thermal",
-  "material-grid",
-  "quiz-form"
+  "overview", "inside", "layer-stack", "ion-demo", "chemistries",
+  "technology-rail", "tech-table", "compare", "tech-selectors",
+  "cell-to-vehicle", "system-steps", "thermal", "materials",
+  "material-grid", "research", "tools", "quiz-form", "about"
 ]) {
   assert.match(html, new RegExp(`id=["']${id}["']`), `missing #${id}`);
 }
 
-for (const required of [
-  "三元锂电池 NCM/NCA",
-  "磷酸铁锂电池 LFP",
-  "钠离子电池",
-  "固态电池",
-  "铅酸电池",
-  "镍氢电池 NiMH",
-  "石墨",
-  "硅",
-  "电解液",
-  "隔膜",
-  "BMS",
-  "热失控"
-]) {
-  assert.ok(script.includes(required), `missing educational content: ${required}`);
+assert.equal(technologies.length, 8, "expected eight battery routes");
+assert.ok(materials.length >= 15, "expected at least fifteen material records");
+assert.ok(sources.length >= 10, "expected a useful source registry");
+
+for (const technology of technologies) {
+  assert.ok(technology.zh?.title && technology.en?.title, `missing bilingual technology: ${technology.id}`);
+  assert.ok(technology.facts?.massRange?.length === 2, `missing energy range: ${technology.id}`);
+  assert.ok(Object.keys(technology.ratings || {}).length === 6, `missing qualitative ratings: ${technology.id}`);
+  assert.ok(technology.sourceIds?.length > 0, `missing sources: ${technology.id}`);
 }
 
-assert.ok((script.match(/id: "(?:nmc|lfp|sodium|solid|lead|nimh)"/g) || []).length >= 6, "expected six battery technologies");
-assert.ok((script.match(/category: "(?:cathode|anode|electrolyte|separator|collector|safety)"/g) || []).length >= 10, "expected rich materials database");
-assert.ok(script.includes("drawFallbackRadar"), "expected no-CDN radar chart fallback");
-assert.ok(script.includes("drawFallbackBar"), "expected no-CDN bar chart fallback");
-assert.ok(script.includes("openDialog"), "expected dialog fallback helper");
+for (const material of materials) {
+  assert.ok(material.zh?.name && material.en?.name, `missing bilingual material: ${material.id}`);
+  assert.ok(material.formula && material.category, `missing material structure: ${material.id}`);
+  assert.ok(material.sourceIds?.length > 0, `missing material sources: ${material.id}`);
+}
 
-console.log("Battery Lab content depth checks passed.");
+for (const source of sources) {
+  assert.match(source.url, /^https:\/\//, `invalid source URL: ${source.id}`);
+  assert.ok(source.publisher && source.year && source.accessed, `incomplete citation: ${source.id}`);
+  assert.ok(source.zh === undefined, "sources should use structured bilingual scope, not duplicated records");
+}
+
+for (const behavior of [
+  "renderExplorer", "renderIonDemo", "renderComparison", "setupSystemStory",
+  "renderMaterials", "openDeepLinkedMaterial", "calculateEnergy", "calculateRange",
+  "scoreQuiz", "retryIncorrect", "openDialog", "citationMarkup"
+]) {
+  assert.ok(script.includes(behavior), `missing behavior: ${behavior}`);
+}
+
+console.log("Battery Materials Lab content depth checks passed.");

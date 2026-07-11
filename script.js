@@ -1,1172 +1,1097 @@
 "use strict";
 
-const state = {
-  lang: localStorage.getItem("battery-lab-lang") || "zh",
-  activeLayer: "cathode",
-  ionMode: "charge",
-  activeSystem: "cell",
-  thermalMode: "normal",
-  materialFilter: "all",
-  materialQuery: "",
-  radarChart: null,
-  barChart: null
-};
+(() => {
+  const technologies = window.BATTERY_TECHNOLOGIES || [];
+  const materials = window.BATTERY_MATERIALS || [];
+  const sources = window.BATTERY_SOURCES || [];
+  const experience = window.BATTERY_EXPERIENCE || {};
+  const depthContent = window.BATTERY_DEPTH_CONTENT || {};
 
-const i18n = {
-  zh: {
-    nav: { overview: "概览", explorer: "探索器", types: "电池体系", compare: "对比", tools: "工具", materials: "材料", research: "研究", search: "搜索" },
-    hero: {
-      label: "材料科学 · 电动车系统",
-      title: "能源储存研究",
-      subtitle: "从材料、结构到整车系统，理解电池为什么工作、为什么失效、又如何变得更安全。",
-      start: "开始",
-      compare: "对比",
-      tag1: "材料科学",
-      tag2: "电动车系统",
-      tag3: "互动学习"
-    },
-    overview: {
-      title: "为什么电池重要？",
-      body: "电池把材料科学、电化学、安全工程和能源系统连在一起。它不是一个“装电的盒子”，而是现代交通、电子设备和可再生能源背后的基础设施。",
-      imageCaption: "电池不只存在于实验室。真正的工程价值，要在制造、装配和质量控制中被验证。"
-    },
-    explorer: {
-      title: "拆开一颗电池，看见材料如何工作。",
-      body: "点击每一层，了解它负责什么、为什么重要、工程难点在哪里，以及常见材料是什么。"
-    },
-    ion: {
-      eyebrow: "离子运动",
-      title: "充电和放电，其实是离子在两端之间往返。",
-      charge: "充电",
-      discharge: "放电",
-      chargeText: "充电时，外部电源把锂离子从正极“推”到负极，电子从外电路补偿电荷。这个动画是简化模型。",
-      dischargeText: "放电时，锂离子回到正极，电子通过外部电路做功，为设备或电机提供能量。"
-    },
-    types: {
-      title: "不同电池体系，不同工程取舍。",
-      body: "有些体系追求高能量密度，有些追求安全寿命，有些追求成本和资源稳定。点击卡片查看完整知识页。",
-      tableTitle: "快速建立全局认知",
-      tableNote: "范围是教育用途的典型估计，真实数值取决于设计、供应商和测试条件。",
-      deepTitle: "继续往下看：真正的差异来自材料结构",
-      deepBody: "同样叫“锂电池”，内部材料、离子通道、热管理和封装方式可能完全不同。下面这几组概念，是读懂电池新闻和技术路线的入口。"
-    },
-    compare: {
-      title: "用图表看懂取舍。",
-      body: "最多选择 4 种技术。雷达图显示相对评分，柱状图显示典型能量密度中值。所有分数都是简化学习模型，不是工业规格。",
-      select: "选择技术",
-      hint: "相对评分：1 较低，10 较高。成本分数越高表示越经济。",
-      radar: "综合雷达图",
-      bar: "典型能量密度",
-      insightTitle: "对比解读",
-      max: "最多同时选择 4 种技术。"
-    },
-    pack: {
-      title: "从电芯到整车，电池才真正变成系统。",
-      body: "电芯只是起点。模组、电池包、BMS、热管理和整车能耗共同决定真实续航、安全和寿命。",
-      imageCaption: "从电芯到电池包，结构、热管理和安全设计共同决定它能否进入真实车辆。"
-    },
-    thermal: {
-      eyebrow: "冬季续航",
-      title: "为什么电动车冬天续航会下降？",
-      normal: "常温",
-      cold: "寒冷",
-      veryCold: "严寒"
-    },
-    tools: {
-      title: "把公式变成直觉。",
-      body: "两个小工具帮助你快速理解 Wh、kWh、能耗和温度折减之间的关系。"
-    },
-    calc: {
-      energyTitle: "电池能量计算器",
-      energyBody: "输入电压和容量，估算储存能量。",
-      voltage: "电压 V",
-      capacity: "容量 Ah",
-      rangeTitle: "电动车续航计算器",
-      rangeBody: "输入电池容量、能耗和温度模式，估算续航。",
-      size: "电池容量 kWh",
-      consumption: "能耗 Wh/km",
-      temp: "温度模式",
-      invalidEnergy: "请输入大于 0 的电压和容量。",
-      invalidRange: "请输入大于 0 的电池容量和能耗。",
-      energyExplain: "理论上约等于 {kwh} kWh。也就是用 {wh} W 的功率持续 1 小时，但真实可用能量会受效率和保护策略影响。",
-      rangeExplain: "常温基础续航约 {base} km；当前温度模型后约 {adjusted} km。真实值还会受车速、空调、轮胎、地形和电池健康影响。"
-    },
-    materials: {
-      title: "电池里面到底有什么？",
-      body: "材料库不是简单罗列名词，而是解释每种材料在电池中的角色、优势、挑战和应用位置。",
-      search: "搜索材料或术语",
-      all: "全部",
-      empty: "没有找到匹配的材料。换一个关键词试试。"
-    },
-    research: {
-      title: "我的研究思考。",
-      body: "这部分保留学生项目的真实感：不是把资料复制成百科，而是记录我如何理解材料、热管理和系统工程之间的联系。",
-      imageCaption: "材料问题最终会进入产业系统：产线、供应链、热管理、安全验证和整车设计一起决定技术能走多远。"
-    },
-    timeline: { title: "电池技术时间线" },
-    quiz: {
-      title: "知识检查。",
-      body: "答题后会看到解释。目标不是考倒你，而是确认关键概念真的连起来了。",
-      submit: "提交答案",
-      reset: "重新开始",
-      score: "得分 {score}/{total}",
-      choose: "请选择一个答案。"
-    },
-    search: { title: "搜索整个知识库", empty: "没有找到相关内容。" },
-    footer: {
-      body: "一个关于电池技术、材料科学与能源系统的学生互动学习项目。",
-      built: "Terry Wang 制作",
-      materials: "材料库",
-      quiz: "知识小测",
-      top: "回到顶部 ↑"
-    },
-    labels: {
-      learn: "了解更多",
-      role: "作用",
-      advantage: "优势",
-      challenge: "挑战",
-      example: "例子",
-      overview: "概览",
-      works: "工作原理",
-      strengths: "主要优点",
-      weaknesses: "主要局限",
-      applications: "应用场景",
-      analogy: "普通人怎么理解",
-      future: "未来方向",
-      density: "能量密度",
-      safety: "安全",
-      cost: "成本",
-      cycles: "寿命",
-      cold: "低温",
-      charging: "快充"
-    }
-  },
-  en: {
-    nav: { overview: "Overview", explorer: "Explorer", types: "Chemistries", compare: "Compare", tools: "Tools", materials: "Materials", research: "Research", search: "Search" },
-    hero: {
-      label: "Materials Science / EV Systems",
-      title: "Battery Lab",
-      subtitle: "A focused journey from materials to cells, packs, safety, and electric vehicles.",
-      start: "Explore",
-      compare: "Compare",
-      tag1: "Materials Science",
-      tag2: "EV Systems",
-      tag3: "Interactive Learning"
-    },
-    overview: {
-      title: "Why do batteries matter?",
-      body: "Batteries connect materials science, electrochemistry, safety engineering, and energy systems. They are not just boxes that store electricity; they are infrastructure behind modern transport, electronics, and renewable energy.",
-      imageCaption: "Batteries do not live only in labs. Their engineering value must survive manufacturing, assembly, and quality control."
-    },
-    explorer: {
-      title: "Open a cell and see how materials work.",
-      body: "Click each layer to learn what it does, why it matters, one engineering challenge, and one example material."
-    },
-    ion: {
-      eyebrow: "Ion movement",
-      title: "Charging and discharging are ion shuttles between two sides.",
-      charge: "Charging",
-      discharge: "Discharging",
-      chargeText: "During charging, an external power source pushes lithium ions from the cathode into the anode while electrons balance charge through the external circuit. This is simplified.",
-      dischargeText: "During discharging, lithium ions return to the cathode while electrons do useful work through the external circuit."
-    },
-    types: {
-      title: "Different chemistries, different trade-offs.",
-      body: "Some chemistries chase high energy density, some prioritize safety and life, and others focus on cost and resource stability. Open each card for a full explanation.",
-      tableTitle: "Build a quick mental map",
-      tableNote: "Ranges are typical educational estimates. Real values depend on design, supplier, and testing conditions.",
-      deepTitle: "Look deeper: the real difference comes from materials",
-      deepBody: "Many batteries share the lithium-ion name, but their crystal structure, ion pathway, thermal behavior, and packaging strategy can be very different. These concepts help decode real battery technology news."
-    },
-    compare: {
-      title: "See trade-offs through charts.",
-      body: "Select up to 4 technologies. The radar chart shows relative scores and the bar chart shows typical energy-density midpoint. All scores are simplified educational estimates, not industrial specifications.",
-      select: "Select technologies",
-      hint: "Relative score: 1 = low, 10 = high. For cost, higher means more affordable.",
-      radar: "Balanced radar",
-      bar: "Typical energy density",
-      insightTitle: "Comparison insight",
-      max: "Select up to 4 technologies."
-    },
-    pack: {
-      title: "A battery becomes real as a vehicle system.",
-      body: "A cell is only the beginning. Modules, packs, BMS, thermal management, and vehicle energy use determine real range, safety, and lifetime.",
-      imageCaption: "From cells to packs, structure, thermal management, and safety design decide whether the technology can enter a real vehicle."
-    },
-    thermal: {
-      eyebrow: "Winter range",
-      title: "Why does EV range drop in winter?",
-      normal: "Normal",
-      cold: "Cold",
-      veryCold: "Very cold"
-    },
-    tools: {
-      title: "Turn formulas into intuition.",
-      body: "These tools help connect Wh, kWh, consumption, and temperature loss."
-    },
-    calc: {
-      energyTitle: "Battery Energy Calculator",
-      energyBody: "Enter voltage and capacity to estimate stored energy.",
-      voltage: "Voltage V",
-      capacity: "Capacity Ah",
-      rangeTitle: "EV Range Calculator",
-      rangeBody: "Enter pack size, consumption, and temperature mode to estimate range.",
-      size: "Battery size kWh",
-      consumption: "Consumption Wh/km",
-      temp: "Temperature mode",
-      invalidEnergy: "Enter voltage and capacity greater than 0.",
-      invalidRange: "Enter battery size and consumption greater than 0.",
-      energyExplain: "This equals about {kwh} kWh. It could theoretically supply {wh} W for 1 hour, although real usable energy depends on efficiency and protection limits.",
-      rangeExplain: "Base range is about {base} km; after the temperature model it is about {adjusted} km. Real range also depends on speed, HVAC, tires, terrain, and battery health."
-    },
-    materials: {
-      title: "What is inside a battery?",
-      body: "The materials database explains each material's role, advantage, challenge, and where it is used.",
-      search: "Search materials or terms",
-      all: "All",
-      empty: "No matching material found. Try another keyword."
-    },
-    research: {
-      title: "My research thoughts.",
-      body: "This section keeps the project personal: not copied encyclopedia text, but notes on how I understand materials, thermal management, and systems engineering.",
-      imageCaption: "Materials questions eventually enter industrial systems: production lines, supply chains, thermal control, safety validation, and vehicle design."
-    },
-    timeline: { title: "Battery innovation timeline" },
-    quiz: {
-      title: "Knowledge check.",
-      body: "You will see explanations after submitting. The goal is not to trick you; it is to connect the key concepts.",
-      submit: "Submit Answers",
-      reset: "Restart",
-      score: "Score {score}/{total}",
-      choose: "Choose an answer."
-    },
-    search: { title: "Search the knowledge base", empty: "No matching entry found." },
-    footer: {
-      body: "A student-built interactive learning project about batteries, materials science, and energy systems.",
-      built: "Built by Terry Wang",
-      materials: "Materials",
-      quiz: "Quiz",
-      top: "Back to top ↑"
-    },
-    labels: {
-      learn: "Learn more",
-      role: "Role",
-      advantage: "Advantage",
-      challenge: "Challenge",
-      example: "Example",
-      overview: "Overview",
-      works: "How it works",
-      strengths: "Strengths",
-      weaknesses: "Limitations",
-      applications: "Applications",
-      analogy: "Plain-language analogy",
-      future: "Future direction",
-      density: "Energy density",
-      safety: "Safety",
-      cost: "Cost",
-      cycles: "Cycle life",
-      cold: "Cold weather",
-      charging: "Fast charging"
-    }
-  }
-};
+  const state = {
+    lang: localStorage.getItem("battery-lab-lang") || "zh",
+    activeLayer: "cathode",
+    ionMode: "charge",
+    ionPaused: false,
+    selectedTechnologies: ["nmc", "lfp", "sodium"],
+    systemStage: "cell",
+    systemProgress: 0,
+    thermalMode: "normal",
+    materialFilter: "all",
+    materialQuery: "",
+    quizSubmitted: false,
+    quizScope: "all",
+    incorrectQuestions: [],
+    lastDialogTrigger: null,
+    systemFrame: 0,
+    heroFrame: 0
+  };
 
-const data = {
-  impact: [
-    { value: "300+", zh: ["Wh/kg 潜力", "高能体系常讨论的质量能量密度潜力区间，但不是所有产品都能达到。"], en: ["Wh/kg potential", "A commonly discussed potential range for high-energy systems, not a universal product value."] },
-    { value: "1000+", zh: ["循环不是简单数字", "寿命受材料、温度、充电策略和使用习惯共同影响。"], en: ["Cycles are not simple", "Lifetime depends on materials, temperature, charging strategy, and user behavior."] },
-    { value: "2030+", zh: ["下一代技术窗口", "固态、钠离子、硅负极等方向仍在从实验室和中试走向成熟。"], en: ["Next-technology window", "Solid-state, sodium-ion, and silicon anode routes are still moving toward maturity."] }
-  ],
-  foundations: [
-    { zh: ["电势", "电压可以理解为推动电子流动的能量差，但高电压不自动等于高容量。"], en: ["Electric potential", "Voltage is the energy difference that pushes electrons, but higher voltage does not automatically mean higher capacity."] },
-    { zh: ["电子与离子", "电子在外电路做功，离子在电池内部迁移，用来维持电荷平衡。"], en: ["Electrons and ions", "Electrons do useful work outside the cell while ions move inside to maintain charge balance."] },
-    { zh: ["SOC 与 SOH", "SOC 是剩余电量估算，SOH 是健康状态估算。一个像油表，一个像电池年龄。"], en: ["SOC and SOH", "SOC estimates remaining charge; SOH estimates aging. One is like a fuel gauge, the other like battery age."] }
-  ],
-  layers: [
-    { id: "cathode", color: "#83c8ff", y: "74px", zh: { title: "正极", role: "放电时接收锂离子，强烈影响电压、容量、安全和成本。", matter: "正极材料通常是决定电池体系名称和性能边界的核心。", challenge: "高能量密度往往会带来热稳定性和成本压力。", example: "LFP、NCM、NCA、LCO" }, en: { title: "Cathode", role: "Receives lithium ions during discharge and strongly affects voltage, capacity, safety, and cost.", matter: "Cathode material often defines the chemistry name and performance limits.", challenge: "Higher energy density often increases stability and cost pressure.", example: "LFP, NMC, NCA, LCO" } },
-    { id: "separator", color: "#f8fafc", y: "152px", zh: { title: "隔膜", role: "隔开正负极，防止短路，同时允许离子通过。", matter: "它很薄，但对安全极其关键。热收缩可能导致内部短路。", challenge: "要同时做到薄、强、耐热、孔径稳定。", example: "PE/PP 微孔膜、陶瓷涂覆隔膜" }, en: { title: "Separator", role: "Keeps the cathode and anode apart to prevent short circuits while allowing ions through.", matter: "It is thin but safety-critical. Heat shrinkage can cause internal shorts.", challenge: "It must be thin, strong, heat-resistant, and pore-stable.", example: "PE/PP microporous film, ceramic-coated separator" } },
-    { id: "electrolyte", color: "#5eead4", y: "230px", zh: { title: "电解液", role: "为离子提供通道，影响快充、低温、寿命与安全。", matter: "没有良好的离子通道，电池就无法高效充放电。", challenge: "液态电解液成熟但易燃；固态电解质仍面临界面和制造难题。", example: "LiPF6 碳酸酯电解液、硫化物固态电解质" }, en: { title: "Electrolyte", role: "Provides the ion pathway and affects fast charging, cold weather, life, and safety.", matter: "Without a good ion pathway, a battery cannot charge or discharge efficiently.", challenge: "Liquid electrolytes are mature but flammable; solid electrolytes face interface and manufacturing challenges.", example: "LiPF6 carbonate electrolyte, sulfide solid electrolyte" } },
-    { id: "anode", color: "#86efac", y: "308px", zh: { title: "负极", role: "充电时接收锂离子，常见材料是石墨。", matter: "负极决定快充能力、低温表现和部分寿命问题。", challenge: "硅负极容量高但膨胀大，锂金属负极容易产生枝晶风险。", example: "石墨、硅碳、硬碳、锂金属" }, en: { title: "Anode", role: "Receives lithium ions during charging; graphite is the most common material.", matter: "The anode affects fast charging, cold behavior, and some lifetime issues.", challenge: "Silicon has high capacity but expands; lithium metal can create dendrite risk.", example: "Graphite, silicon-carbon, hard carbon, lithium metal" } },
-    { id: "collector", color: "#fbbf24", y: "386px", zh: { title: "集流体", role: "把电极中的电子收集并导向外电路。", matter: "它们不直接储能，却决定电流路径和内阻。", challenge: "需要导电、轻、耐腐蚀，并适配不同电极电位。", example: "铜箔负极集流体、铝箔正极集流体" }, en: { title: "Current Collectors", role: "Collect electrons from electrodes and route them to the external circuit.", matter: "They do not store much energy directly, but define current paths and resistance.", challenge: "They must be conductive, light, corrosion-resistant, and compatible with electrode potentials.", example: "Copper foil for anode, aluminum foil for cathode" } },
-    { id: "case", color: "#cbd5e1", y: "464px", zh: { title: "壳体", role: "保护内部结构，控制膨胀、泄压和机械安全。", matter: "电池必须在冲击、振动、热膨胀和压力变化中保持安全。", challenge: "轻量化、强度、密封和热传播控制需要平衡。", example: "方壳、圆柱、软包封装" }, en: { title: "Casing", role: "Protects internal structure and manages swelling, venting, and mechanical safety.", matter: "Cells must remain safe under impact, vibration, thermal expansion, and pressure changes.", challenge: "Weight, strength, sealing, and heat propagation must be balanced.", example: "Prismatic, cylindrical, pouch formats" } }
-  ],
-  technologies: [
-    { id: "nmc", color: "#fb7185", short: "NCM / NCA", density: "180–300 Wh/kg", midpoint: 240, scores: [9, 5, 6, 6, 8, 5], zh: { title: "三元锂电池 NCM/NCA", desc: "使用镍、钴、锰或镍、钴、铝正极，常用于追求长续航的电动车。", tags: ["高能量密度", "长续航", "热管理重要"], strengths: "相同重量下通常储能更多，适合长续航和轻量化。", weaknesses: "成本和热稳定性压力较大，对 BMS 与制造控制要求高。", use: "长续航电动车、无人机、笔记本、高端消费电子", analogy: "像轻量大容量背包，能装更多，但要保护得更仔细。", future: "高镍化、表面包覆、低钴化、固态电解质耦合。" }, en: { title: "NCM / NCA Lithium-ion", desc: "Nickel-cobalt based cathodes often used in long-range EVs.", tags: ["High energy", "Long range", "Thermal control"], strengths: "Usually stores more energy at the same mass, useful for long range and lightweight design.", weaknesses: "Cost and thermal stability are harder; BMS and manufacturing control matter.", use: "Long-range EVs, drones, laptops, premium electronics", analogy: "Like a lightweight high-capacity backpack: more range, but needs careful protection.", future: "High-nickel designs, coatings, lower cobalt, and solid-electrolyte coupling." } },
-    { id: "lfp", color: "#86efac", short: "LFP", density: "90–160 Wh/kg", midpoint: 125, scores: [6, 8, 9, 9, 8, 6], zh: { title: "磷酸铁锂电池 LFP", desc: "以磷酸铁锂为正极，安全稳定、寿命长、成本友好。", tags: ["安全", "长寿命", "成本友好"], strengths: "热稳定性和循环寿命通常优秀，不依赖镍钴。", weaknesses: "能量密度低于高镍三元，低温快充和冬季续航需要优化。", use: "大众电动车、商用车、储能电站、公交车", analogy: "像结实可靠的工具箱，不追求最轻，但耐用。", future: "刀片电池、CTP、低温电解液和热管理优化。" }, en: { title: "Lithium Iron Phosphate LFP", desc: "A stable, long-life, cost-friendly lithium-ion chemistry.", tags: ["Safe", "Long life", "Cost friendly"], strengths: "Often excellent in thermal stability and cycle life; no nickel or cobalt.", weaknesses: "Lower energy density than high-nickel systems; cold charging needs support.", use: "Mainstream EVs, commercial vehicles, grid storage, buses", analogy: "Like a tough tool case: not the lightest, but dependable.", future: "Blade cells, CTP, low-temperature electrolytes, and better thermal management." } },
-    { id: "sodium", color: "#83c8ff", short: "Sodium-ion", density: "100–180 Wh/kg", midpoint: 140, scores: [5, 8, 8, 7, 7, 9], zh: { title: "钠离子电池", desc: "用钠离子替代锂离子，资源更丰富，适合低成本储能和部分入门车辆。", tags: ["资源丰富", "低成本潜力", "低温表现"], strengths: "钠资源分布广，部分体系低温性能有优势。", weaknesses: "能量密度通常低于锂离子，产业链仍在成熟。", use: "固定储能、两轮车、入门级车辆、低温场景", analogy: "不一定跑最远，但原料更容易找到，适合大规模铺开。", future: "硬碳负极、层状氧化物、普鲁士蓝类材料和规模化制造。" }, en: { title: "Sodium-ion Battery", desc: "Uses sodium ions instead of lithium ions, with potential in lower-cost storage.", tags: ["Abundant", "Cost potential", "Cold weather"], strengths: "Sodium is widely available, and some systems perform well in low temperature.", weaknesses: "Energy density is usually below lithium-ion; the supply chain is maturing.", use: "Stationary storage, two-wheelers, entry vehicles, cold regions", analogy: "Not always the longest runner, but easier to source and scale.", future: "Hard carbon, layered oxides, Prussian blue materials, and scale manufacturing." } },
-    { id: "solid", color: "#c084fc", short: "Solid-state", density: "Developing / >300", midpoint: 330, scores: [10, 2, 8, 7, 8, 6], zh: { title: "固态电池", desc: "用固态电解质替代液态电解液，有潜力提升安全和能量上限。", tags: ["发展中", "高潜力", "界面挑战"], strengths: "有机会减少易燃液体，并支持锂金属负极。", weaknesses: "固-固界面、枝晶、压力控制、制造良率和成本仍困难。", use: "未来高端电动车、航空、消费电子、高安全储能", analogy: "把液体通道换成固体隧道，可能更稳，但修隧道很难。", future: "硫化物、氧化物、聚合物路线都在推进，量产时间表仍需谨慎看待。" }, en: { title: "Solid-state Battery", desc: "Uses solid electrolytes, with potential for safety and energy improvements.", tags: ["Developing", "High potential", "Interface challenge"], strengths: "May reduce flammable liquid content and support lithium-metal anodes.", weaknesses: "Solid-solid interfaces, dendrites, pressure, yield, and cost remain difficult.", use: "Future premium EVs, aviation, electronics, high-safety storage", analogy: "Replacing liquid pathways with solid tunnels may be safer, but tunnels are hard to build perfectly.", future: "Sulfide, oxide, and polymer routes are moving forward; timelines should be read carefully." } },
-    { id: "lead", color: "#d6b48f", short: "Lead-acid", density: "30–50 Wh/kg", midpoint: 40, scores: [2, 10, 7, 5, 4, 7], zh: { title: "铅酸电池", desc: "历史悠久、成本低、瞬时大电流强，但重量大、能量密度低。", tags: ["低成本", "启动电流", "成熟回收"], strengths: "便宜、可靠，大电流输出强，回收体系成熟。", weaknesses: "重、能量密度低，长期亏电会造成不可逆损伤。", use: "燃油车启动电源、UPS、通信后备电源", analogy: "像很重但有力的启动器，不适合长跑，擅长瞬间发力。", future: "仍会在启动电源和备用电源保留位置，但动力电池领域被锂电替代。" }, en: { title: "Lead-acid Battery", desc: "A mature, low-cost battery with strong starting current but low energy density.", tags: ["Low cost", "Starting current", "Recycling"], strengths: "Cheap, reliable, strong high-current output, mature recycling.", weaknesses: "Heavy, low energy density, and deep discharge causes damage.", use: "Starter batteries, UPS, telecom backup", analogy: "Like a heavy but strong starter: not a distance runner, but powerful instantly.", future: "It remains in starter and backup systems, while lithium dominates traction batteries." } },
-    { id: "nimh", color: "#fbbf24", short: "NiMH", density: "60–120 Wh/kg", midpoint: 90, scores: [4, 6, 8, 6, 5, 8], zh: { title: "镍氢电池 NiMH", desc: "耐用、宽温区、抗滥用能力强，曾广泛用于混合动力汽车。", tags: ["耐用", "混动车", "宽温区"], strengths: "可靠、抗滥用、适合浅充浅放和宽温区。", weaknesses: "自放电较高，质量和体积大于现代锂离子。", use: "混合动力汽车、消费级充电电池、工业设备", analogy: "像稳健老队员，不一定最快，但抗压可靠。", future: "在经典 HEV 仍有价值，但纯电和插混主流由锂电主导。" }, en: { title: "Nickel-Metal Hydride NiMH", desc: "Durable and abuse-tolerant, once widely used in hybrid vehicles.", tags: ["Durable", "Hybrids", "Wide temperature"], strengths: "Reliable, abuse-tolerant, good for shallow cycling and wide temperatures.", weaknesses: "Higher self-discharge and larger mass/volume than modern lithium-ion.", use: "Hybrid vehicles, rechargeable consumer cells, industrial equipment", analogy: "Like a steady veteran: not the fastest, but reliable under stress.", future: "Still useful in classic HEVs, while EVs and PHEVs are dominated by lithium-ion." } }
-  ],
-  systems: [
-    { id: "cell", zh: ["电芯", "最小电化学单元。正极、负极、电解质和隔膜决定电压、容量、寿命和安全边界。"], en: ["Cell", "The smallest electrochemical unit. Cathode, anode, electrolyte, and separator define voltage, capacity, life, and safety limits."] },
-    { id: "module", zh: ["模组", "多个电芯组合在一起，便于固定、采样、布线和散热。"], en: ["Module", "A group of cells arranged for support, sensing, wiring, and heat spreading."] },
-    { id: "pack", zh: ["电池包", "把电芯/模组、BMS、冷却、壳体和高压安全件整合成车上可用的系统。"], en: ["Pack", "Combines cells/modules with BMS, cooling, enclosure, and high-voltage safety components."] },
-    { id: "vehicle", zh: ["整车", "续航不只由电池决定，还受车速、空调、轮胎、地形和热管理影响。"], en: ["Vehicle", "Range is not determined by the battery alone; speed, HVAC, tires, terrain, and thermal management matter."] }
-  ],
-  thermal: [
-    { id: "normal", factor: 1, zh: ["常温下离子迁移和内阻处于较理想状态。", ["离子迁移较顺畅", "内阻较低", "加热负荷小", "续航接近标称条件"]], en: ["At normal temperature, ion movement and resistance are closer to ideal conditions.", ["Ion movement is smoother", "Internal resistance is lower", "Heating load is small", "Range is closer to rated conditions"]] },
-    { id: "cold", factor: .85, zh: ["寒冷环境会让离子运动变慢，电池和座舱加热也会消耗能量。", ["离子迁移变慢", "内阻升高", "电池需要加热", "座舱空调消耗更多能量"]], en: ["Cold weather slows ion movement and uses energy for pack and cabin heating.", ["Ion movement slows", "Internal resistance rises", "Pack heating may be needed", "Cabin HVAC uses more energy"]] },
-    { id: "veryCold", factor: .7, zh: ["严寒环境下，热管理和能耗控制会显著影响真实续航。", ["离子迁移明显变慢", "内阻明显升高", "快充能力受限", "热管理能耗上升"]], en: ["In very cold weather, thermal management and energy use strongly affect real range.", ["Ion movement slows significantly", "Resistance rises sharply", "Fast charging is limited", "Thermal load increases"]] }
-  ],
-  materials: [
-    { id: "graphite", symbol: "C", category: "anode", zh: { name: "石墨", role: "负极材料", desc: "商业锂离子电池中最成熟的负极，可让锂离子嵌入层状结构。", advantage: "稳定、成熟、成本可控。", challenge: "理论容量有限，极端快充会增加析锂风险。", used: "手机、电动车、储能电池" }, en: { name: "Graphite", role: "Anode material", desc: "The most mature anode material for commercial lithium-ion cells.", advantage: "Stable, mature, and cost controlled.", challenge: "Limited theoretical capacity and lithium plating risk under extreme fast charging.", used: "Phones, EVs, storage cells" } },
-    { id: "silicon", symbol: "Si", category: "anode", zh: { name: "硅", role: "高容量负极", desc: "容量潜力远高于石墨，但充放电膨胀可超过 300%。", advantage: "显著提高负极容量潜力。", challenge: "体积膨胀、粉化和 SEI 反复破裂。", used: "硅碳负极、下一代高能电池" }, en: { name: "Silicon", role: "High-capacity anode", desc: "Much higher capacity potential than graphite, but can expand over 300%.", advantage: "Can raise anode capacity significantly.", challenge: "Volume expansion, cracking, and repeated SEI damage.", used: "Silicon-carbon anodes, next-gen high-energy cells" } },
-    { id: "lfp-material", symbol: "Fe", category: "cathode", zh: { name: "磷酸铁锂 LFP", role: "正极材料", desc: "橄榄石结构稳定，安全和循环寿命表现突出。", advantage: "热稳定、寿命长、成本低。", challenge: "能量密度和低温性能通常不如高镍三元。", used: "电动车、储能、公交车" }, en: { name: "Lithium Iron Phosphate", role: "Cathode material", desc: "A stable olivine-structure cathode known for safety and cycle life.", advantage: "Thermally stable, long life, lower cost.", challenge: "Energy density and cold behavior are usually below high-nickel cells.", used: "EVs, storage, buses" } },
-    { id: "nmc-material", symbol: "Ni", category: "cathode", zh: { name: "镍锰钴氧化物 NMC", role: "高能正极", desc: "层状结构正极，通过镍、锰、钴比例调整能量、稳定性和成本。", advantage: "能量密度较高。", challenge: "高镍带来稳定性、成本和制造控制挑战。", used: "长续航电动车、消费电子" }, en: { name: "Nickel Manganese Cobalt Oxide", role: "High-energy cathode", desc: "A layered cathode tuned by nickel, manganese, and cobalt ratios.", advantage: "High energy density.", challenge: "High nickel brings stability, cost, and manufacturing challenges.", used: "Long-range EVs, electronics" } },
-    { id: "electrolyte", symbol: "Li+", category: "electrolyte", zh: { name: "电解液", role: "离子通道", desc: "让锂离子在正负极之间移动，影响快充、低温和安全。", advantage: "液态体系成熟、导电性好。", challenge: "有机溶剂易燃，热失控风险需要管理。", used: "几乎所有液态锂离子电池" }, en: { name: "Liquid Electrolyte", role: "Ion pathway", desc: "Allows lithium ions to move between electrodes, affecting fast charging, cold behavior, and safety.", advantage: "Mature and conductive.", challenge: "Organic solvents can be flammable and need safety control.", used: "Most liquid lithium-ion cells" } },
-    { id: "solid-electrolyte", symbol: "SE", category: "electrolyte", zh: { name: "固态电解质", role: "固体离子通道", desc: "用固体材料传导离子，是固态电池的核心。", advantage: "有潜力减少易燃液体并匹配锂金属。", challenge: "界面接触、离子电导率、压力和制造仍难。", used: "固态电池研发" }, en: { name: "Solid Electrolyte", role: "Solid ion pathway", desc: "A solid material that conducts ions; central to solid-state batteries.", advantage: "May reduce flammable liquid and support lithium metal.", challenge: "Interface contact, conductivity, pressure, and manufacturing remain hard.", used: "Solid-state battery development" } },
-    { id: "separator", symbol: "PP", category: "separator", zh: { name: "隔膜", role: "安全隔离层", desc: "隔开正负极，防止短路，同时允许离子通过。", advantage: "薄而轻，对能量密度友好。", challenge: "高温热收缩可能导致短路，陶瓷涂覆可改善。", used: "锂离子电池、钠离子电池" }, en: { name: "Separator Polymer", role: "Safety barrier", desc: "Separates electrodes to prevent short circuits while allowing ions through.", advantage: "Thin and light, good for energy density.", challenge: "Heat shrinkage can cause shorts; ceramic coating helps.", used: "Lithium-ion and sodium-ion cells" } },
-    { id: "copper", symbol: "Cu", category: "collector", zh: { name: "铜集流体", role: "负极集流体", desc: "负责收集负极电子并导出电流。", advantage: "导电性强，适合负极电位。", challenge: "成本和重量需要控制。", used: "锂离子负极" }, en: { name: "Copper Current Collector", role: "Anode current collector", desc: "Collects electrons from the anode and routes current.", advantage: "Highly conductive and suitable for anode potentials.", challenge: "Cost and weight must be controlled.", used: "Lithium-ion anodes" } },
-    { id: "aluminum", symbol: "Al", category: "collector", zh: { name: "铝集流体", role: "正极集流体", desc: "负责收集正极电子，通常比铜更轻。", advantage: "轻、成本低、适合正极电位。", challenge: "在某些电位和电解液条件下需要稳定性控制。", used: "锂离子正极、部分钠离子电池" }, en: { name: "Aluminum Current Collector", role: "Cathode current collector", desc: "Collects electrons from the cathode and is usually lighter than copper.", advantage: "Light, lower cost, suitable for cathode potentials.", challenge: "Stability depends on potential and electrolyte conditions.", used: "Lithium-ion cathodes, some sodium-ion cells" } },
-    { id: "ceramic", symbol: "Al₂O₃", category: "safety", zh: { name: "陶瓷涂覆", role: "隔膜安全材料", desc: "涂在隔膜表面，提高耐热性并减少热收缩。", advantage: "改善热稳定性和安全边界。", challenge: "增加工艺复杂度和成本。", used: "动力电池隔膜" }, en: { name: "Ceramic Coating", role: "Separator safety material", desc: "Coated on separators to improve heat resistance and reduce shrinkage.", advantage: "Improves thermal stability and safety margins.", challenge: "Adds process complexity and cost.", used: "EV battery separators" } }
-  ],
-  research: [
-    { zh: ["问题", "为什么钠离子值得关注？", "我不认为钠离子一定要“取代”锂离子。更有价值的问题是：在低成本储能、入门级车辆和寒冷地区，它能不能成为更合适的材料选择？"], en: ["Question", "Why sodium-ion matters", "I do not think sodium-ion must replace lithium-ion. The better question is whether it can be the more suitable material choice for low-cost storage, entry vehicles, and cold regions."] },
-    { zh: ["工程取舍", "冬季续航为什么下降？", "低温让离子移动变慢、内阻升高，同时座舱和电池加热也要消耗能量。所以冬季续航既是材料问题，也是热管理问题。"], en: ["Engineering trade-off", "Why winter range drops", "Low temperature slows ions and raises internal resistance, while cabin and battery heating consume energy. Winter range is both a materials problem and a thermal-system problem."] },
-    { zh: ["未来方向", "电池余热能否再利用？", "我曾想过电池包和功率电子产生的热量能否作为冬季热源之一。这个方向有吸引力，但必须保证温度、时机、安全和寿命都被严格控制。"], en: ["Future direction", "Can battery waste heat be reused?", "I have wondered whether heat from the pack and power electronics could become part of winter heating. It is attractive, but temperature, timing, safety, and lifetime must be carefully controlled."] }
-  ],
-  timeline: [
-    { year: "1800", zh: ["伏打电堆", "第一次证明连续电流可以由电化学系统产生。"], en: ["Voltaic pile", "Showed that continuous current could be generated by an electrochemical system."] },
-    { year: "1859", zh: ["铅酸电池", "第一种可充电电池，至今仍用于启动和备用电源。"], en: ["Lead-acid battery", "The first rechargeable battery, still used for starting and backup power."] },
-    { year: "1991", zh: ["商用锂离子电池", "索尼推动锂离子电池商业化，开启便携电子时代。"], en: ["Commercial lithium-ion", "Sony commercialized lithium-ion batteries, enabling the portable electronics era."] },
-    { year: "2010s", zh: ["电动车扩张", "动力电池从消费电子走向交通系统。"], en: ["EV expansion", "Battery technology moved from electronics into transportation systems."] },
-    { year: "2020s", zh: ["钠离子与半固态", "产业开始探索低成本路线和更高安全边界。"], en: ["Sodium-ion and semi-solid", "Industry explores lower-cost routes and better safety margins."] },
-    { year: "2030+", zh: ["固态潜力", "固态电池可能进入更成熟量产阶段，但仍取决于成本、界面和制造。"], en: ["Solid-state potential", "Solid-state batteries may mature further, depending on cost, interface, and manufacturing."] }
-  ],
-  quiz: [
-    { answer: 1, zh: ["Wh 衡量什么？", ["电阻", "储存或释放的能量", "温度", "材料硬度"], "Wh 是能量单位，把功率和时间联系起来。"], en: ["What does Wh measure?", ["Resistance", "Stored or delivered energy", "Temperature", "Material hardness"], "Wh is a unit of energy that connects power and time."] },
-    { answer: 0, zh: ["电动车常用哪一大类电池？", ["锂离子电池", "一次碱性电池", "氧化银电池", "锌空气电池"], "现代电动车通常使用 LFP 或三元等锂离子体系。"], en: ["Which battery family is common in EVs?", ["Lithium-ion", "Primary alkaline", "Silver oxide", "Zinc-air"], "Modern EVs commonly use lithium-ion families such as LFP or NCM/NCA."] },
-    { answer: 2, zh: ["低温为什么影响续航？", ["电池变轻", "车轮变小", "离子移动变慢且加热耗电", "电压自动翻倍"], "低温提高内阻、减慢反应，同时热管理和座舱加热也会耗能。"], en: ["Why can cold weather reduce range?", ["The pack becomes lighter", "Wheels shrink", "Ion movement slows and heating uses energy", "Voltage doubles"], "Cold increases resistance, slows reactions, and heating consumes energy."] },
-    { answer: 0, zh: ["BMS 的核心作用是什么？", ["监测和保护电池系统", "增加轮胎抓地力", "改变车身颜色", "替代电解液"], "BMS 会监测电压、电流、温度，并估算 SOC/SOH。"], en: ["What is a core role of BMS?", ["Monitor and protect the battery system", "Increase tire grip", "Change vehicle color", "Replace electrolyte"], "BMS monitors voltage, current, temperature, and estimates SOC/SOH."] },
-    { answer: 3, zh: ["隔膜的关键作用是什么？", ["储存汽油", "产生声音", "直接驱动车轮", "隔开正负极并允许离子通过"], "隔膜防止正负极短路，同时让离子通过。"], en: ["What does the separator do?", ["Stores gasoline", "Makes sound", "Directly drives wheels", "Separates electrodes while allowing ions through"], "The separator prevents short circuits while allowing ions to pass."] }
-  ]
-};
+  if (!['zh', 'en'].includes(state.lang)) state.lang = 'zh';
 
-const techSpecs = {
-  nmc: {
-    voltage: "3.6–3.7 V",
-    maturity: { zh: "量产成熟", en: "Commercially mature" },
-    platform: { zh: "层状氧化物正极，镍提升容量，钴/锰/铝帮助稳定结构。", en: "Layered oxide cathode. Nickel raises capacity; cobalt, manganese, or aluminum help stabilize the structure." },
-    reaction: { zh: "简化理解：锂离子在层状正极与石墨负极之间往返。NCM 523 / 622 / 811 的数字代表镍、钴、锰比例。镍越高，能量潜力越高，但热稳定和制造难度也上升。", en: "Simplified view: lithium ions shuttle between a layered cathode and graphite anode. NCM 523 / 622 / 811 describe nickel, cobalt, and manganese ratios. More nickel can raise energy potential, but stability and manufacturing become harder." },
-    case: { zh: "常见于长续航电动车和高端消费电子。", en: "Common in long-range EVs and premium electronics." }
-  },
-  lfp: {
-    voltage: "3.2–3.3 V",
-    maturity: { zh: "大规模量产", en: "Mass production" },
-    platform: { zh: "橄榄石结构正极，P-O 强共价键让结构更稳定。", en: "Olivine cathode structure; strong P-O bonds make the framework more stable." },
-    reaction: { zh: "简化反应可理解为 LiFePO₄ 与 FePO₄ 之间可逆转化。它的优势不是最高能量，而是安全、寿命、成本和资源稳定。", en: "A simplified reaction is the reversible change between LiFePO₄ and FePO₄. Its value is not maximum energy, but safety, life, cost, and resource stability." },
-    case: { zh: "常见于主流电动车、商用车和储能电站。", en: "Common in mainstream EVs, commercial vehicles, and stationary storage." }
-  },
-  sodium: {
-    voltage: "2.8–3.3 V",
-    maturity: { zh: "早期量产 / 快速推进", en: "Early commercialization / scaling" },
-    platform: { zh: "用钠离子替代锂离子，正极可采用层状氧化物或普鲁士蓝类材料，负极常用硬碳。", en: "Uses sodium ions instead of lithium ions. Cathodes may use layered oxides or Prussian blue analogues; hard carbon is a common anode route." },
-    reaction: { zh: "核心逻辑仍是离子脱嵌，但钠离子更大，材料通道和结构稳定性需要重新设计。", en: "The core mechanism is still ion insertion/extraction, but sodium ions are larger, so host structures and stability need different design." },
-    case: { zh: "适合低成本储能、两轮车、入门车辆和低温场景。", en: "Fits low-cost storage, two-wheelers, entry vehicles, and cold-weather scenarios." }
-  },
-  solid: {
-    voltage: { zh: "取决于正负极组合", en: "Depends on electrode pair" },
-    maturity: { zh: "实验室到中试 / 部分半固态商业化", en: "Lab to pilot scale / some semi-solid commercialization" },
-    platform: { zh: "用固态电解质替代液态电解液，路线包括硫化物、氧化物和聚合物。", en: "Replaces liquid electrolyte with a solid electrolyte. Main routes include sulfides, oxides, and polymers." },
-    reaction: { zh: "它不是单一化学体系，而是电池架构变化。关键难点是固-固界面接触、离子电导率、压力管理和制造良率。", en: "It is not one chemistry; it is an architecture change. Key challenges include solid-solid interfaces, ionic conductivity, pressure management, and manufacturing yield." },
-    case: { zh: "未来可能用于高安全、高能量密度场景，但不能简单说已经取代液态锂电。", en: "Could be used in high-safety and high-energy applications, but it has not simply replaced liquid lithium-ion cells." }
-  },
-  lead: {
-    voltage: { zh: "2.0 V / 单体", en: "2.0 V / cell" },
-    maturity: { zh: "极成熟", en: "Very mature" },
-    platform: { zh: "铅、二氧化铅和硫酸电解液体系，擅长瞬时大电流。", en: "Lead, lead dioxide, and sulfuric acid electrolyte system; strong at high-current bursts." },
-    reaction: { zh: "放电时正负极都逐渐生成硫酸铅。深度亏电会导致硫化损伤，影响寿命。", en: "During discharge both electrodes move toward lead sulfate. Deep discharge can cause sulfation damage and shorten life." },
-    case: { zh: "燃油车启动、UPS 和后备电源仍大量使用。", en: "Still widely used in starter batteries, UPS, and backup power." }
-  },
-  nimh: {
-    voltage: { zh: "1.2 V / 单体", en: "1.2 V / cell" },
-    maturity: { zh: "成熟", en: "Mature" },
-    platform: { zh: "镍氧化物正极与储氢合金负极，安全耐用。", en: "Nickel oxyhydroxide cathode with hydrogen-absorbing alloy anode; durable and tolerant." },
-    reaction: { zh: "通过氢在合金中的吸收和释放完成充放电，适合混动车频繁浅充浅放。", en: "Charge/discharge involves hydrogen absorption and release in the alloy, fitting shallow cycling in hybrids." },
-    case: { zh: "经典混动车、工业设备和部分消费级充电电池。", en: "Classic hybrids, industrial devices, and some rechargeable consumer cells." }
-  }
-};
-
-const deepDives = [
-  {
+  const i18n = {
     zh: {
-      label: "正极结构",
-      title: "层状、橄榄石、尖晶石为什么不一样？",
-      body: "层状结构像多层停车场，锂离子可以在层间进出，能量密度潜力高；橄榄石结构像更坚固的框架，牺牲部分能量密度换来安全和寿命；尖晶石结构通道更立体，倍率性能好但高温寿命更难控制。",
-      points: ["NCM/NCA：高能量，热管理要求高", "LFP：结构稳定，成本和寿命优势明显", "LMO：倍率好，但高温下锰溶解是问题"]
+      meta: {
+        title: "Battery Materials Lab — Terry Wang 互动电池工程项目",
+        description: "Terry Wang 独立设计和开发的互动电池实验室，从材料、电化学、电芯、电池包到整车系统解释工程取舍。"
+      },
+      a11y: {
+        skip: "跳到主要内容", nav: "主导航", home: "Battery Materials Lab 首页", menuOpen: "打开导航菜单", menuClose: "关闭导航菜单",
+        search: "搜索知识库", language: "切换语言", projectFields: "项目领域", scroll: "继续浏览", layerExplorer: "电池分层探索器",
+        ionMode: "充放电模式", techTable: "电池体系对比表", techSelect: "选择要比较的电池体系", systemProgress: "系统阶段进度",
+        temperature: "温度条件", materialFilters: "材料分类", storyNav: "项目故事目录", close: "关闭弹窗"
+      },
+      nav: { overview: "项目概览", inside: "电池内部", chemistries: "电池体系", system: "从电芯到整车", materials: "材料数据库", research: "研究思考", tools: "学习工具", about: "关于项目", search: "搜索" },
+      hero: {
+        identity: "独立项目 · 高中生作品",
+        title: "拆开一块电池",
+        subtitle: "看见材料如何驱动一辆汽车。从电极材料到整车系统，理解性能背后的工程取舍。",
+        explore: "开始探索电池", story: "查看项目故事", source: "查看 GitHub ↗", field1: "材料科学", field2: "电池工程", field3: "互动学习", scroll: "向下探索"
+      },
+      chapters: { overview: "项目概览", inside: "电池内部", chemistries: "电池体系", system: "从电芯到整车", materials: "材料数据库", research: "研究思考", tools: "学习工具", about: "关于项目" },
+      overview: {
+        title: "一块电池的性能，\n从来不由一个数字决定。",
+        body: "能量密度、安全、寿命、快充、低温与成本彼此牵制。这个项目把材料选择放回电芯、电池包和整车系统中，帮助普通读者看懂“性能更好”究竟意味着什么。",
+        thesis: "核心问题：材料层面的优势，如何在真实系统中转化，又在哪里被抵消？",
+        caption: "材料只有经过制造、装配、检测和系统控制，才会成为可靠的电池产品。"
+      },
+      inside: { eyebrow: "从材料开始", title: "点击一层，\n理解一个工程决定。", body: "一颗电芯不是六张薄片的简单叠加。每一层都在容量、阻抗、寿命和安全之间承担不同任务。" },
+      ion: {
+        eyebrow: "离子与电子的两条路", title: "电池内部传离子，\n外部电路传电子。", charge: "充电", discharge: "放电", pause: "暂停动画", resume: "继续动画",
+        electrons: "电子 · 外部电路", ions: "锂离子 · 电池内部", note: "简化教学模型：真实电极是多孔复合结构，离子运动也不是一条直线。"
+      },
+      chemistries: {
+        title: "没有“最好”的电池，\n只有更适合的取舍。", body: "高能量、安全、寿命、快充、低温、成本与资源无法同时达到极值。先建立全局坐标，再进入每一种材料体系。",
+        tableTitle: "可直接扫读的全局对照", tableNote: "范围用于建立数量级直觉，不是单一产品规格；点击体系可查看测试条件与来源。"
+      },
+      compare: {
+        eyebrow: "互动比较", title: "把数字与判断分开看。", body: "质量能量密度使用范围图；安全、快充、低温、资源、成本与成熟度使用定性等级。最多选择四种技术。",
+        clear: "清除选择", rangeTitle: "典型电芯质量能量密度范围", matrixTitle: "教学性定性比较", boundary: "Low / Medium / High 是基于材料特性、商业成熟度和常见系统表现的教学概括，不是认证评级。",
+        max: "最多同时选择四种技术。请先取消一种。", choose: "至少选择一种技术以开始比较。", insight: "对比解读"
+      },
+      system: { eyebrow: "网站核心交互", title: "一颗电芯的成绩，\n不等于一辆车的表现。", body: "向下滚动，观察电压与容量如何组合，结构与热管理为何占据质量，能量又如何进入电机并返回电池。" },
+      thermal: { eyebrow: "冬季续航实验", title: "为什么温度下降，\n可用续航也会下降？", model: "简化教学情景", normal: "常温", cold: "寒冷", veryCold: "严寒" },
+      materials: { title: "把材料名词，\n变成可以查询的研究线索。", body: "搜索中文名、英文名、缩写或化学式。列表只显示核心角色；完整的性质、局限、可持续性与来源放在详情中。", searchLabel: "搜索材料", placeholder: "例如：LFP、LiFePO₄、石墨、solid electrolyte", reset: "重置", openHint: "选择一项查看完整研究信息与来源", emptyTitle: "没有找到相符材料", emptyBody: "尝试缩写、化学式或更宽的分类。", count: "显示 {shown} / {total} 种材料" },
+      research: { eyebrow: "从“是什么”走向“为什么”", title: "真正值得研究的，\n往往是取舍之间的连接。", caption: "材料性能最终要穿过制造、结构、安全、热管理和整车效率，才能成为真实产品。" },
+      sources: { eyebrow: "证据与边界", title: "每一个数字，\n都应该带着条件阅读。", body: "来源优先使用论文、政府/研究机构和制造商原始资料。制造商数据会明确标注，材料级结果不会冒充整车表现。", disclaimerTitle: "数据使用说明", disclaimer: "本网站中的性能数据用于教学和比较。实际结果会受到电芯设计、测试温度、充放电倍率、循环深度、制造工艺和系统集成方式影响。不同来源的数据不应在缺少测试条件时直接比较。", accessed: "访问日期", conditions: "适用边界" },
+      tools: { title: "把公式、历史与判断，\n变成可以亲手验证的直觉。", body: "计算器是简化教育模型；测验提供解释而不只给对错。所有结果都明确显示使用条件。" },
+      calc: {
+        energyTitle: "电池能量计算", voltage: "电压", capacity: "容量", rangeTitle: "电动车续航估算", batterySize: "电池容量", consumption: "车辆能耗", usable: "可用容量", temperature: "温度条件",
+        invalidEnergy: "请输入 0.1–1000 V 的电压和 0.1–10000 Ah 的容量。", invalidRange: "请输入合理范围：1–300 kWh、50–600 Wh/km、50%–100%。",
+        energyResult: "{wh} Wh", energySecondary: "{kwh} kWh", energyExplain: "理论上可让 {power} W 负载运行约 1 小时。真实可用能量还会受效率、保护窗口和老化影响。",
+        rangeResult: "约 {range} km", rangeExplain: "总容量 {size} kWh；预留缓冲约 {buffer} kWh；当前温度情景额外影响约 {tempLoss} kWh。", rangeNote: "这是简化教学模型，不是制造商级预测。车速、风阻、暖风、道路、轮胎、驾驶方式与 SOH 都会改变结果。"
+      },
+      timeline: { eyebrow: "技术时间线", title: "每一次突破，\n都改变了可用场景。" },
+      quiz: { eyebrow: "知识检查", title: "你能把材料、结构与系统连接起来吗？", body: "提交后会显示答案与原因；错题可以单独重试。", submit: "提交答案", retry: "只重试错题", reset: "重新开始", score: "得分 {score} / {total}", allCorrect: "全部答对。你已经能把材料、结构与系统联系起来。", incomplete: "未选择的题目会按未答处理。", correct: "正确", incorrect: "需要再想一步" },
+      about: { eyebrow: "Why I Built This", title: "我为什么制作\n这个项目", intro: "我对材料科学感兴趣，因为一种材料的微观结构，最终会改变一辆车的续航、安全和使用方式。编写这个网站，让我能把研究、视觉表达和编程放进同一个长期项目。", authorLabel: "作者", author: "一名对材料科学、电池工程与互动技术感兴趣的高中生。" },
+      footer: { body: "由 Terry Wang 独立设计与开发的材料科学互动学习项目。", sources: "数据与来源", about: "项目故事", top: "回到顶部 ↑" },
+      search: { eyebrow: "知识检索", title: "搜索整个实验室", label: "输入关键词", placeholder: "NCM、LFP、SOC、热失控、BMS…", empty: "没有找到相关词条。尝试材料名、缩写或系统部件。", hint: "输入关键词开始搜索" },
+      alt: { production: "机器人在清洁产线中组装电动车电池包", manufacturing: "俯视汽车工厂，机器人围绕车身生产线工作" },
+      labels: {
+        learnMore: "深入了解 →", function: "功能", material: "常见材料", performance: "影响性能", failure: "失效风险", technology: "技术", voltage: "典型电压", massEnergy: "质量能量密度", volumeEnergy: "体积能量密度", cycles: "循环寿命", maturity: "成熟度",
+        safety: "安全", fastCharge: "快充", cold: "低温", availability: "材料可得性", cost: "成本潜力", overview: "基本概念", how: "工作原理", electrodes: "核心材料", strengths: "主要优点", limitations: "主要局限", applications: "应用场景", comparison: "与其他体系比较", analogy: "普通人怎么理解", outlook: "未来方向", sources: "来源与测试条件",
+        role: "作用", properties: "关键性质", sustainability: "可持续性", research: "研究状态", formula: "化学式", status: "状态", stage: "阶段"
+      },
+      categories: { all: "全部", cathode: "正极材料", anode: "负极材料", electrolyte: "电解质", separator: "隔膜", additive: "导电添加剂", collector: "集流体", emerging: "前沿材料" },
+      ratings: { high: "高", medium: "中", low: "低", uncertain: "尚不确定", "potential-high": "潜力高" },
+      maturity: { commercial: "规模量产", "early-commercial": "早期商业化", pilot: "中试验证", "research-pilot": "实验室 / 小规模验证", "commercial-blend": "已量产掺混" },
+      dialog: { technology: "电池体系", material: "材料词条" }
     },
     en: {
-      label: "Cathode structure",
-      title: "Why layered, olivine, and spinel structures behave differently",
-      body: "Layered structures are like multi-level parking decks for lithium ions and can support high energy. Olivine structures are more rigid, trading some energy density for safety and life. Spinel structures have three-dimensional pathways but can suffer from manganese dissolution at high temperature.",
-      points: ["NCM/NCA: high energy, demanding thermal control", "LFP: stable framework, strong cost and life advantage", "LMO: good power, harder high-temperature life"]
+      meta: {
+        title: "Battery Materials Lab — Interactive Battery Engineering by Terry Wang",
+        description: "An interactive battery laboratory independently designed and developed by Terry Wang, connecting materials, electrochemistry, cells, packs, and vehicle systems."
+      },
+      a11y: {
+        skip: "Skip to main content", nav: "Main navigation", home: "Battery Materials Lab home", menuOpen: "Open navigation menu", menuClose: "Close navigation menu",
+        search: "Search the knowledge lab", language: "Switch language", projectFields: "Project fields", scroll: "Continue exploring", layerExplorer: "Battery layer explorer",
+        ionMode: "Charge and discharge mode", techTable: "Battery chemistry comparison table", techSelect: "Select battery technologies", systemProgress: "System stage progress",
+        temperature: "Temperature condition", materialFilters: "Material categories", storyNav: "Project story contents", close: "Close dialog"
+      },
+      nav: { overview: "Overview", inside: "Inside a Battery", chemistries: "Chemistries", system: "Cell to Vehicle", materials: "Materials", research: "Research", tools: "Tools", about: "About", search: "Search" },
+      hero: {
+        identity: "Independent Project · High School Student",
+        title: "INSIDE A BATTERY",
+        subtitle: "See how materials move a vehicle. From electrode chemistry to pack and vehicle systems, explore the trade-offs behind performance.",
+        explore: "Explore the Battery", story: "View Project Story", source: "View Source ↗", field1: "Materials Science", field2: "Battery Engineering", field3: "Interactive Learning", scroll: "Scroll to explore"
+      },
+      chapters: { overview: "Project Overview", inside: "Inside a Battery", chemistries: "Battery Chemistries", system: "Cell to Vehicle", materials: "Materials Database", research: "Research Thinking", tools: "Learning Tools", about: "About the Project" },
+      overview: {
+        title: "Battery performance\nis never one number.", body: "Energy density, safety, lifetime, fast charging, cold behavior, cost, and resources constrain one another. This project places material choices back inside cells, packs, and vehicles so “better performance” has a precise meaning.",
+        thesis: "Core question: how does a material advantage survive system integration, and where is it cancelled?", caption: "Materials become reliable battery products only through manufacturing, assembly, inspection, and system control."
+      },
+      inside: { eyebrow: "Start with materials", title: "Select one layer.\nUnderstand one decision.", body: "A cell is not a simple stack of six films. Each layer carries a different responsibility across capacity, resistance, lifetime, and safety." },
+      ion: { eyebrow: "Two paths: ions and electrons", title: "Ions move inside.\nElectrons use the circuit.", charge: "Charging", discharge: "Discharging", pause: "Pause motion", resume: "Resume motion", electrons: "Electrons · external circuit", ions: "Lithium ions · inside the cell", note: "Simplified educational model: real electrodes are porous composites and ions do not travel along one straight line." },
+      chemistries: { title: "No battery is “best.”\nEach serves a trade-off.", body: "Energy, safety, life, fast charging, cold performance, cost, and resources cannot all be maximized. Build a map first, then open each material system.", tableTitle: "A comparison you can scan", tableNote: "Ranges build order-of-magnitude intuition, not a product specification. Open a chemistry to see conditions and sources." },
+      compare: { eyebrow: "Interactive comparison", title: "Keep numbers and judgments separate.", body: "Mass energy uses range bars. Safety, charging, cold behavior, resources, cost, and maturity use qualitative levels. Select up to four technologies.", clear: "Clear selection", rangeTitle: "Typical cell-level gravimetric energy range", matrixTitle: "Educational qualitative comparison", boundary: "Low / Medium / High is an educational synthesis of materials, maturity, and common system behavior, not a certification rating.", max: "You can compare up to four technologies. Deselect one first.", choose: "Select at least one technology to begin.", insight: "Comparison insight" },
+      system: { eyebrow: "Signature interaction", title: "A cell result is not\na vehicle result.", body: "Scroll to see how voltage and capacity combine, why structures and cooling add mass, and how energy reaches the motor and returns through braking." },
+      thermal: { eyebrow: "Winter range lab", title: "Why does usable range\nfall with temperature?", model: "Simplified learning scenario", normal: "Normal", cold: "Cold", veryCold: "Very cold" },
+      materials: { title: "Turn material names\ninto research paths.", body: "Search Chinese or English names, abbreviations, and formulas. The index shows the core role; details contain properties, limitations, sustainability, and sources.", searchLabel: "Search materials", placeholder: "Try LFP, LiFePO₄, graphite, or solid electrolyte", reset: "Reset", openHint: "Select an entry for full research information and sources", emptyTitle: "No matching material", emptyBody: "Try an abbreviation, formula, or wider category.", count: "Showing {shown} of {total} materials" },
+      research: { eyebrow: "Move from what to why", title: "The valuable questions\nlive between trade-offs.", caption: "Material performance must pass through manufacturing, structure, safety, thermal management, and vehicle efficiency before becoming a product." },
+      sources: { eyebrow: "Evidence and boundaries", title: "Every number needs\nits conditions.", body: "Sources prioritize papers, government/research institutions, and original manufacturer documents. Manufacturer claims are labeled, and material results are not presented as vehicle performance.", disclaimerTitle: "Data-use note", disclaimer: "Performance data on this website is presented for educational comparison. Real-world results vary with cell design, temperature, charge and discharge rate, depth of discharge, manufacturing process, and system integration. Values from different sources should not be treated as directly comparable without considering test conditions.", accessed: "Accessed", conditions: "Boundary" },
+      tools: { title: "Turn formulas, history,\nand judgment into intuition.", body: "Calculators are simplified educational models. The quiz explains reasoning rather than only reporting right or wrong, and every output states its limits." },
+      calc: { energyTitle: "Battery Energy", voltage: "Voltage", capacity: "Capacity", rangeTitle: "EV Range Estimate", batterySize: "Battery capacity", consumption: "Vehicle consumption", usable: "Usable capacity", temperature: "Temperature condition", invalidEnergy: "Enter 0.1–1000 V and 0.1–10000 Ah.", invalidRange: "Use 1–300 kWh, 50–600 Wh/km, and 50%–100% usable capacity.", energyResult: "{wh} Wh", energySecondary: "{kwh} kWh", energyExplain: "Theoretically, this could power a {power} W load for about one hour. Efficiency, protection windows, and aging reduce usable energy.", rangeResult: "About {range} km", rangeExplain: "Total {size} kWh; about {buffer} kWh reserved as buffer; this temperature scenario affects about {tempLoss} kWh more.", rangeNote: "This is a simplified educational model, not a manufacturer-grade prediction. Speed, drag, HVAC, roads, tires, driving, and SOH change the result." },
+      timeline: { eyebrow: "Technology timeline", title: "Each breakthrough\nchanged what batteries could do." },
+      quiz: { eyebrow: "Knowledge check", title: "Can you connect materials,\nstructures, and systems?", body: "Submit to see the answer and reasoning. Missed questions can be retried separately.", submit: "Submit answers", retry: "Retry missed questions", reset: "Start over", score: "Score {score} / {total}", allCorrect: "All correct. You can connect materials, structures, and systems.", incomplete: "Unselected questions count as unanswered.", correct: "Correct", incorrect: "Think one step further" },
+      about: { eyebrow: "Why I Built This", title: "Why I built\nthis project", intro: "I am interested in materials science because a microscopic structure can eventually change a vehicle's range, safety, and use. Building this website lets research, visual explanation, and programming live in one long-term project.", authorLabel: "Author", author: "A high school student interested in Materials Science, Battery Engineering, and Interactive Technology." },
+      footer: { body: "An independent materials-science learning project designed and developed by Terry Wang.", sources: "Data & sources", about: "Project story", top: "Back to top ↑" },
+      search: { eyebrow: "Knowledge search", title: "Search the whole lab", label: "Enter a keyword", placeholder: "NMC, LFP, SOC, thermal runaway, BMS…", empty: "No related entry found. Try a material, abbreviation, or system component.", hint: "Type a keyword to begin" },
+      alt: { production: "Robots assembling an EV battery pack in a clean production line", manufacturing: "Overhead vehicle factory with robots around car bodies" },
+      labels: { learnMore: "Explore details →", function: "Function", material: "Example material", performance: "Performance impact", failure: "Failure risk", technology: "Technology", voltage: "Typical voltage", massEnergy: "Gravimetric energy", volumeEnergy: "Volumetric energy", cycles: "Cycle life", maturity: "Maturity", safety: "Safety", fastCharge: "Fast charge", cold: "Cold weather", availability: "Material availability", cost: "Cost potential", overview: "Overview", how: "How it works", electrodes: "Core materials", strengths: "Advantages", limitations: "Limitations", applications: "Applications", comparison: "Comparison", analogy: "Plain-language analogy", outlook: "Future outlook", sources: "Sources & conditions", role: "Role", properties: "Key properties", sustainability: "Sustainability", research: "Research status", formula: "Formula", status: "Status", stage: "Stage" },
+      categories: { all: "All", cathode: "Cathodes", anode: "Anodes", electrolyte: "Electrolytes", separator: "Separators", additive: "Conductive additives", collector: "Current collectors", emerging: "Emerging" },
+      ratings: { high: "High", medium: "Medium", low: "Low", uncertain: "Uncertain", "potential-high": "High potential" },
+      maturity: { commercial: "Mass production", "early-commercial": "Early commercial", pilot: "Pilot validation", "research-pilot": "Lab / limited pilot", "commercial-blend": "Commercial blends" },
+      dialog: { technology: "Battery chemistry", material: "Material entry" }
     }
-  },
-  {
-    zh: {
-      label: "负极与 SEI",
-      title: "为什么硅负极很诱人，也很难？",
-      body: "石墨成熟稳定，但容量上限有限。硅能容纳更多锂，理论容量很高，可是充放电时体积膨胀巨大，会让颗粒开裂、SEI 膜反复破裂，导致寿命和效率下降。",
-      points: ["石墨：成熟、稳定、成本低", "硅碳：提高容量，但要控制膨胀", "预锂化与纳米化：常见改善方向"]
+  };
+
+  const layerData = [
+    {
+      id: "cathode", color: "#78bfff", y: "20px",
+      zh: { title: "正极", function: "放电时接收锂离子，决定主要电压平台与相当一部分容量。", material: "LFP、NMC、NCA、LCO、LMO", performance: "晶体结构和过渡金属组成影响能量密度、快充、成本与热稳定。", failure: "高荷电、高温或结构缺陷可能加剧释氧、微裂纹与界面副反应。" },
+      en: { title: "Cathode", function: "Receives lithium during discharge and defines much of the voltage and capacity.", material: "LFP, NMC, NCA, LCO, LMO", performance: "Crystal structure and transition metals shape energy, charging, cost, and thermal stability.", failure: "High charge, heat, or defects can accelerate oxygen release, microcracks, and interface reactions." }
     },
-    en: {
-      label: "Anode and SEI",
-      title: "Why silicon anodes are attractive and difficult",
-      body: "Graphite is stable and mature, but its capacity is limited. Silicon can host much more lithium, yet it expands dramatically during cycling, cracking particles and repeatedly damaging the SEI layer, which hurts life and efficiency.",
-      points: ["Graphite: mature, stable, lower cost", "Silicon-carbon: higher capacity, expansion challenge", "Pre-lithiation and nano-design: common improvement routes"]
-    }
-  },
-  {
-    zh: {
-      label: "热失控",
-      title: "安全不是一个零件，而是一串防线",
-      body: "电池过热时，SEI 分解、电解液反应、隔膜收缩、正极释氧等过程可能互相放大。真正的安全设计要从电芯、模组、电池包到整车逐级阻断热传播。",
-      points: ["电芯级：材料稳定、泄压阀、隔膜", "模组级：隔热材料、间距、传感器", "系统级：BMS 断电、冷却和整车保护"]
+    {
+      id: "separator", color: "#d9dde1", y: "90px",
+      zh: { title: "隔膜", function: "阻止正负极直接电子接触，同时让离子穿过微孔。", material: "PE/PP 聚烯烃，常见陶瓷涂覆", performance: "厚度、孔隙率与润湿性影响阻抗、功率和体积利用率。", failure: "热收缩、毛刺或异物刺穿可能缩短绝缘路径并触发内短路。" },
+      en: { title: "Separator", function: "Prevents direct electronic contact while passing ions through micropores.", material: "PE/PP polyolefins, often ceramic coated", performance: "Thickness, porosity, and wetting affect resistance, power, and volume use.", failure: "Heat shrinkage, burrs, or debris can shorten insulation paths and trigger internal shorts." }
     },
-    en: {
-      label: "Thermal runaway",
-      title: "Safety is not one part; it is a chain of barriers",
-      body: "When a cell overheats, SEI breakdown, electrolyte reactions, separator shrinkage, and cathode oxygen release can amplify each other. Safety design must interrupt heat propagation from cell to module to pack to vehicle.",
-      points: ["Cell level: stable materials, vents, separator", "Module level: insulation, spacing, sensors", "System level: BMS cutoff, cooling, vehicle protection"]
-    }
-  },
-  {
-    zh: {
-      label: "电池包架构",
-      title: "CTP、CTB、CTC 到底在省什么？",
-      body: "传统 Pack 会把电芯先组成模组，再装进电池包。CTP 减少模组结构，CTB 把电池包更深地整合进车身，CTC 甚至让电池与底盘结构融合。节省空间和重量的同时，也带来维修、安全验证和结构设计新难题。",
-      points: ["CTP：少模组，提高体积利用率", "CTB：电池包参与车身结构", "CTC：底盘一体化潜力大，验证难度也高"]
+    {
+      id: "electrolyte", color: "#66dac8", y: "160px",
+      zh: { title: "电解质", function: "在两极和隔膜孔隙中提供离子通道，并形成关键界面膜。", material: "LiPF₆ 碳酸酯、固态硫化物/氧化物/聚合物", performance: "离子电导、稳定窗口和添加剂影响低温、快充、寿命与安全。", failure: "过热或高电压会促使溶剂、盐和界面膜发生副反应；有机溶剂可燃。" },
+      en: { title: "Electrolyte", function: "Provides ion paths through electrodes and separator pores and forms critical interfaces.", material: "LiPF₆ carbonates; solid sulfides, oxides, or polymers", performance: "Conductivity, stability window, and additives affect cold, charge, life, and safety.", failure: "Heat or high voltage accelerates solvent, salt, and interface reactions; organic solvents can burn." }
     },
-    en: {
-      label: "Pack architecture",
-      title: "What do CTP, CTB, and CTC actually remove?",
-      body: "Traditional packs group cells into modules first. CTP reduces module structure, CTB integrates the pack more deeply into the body, and CTC moves toward battery-chassis integration. Space and weight improve, but repair, safety validation, and structural design become harder.",
-      points: ["CTP: fewer modules, better volume use", "CTB: pack participates in body structure", "CTC: high integration potential, harder validation"]
+    {
+      id: "anode", color: "#73d7ad", y: "230px",
+      zh: { title: "负极", function: "充电时储存锂或钠离子，放电时释放。", material: "石墨、硅碳、硬碳、锂金属", performance: "决定相当一部分快充、低温、首圈效率和寿命表现。", failure: "低温快充可能析锂；硅膨胀会破坏 SEI；锂金属沉积不均可能形成枝晶。" },
+      en: { title: "Anode", function: "Stores lithium or sodium during charge and releases it during discharge.", material: "Graphite, silicon-carbon, hard carbon, lithium metal", performance: "Strongly affects fast charge, cold behavior, first efficiency, and life.", failure: "Cold fast charge can plate lithium; silicon cracks SEI; uneven lithium metal can form dendrites." }
+    },
+    {
+      id: "collectors", color: "#efcf76", y: "300px",
+      zh: { title: "集流体", function: "把复合电极中的电子汇集到极耳和外部电路。", material: "正极常用铝箔，负极常用铜箔", performance: "厚度、导电率和连接电阻影响功率、发热与非活性质量。", failure: "腐蚀、焊接缺陷或过放导致的金属溶解可能增加阻抗与短路风险。" },
+      en: { title: "Current Collectors", function: "Gather electrons from composite electrodes into tabs and the external circuit.", material: "Usually aluminum at the cathode and copper at the anode", performance: "Thickness, conductivity, and joints affect power, heat, and inactive mass.", failure: "Corrosion, poor welds, or overdischarge dissolution can raise resistance and short risk." }
+    },
+    {
+      id: "casing", color: "#9ea8b3", y: "370px",
+      zh: { title: "壳体", function: "密封内部化学体系，承受膨胀、压力、振动和冲击，并提供受控泄压。", material: "钢、铝或铝塑复合膜", performance: "质量、刚度、密封与传热路径影响电芯到电池包的集成。", failure: "密封失效、机械变形或堵塞泄压路径会放大腐蚀、短路和热事件。" },
+      en: { title: "Cell Casing", function: "Seals chemistry, carries swelling, pressure, vibration, and impact, and provides controlled venting.", material: "Steel, aluminum, or aluminum-laminate pouch", performance: "Mass, stiffness, sealing, and heat paths shape pack integration.", failure: "Seal failure, deformation, or blocked vents can amplify corrosion, shorts, and thermal events." }
     }
-  }
-];
-
-const labels = ["density", "cost", "safety", "cycles", "charging", "cold"];
-const labelFor = (key) => i18n[state.lang].labels[key] || key;
-const text = (path) => path.split(".").reduce((obj, key) => obj?.[key], i18n[state.lang]) || path;
-const local = (item) => item[state.lang];
-const localValue = (value) => (value && typeof value === "object" ? local(value) : value);
-
-function init() {
-  if (!["zh", "en"].includes(state.lang)) state.lang = "zh";
-  document.body.classList.add(state.lang);
-  bindNavigation();
-  bindGlobalEvents();
-  renderAll();
-  setupReveal();
-  updateActiveNav();
-  calculateEnergy();
-  calculateRange();
-}
-
-function renderAll() {
-  applyLanguage();
-  renderImpact();
-  renderExplorer();
-  renderIonDemo();
-  renderTechnologies();
-  renderTechTable();
-  renderDeepDives();
-  renderSelectors();
-  renderSystem();
-  renderThermal();
-  renderTemperatureOptions();
-  renderMaterials();
-  renderResearch();
-  renderTimeline();
-  renderQuiz();
-  renderSearchResults();
-  updateCharts();
-}
-
-function applyLanguage() {
-  document.documentElement.lang = state.lang === "zh" ? "zh-CN" : "en";
-  document.body.classList.toggle("zh", state.lang === "zh");
-  document.body.classList.toggle("en", state.lang === "en");
-  document.title = state.lang === "zh" ? "Battery Lab — 电池科学互动学习" : "Battery Lab — Interactive Battery Learning";
-  document.querySelectorAll("[data-i18n]").forEach((node) => {
-    node.textContent = text(node.dataset.i18n);
-  });
-  document.querySelectorAll("[data-lang]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.lang === state.lang);
-  });
-  const materialSearch = document.getElementById("material-search");
-  if (materialSearch) materialSearch.placeholder = state.lang === "zh" ? "搜索 石墨、硅、LFP、电解液、隔膜…" : "Search graphite, silicon, LFP, electrolyte, separator…";
-  const globalSearch = document.getElementById("global-search-input");
-  if (globalSearch) globalSearch.placeholder = state.lang === "zh" ? "搜索 NCM、LFP、SOC、热失控、BMS…" : "Search NCM, LFP, SOC, thermal runaway, BMS…";
-}
-
-function renderImpact() {
-  document.getElementById("impact-grid").innerHTML = data.impact.map((item) => {
-    const [title, body] = local(item);
-    return `<article class="impact-card"><strong>${item.value}</strong><h3>${title}</h3><p>${body}</p></article>`;
-  }).join("");
-  document.getElementById("foundation-strip").innerHTML = data.foundations.map((item, index) => {
-    const [title, body] = local(item);
-    return `<article class="foundation-card"><span>${String(index + 1).padStart(2, "0")}</span><h3>${title}</h3><p>${body}</p></article>`;
-  }).join("");
-}
-
-function renderExplorer() {
-  const stack = document.getElementById("layer-stack");
-  stack.innerHTML = data.layers.map((layer, index) => `
-    <button class="layer-button ${layer.id === state.activeLayer ? "active" : ""}" type="button" data-layer="${layer.id}" style="--layer-color:${layer.color};--y:${layer.y};z-index:${20 - index}">
-      <span>${local(layer).title}</span>
-    </button>
-  `).join("");
-  renderLayerPanel();
-}
-
-function renderLayerPanel() {
-  const layer = data.layers.find((item) => item.id === state.activeLayer) || data.layers[0];
-  const item = local(layer);
-  document.getElementById("layer-panel").innerHTML = `
-    <span class="eyebrow">${labelFor("overview")}</span>
-    <h3>${item.title}</h3>
-    <p>${item.role}</p>
-    <dl class="spec-list">
-      <div><dt>${labelFor("role")}</dt><dd>${item.matter}</dd></div>
-      <div><dt>${labelFor("challenge")}</dt><dd>${item.challenge}</dd></div>
-      <div><dt>${labelFor("example")}</dt><dd>${item.example}</dd></div>
-    </dl>
-  `;
-}
-
-function renderIonDemo() {
-  document.getElementById("ion-description").textContent = state.ionMode === "charge" ? text("ion.chargeText") : text("ion.dischargeText");
-  document.querySelector(".ion-canvas")?.setAttribute("data-mode", state.ionMode);
-  document.querySelectorAll("[data-ion-mode]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.ionMode === state.ionMode);
-  });
-}
-
-function renderTechnologies() {
-  document.getElementById("technology-rail").innerHTML = data.technologies.map((tech) => {
-    const item = local(tech);
-    return `
-      <article class="tech-card" style="--tech-color:${tech.color}">
-        <div>
-          <div class="tech-visual" aria-hidden="true"></div>
-          <h3>${item.title}</h3>
-          <p>${item.desc}</p>
-          <div class="tech-tags">${item.tags.map((tag) => `<span>${tag}</span>`).join("")}</div>
-        </div>
-        <button class="secondary-action" type="button" data-open-detail="${tech.id}">${text("labels.learn")}</button>
-      </article>
-    `;
-  }).join("");
-}
-
-function renderTechTable() {
-  const headers = [
-    state.lang === "zh" ? "体系" : "Technology",
-    state.lang === "zh" ? "电压平台" : "Voltage platform",
-    labelFor("density"),
-    state.lang === "zh" ? "成熟度" : "Maturity",
-    state.lang === "zh" ? "材料逻辑" : "Material logic",
-    state.lang === "zh" ? "典型应用" : "Use cases"
   ];
-  const rows = data.technologies.map((tech) => {
-    const item = local(tech);
-    const spec = techSpecs[tech.id];
-    return `<tr><th scope="row">${tech.short}</th><td>${localValue(spec.voltage)}</td><td>${tech.density}</td><td>${local(spec.maturity)}</td><td>${local(spec.platform)}</td><td>${item.use}</td></tr>`;
-  }).join("");
-  document.getElementById("tech-table").innerHTML = `<thead><tr>${headers.map((head) => `<th scope="col">${head}</th>`).join("")}</tr></thead><tbody>${rows}</tbody>`;
-}
 
-function renderDeepDives() {
-  const target = document.getElementById("deep-grid");
-  if (!target) return;
-  target.innerHTML = deepDives.map((entry, index) => {
-    const item = local(entry);
-    return `
-      <article class="deep-card">
-        <span>${String(index + 1).padStart(2, "0")} · ${item.label}</span>
-        <h4>${item.title}</h4>
-        <p>${item.body}</p>
-        <ul>${item.points.map((point) => `<li>${point}</li>`).join("")}</ul>
-      </article>
-    `;
-  }).join("");
-}
-
-function renderSelectors() {
-  const selected = getSelectedTechIds();
-  const active = selected.length ? new Set(selected) : new Set(["lfp", "nmc", "sodium"]);
-  document.getElementById("tech-selectors").innerHTML = data.technologies.map((tech) => `
-    <label class="selector-item" style="--series:${tech.color}">
-      <input type="checkbox" value="${tech.id}" ${active.has(tech.id) ? "checked" : ""}>
-      <span class="selector-dot"></span>
-      <span>${tech.short}</span>
-      <span class="selector-check"></span>
-    </label>
-  `).join("");
-}
-
-function getSelectedTechIds() {
-  return [...document.querySelectorAll("#tech-selectors input:checked")].map((input) => input.value);
-}
-
-function updateCharts() {
-  if (!window.Chart) {
-    const ids = getSelectedTechIds().length ? getSelectedTechIds() : ["lfp", "nmc", "sodium"];
-    const techs = ids.map((id) => data.technologies.find((tech) => tech.id === id)).filter(Boolean);
-    drawFallbackRadar(techs);
-    drawFallbackBar(techs);
-    renderInsight(techs);
-    return;
-  }
-  const ids = getSelectedTechIds().length ? getSelectedTechIds() : ["lfp", "nmc", "sodium"];
-  const techs = ids.map((id) => data.technologies.find((tech) => tech.id === id)).filter(Boolean);
-  const chartLabels = labels.map(labelFor);
-  const datasets = techs.map((tech) => ({
-    label: tech.short,
-    data: tech.scores,
-    borderColor: tech.color,
-    backgroundColor: `${tech.color}33`,
-    pointBackgroundColor: tech.color,
-    borderWidth: 2
-  }));
-  const radarCtx = document.getElementById("radar-chart");
-  const barCtx = document.getElementById("bar-chart");
-  if (!radarCtx || !barCtx) return;
-  const common = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { labels: { color: "#cbd5e1", boxWidth: 14 } }
+  const ionModes = {
+    charge: {
+      zh: { description: "外部电源提高负极电子能量。锂离子从正极晶格脱出，穿过电解质和隔膜进入负极；电子沿外部电路到达负极。", steps: ["锂离子离开正极可用位点", "离子通过电解质与隔膜", "电子经充电器和外部电路到达负极", "离子在负极中嵌入或沉积"] },
+      en: { description: "The charger raises electron energy at the anode. Lithium leaves cathode sites, crosses electrolyte and separator, and enters the anode while electrons arrive through the circuit.", steps: ["Lithium leaves available cathode sites", "Ions cross electrolyte and separator", "Electrons pass through charger and circuit", "Lithium enters or plates at the anode"] }
     },
-    animation: { duration: 420 }
-  };
-  const radarOptions = {
-    ...common,
-    scales: {
-      r: {
-        min: 0,
-        max: 10,
-        ticks: { display: false },
-        grid: { color: "rgba(255,255,255,.12)" },
-        angleLines: { color: "rgba(255,255,255,.12)" },
-        pointLabels: { color: "#aab0bb", font: { size: 12 } }
-      }
+    discharge: {
+      zh: { description: "负极中的锂离子返回正极。电子不能穿过电解质，只能通过外部负载做功，再到达正极。", steps: ["锂离子从负极释放", "离子穿过内部离子通道", "电子通过电机或设备输出能量", "离子与电子在正极反应"] },
+      en: { description: "Lithium returns from anode to cathode. Electrons cannot cross the electrolyte, so they do useful work through a load before reaching the cathode.", steps: ["Lithium leaves the anode", "Ions cross the internal pathway", "Electrons power a motor or device", "Ions and electrons react at the cathode"] }
     }
   };
-  const barOptions = {
-    ...common,
-    indexAxis: "y",
-    scales: {
-      x: { grid: { color: "rgba(255,255,255,.1)" }, ticks: { color: "#aab0bb" } },
-      y: { grid: { display: false }, ticks: { color: "#cbd5e1" } }
-    }
-  };
-  if (state.radarChart) state.radarChart.destroy();
-  if (state.barChart) state.barChart.destroy();
-  state.radarChart = new Chart(radarCtx, { type: "radar", data: { labels: chartLabels, datasets }, options: radarOptions });
-  state.barChart = new Chart(barCtx, {
-    type: "bar",
-    data: {
-      labels: techs.map((tech) => tech.short),
-      datasets: [{ label: "Wh/kg", data: techs.map((tech) => tech.midpoint), backgroundColor: techs.map((tech) => tech.color), borderWidth: 0 }]
+
+  const systemData = [
+    {
+      id: "cell",
+      zh: { title: "Cell · 电芯", body: "最小电化学单元。材料决定电压与容量上限，但测试温度、倍率、SOC 窗口和电芯形态会改变实际结果。", equation: "Energy (Wh) = Voltage (V) × Capacity (Ah)", facts: ["单颗电芯提供有限电压", "正极、负极、电解质与隔膜共同定义边界", "实验室材料容量不等于完整电芯比能量"] },
+      en: { title: "Cell", body: "The smallest electrochemical unit. Materials set voltage and capacity limits, while temperature, rate, SOC window, and format change the result.", equation: "Energy (Wh) = Voltage (V) × Capacity (Ah)", facts: ["One cell provides limited voltage", "Electrodes, electrolyte, and separator share the limits", "Material capacity is not complete-cell specific energy"] }
     },
-    options: barOptions
-  });
-  renderInsight(techs);
-}
-
-function setupCanvas(canvas) {
-  const rect = canvas.getBoundingClientRect();
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = Math.max(320, Math.floor(rect.width * dpr));
-  canvas.height = Math.max(280, Math.floor(rect.height * dpr));
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  return { ctx, width: rect.width, height: rect.height };
-}
-
-function drawFallbackRadar(techs) {
-  const canvas = document.getElementById("radar-chart");
-  if (!canvas) return;
-  const { ctx, width, height } = setupCanvas(canvas);
-  ctx.clearRect(0, 0, width, height);
-  const cx = width / 2;
-  const cy = height / 2 + 12;
-  const radius = Math.min(width, height) * 0.34;
-  const axes = labels.length;
-  ctx.strokeStyle = "rgba(255,255,255,.13)";
-  ctx.fillStyle = "#aab0bb";
-  ctx.font = "12px Inter, Arial";
-  for (let ring = 1; ring <= 5; ring += 1) {
-    ctx.beginPath();
-    for (let i = 0; i < axes; i += 1) {
-      const angle = -Math.PI / 2 + (Math.PI * 2 * i) / axes;
-      const r = (radius * ring) / 5;
-      const x = cx + Math.cos(angle) * r;
-      const y = cy + Math.sin(angle) * r;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+    {
+      id: "module",
+      zh: { title: "Module · 模组", body: "多颗电芯形成电气与机械单元。串联提高电压，并联提高容量与电流能力；一致性差异会让最弱电芯更早触及保护边界。", equation: "Series → voltage ↑ · Parallel → capacity ↑", facts: ["串联电压相加，容量 Ah 基本不变", "并联容量 Ah 相加，电压基本不变", "采样线、连接件与热扩散开始进入系统"] },
+      en: { title: "Module", body: "Cells form an electrical and mechanical unit. Series raises voltage; parallel raises capacity and current. Variation makes the weakest cell reach protection limits first.", equation: "Series → voltage ↑ · Parallel → capacity ↑", facts: ["Series adds voltage while Ah stays similar", "Parallel adds Ah while voltage stays similar", "Sensing, joints, and heat spreading enter the system"] }
+    },
+    {
+      id: "pack",
+      zh: { title: "Pack · 电池包", body: "模组或电芯与 BMS、冷却板、壳体、高压连接、接触器和传感器组合。它们不直接储能，却让系统可控、可冷却并能承受碰撞。", equation: "Pack energy density < cell energy density", facts: ["BMS 估算 SOC/SOH 并限制异常", "冷却板控制平均温度和温差", "结构、安全件与缓冲空间增加非活性质量"] },
+      en: { title: "Pack", body: "Modules or cells combine with BMS, cooling, enclosure, high-voltage links, contactors, and sensors. These parts store little energy but make the system controllable and crashworthy.", equation: "Pack energy density < cell energy density", facts: ["BMS estimates SOC/SOH and limits faults", "Cooling controls average temperature and gradients", "Structure, safety hardware, and buffers add inactive mass"] }
+    },
+    {
+      id: "vehicle",
+      zh: { title: "Vehicle · 整车", body: "电池通过逆变器驱动电机；制动时一部分动能返回电池。空调、速度、轮胎、道路和热管理决定同一电池能走多远。", equation: "Range ≈ usable pack energy ÷ vehicle consumption", facts: ["逆变器把直流电变成受控交流", "再生制动只能回收部分动能", "低温加热、座舱 HVAC 与风阻都会消耗能量"] },
+      en: { title: "Vehicle", body: "The pack drives a motor through an inverter; braking returns part of the kinetic energy. HVAC, speed, tires, roads, and thermal control determine range.", equation: "Range ≈ usable pack energy ÷ vehicle consumption", facts: ["The inverter converts DC into controlled AC", "Regeneration recovers only part of kinetic energy", "Cold heating, cabin HVAC, and drag consume energy"] }
     }
-    ctx.closePath();
-    ctx.stroke();
+  ];
+
+  const thermalScenarios = {
+    normal: { temp: "20°C", factor: 1, zh: { text: "常温下离子传输、内阻和热管理负荷更接近标称测试条件。", chain: ["离子传输较顺畅", "内阻与极化较低", "电池无需持续加热", "更多能量用于驱动车辆"] }, en: { text: "At normal temperature, ion transport, resistance, and thermal load are closer to rated test conditions.", chain: ["Ion transport is smoother", "Resistance and polarization are lower", "The pack needs little continuous heating", "More energy reaches the wheels"] } },
+    cold: { temp: "−10°C", factor: .85, zh: { text: "低温使电解液更黏、界面反应变慢并提高内阻；电池和座舱加热还要分享储存能量。", chain: ["离子迁移与界面反应变慢", "内阻上升，电压更早触及下限", "电池预热和保温消耗能量", "暖风进一步增加整车能耗"] }, en: { text: "Cold makes electrolyte more viscous, slows interfaces, and raises resistance; pack and cabin heating also share stored energy.", chain: ["Ion and interface kinetics slow", "Higher resistance reaches voltage limits earlier", "Pack preheating consumes energy", "Cabin heating raises vehicle consumption"] } },
+    veryCold: { temp: "−25°C", factor: .7, zh: { text: "严寒会显著限制可接受的充电电流与可用功率。这个 70% 情景只是教学示例，不代表所有车型。", chain: ["扩散与反应明显变慢", "析锂风险限制快充", "热泵效率和座舱负荷更不利", "BMS 保留更多安全与功率余量"] }, en: { text: "Very cold conditions strongly limit acceptable charging current and usable power. This 70% scenario is an example, not a value for every vehicle.", chain: ["Diffusion and reactions slow strongly", "Plating risk limits fast charge", "Heat-pump efficiency and cabin load worsen", "BMS preserves more safety and power margin"] } }
+  };
+
+  const researchNotes = [
+    {
+      label: { zh: "研究问题", en: "Research question" },
+      title: { zh: "钠离子为什么值得关注，但不必“取代”锂离子？", en: "Why does sodium-ion matter without replacing lithium-ion?" },
+      body: { zh: "我更关心它是否能在低成本储能、寒冷地区和部分入门车辆中成为更合适的选择。材料工程不是寻找一个统治所有场景的答案，而是让资源、性能和系统需求匹配。", en: "I am more interested in whether it becomes the better fit for low-cost storage, cold regions, and selected entry vehicles. Materials engineering is not about one answer dominating every use; it is about matching resources, performance, and systems." }
+    },
+    {
+      label: { zh: "系统思考", en: "Systems thinking" },
+      title: { zh: "为什么电芯能量密度不能直接换算成整车续航？", en: "Why can cell energy density not directly predict vehicle range?" },
+      body: { zh: "电池包还要加入壳体、冷却、BMS、高压安全和碰撞结构；整车又有风阻、轮胎、逆变器、空调和可用 SOC 窗口。单体材料优势会在系统中被重新分配。", en: "A pack adds enclosure, cooling, BMS, high-voltage safety, and crash structure. The vehicle adds drag, tires, inverter loss, HVAC, and an SOC window. A material advantage is redistributed by the system." }
+    },
+    {
+      label: { zh: "热管理", en: "Thermal management" },
+      title: { zh: "电池与功率电子的余热，能否成为冬季热源？", en: "Could pack and power-electronics heat support winter heating?" },
+      body: { zh: "这个想法有吸引力，但余热并不总在需要时出现，温度等级也未必足够。更合理的研究方向是整车热泵、冷却回路和预热策略如何协同，在不牺牲寿命与安全的情况下减少净能耗。", en: "The idea is attractive, but waste heat is not always available when needed or at a useful temperature. The better question is how heat pumps, coolant loops, and preconditioning cooperate without sacrificing life or safety." }
+    },
+    {
+      label: { zh: "材料取舍", en: "Material trade-off" },
+      title: { zh: "为什么能量密度、安全、寿命和成本不能一起达到最大？", en: "Why can energy, safety, life, and cost not all be maximized?" },
+      body: { zh: "更高电压和更活泼的材料能提高能量，却会缩小界面和热稳定窗口；更厚的防护提高安全，却增加非活性质量。设计不是消除取舍，而是根据使用场景决定哪些边界最重要。", en: "Higher voltage and more reactive materials raise energy but narrow interface and thermal margins. More protection improves safety but adds inactive mass. Design does not eliminate trade-offs; it decides which boundaries matter for the use case." }
+    }
+  ];
+
+  const timelineData = [
+    { year: "1800", zh: ["伏打电堆", "证明连续电流可以由化学反应产生，让电化学成为可研究的能源系统。"], en: ["Voltaic pile", "Showed that chemical reactions could produce continuous current and made electrochemistry a researchable energy system."] },
+    { year: "1859", zh: ["铅酸电池", "第一种可反复充电的实用电池，至今仍服务启动与后备电源。"], en: ["Lead-acid battery", "The first practical rechargeable battery, still used for starting and backup power."] },
+    { year: "1899", zh: ["镍镉电池", "建立了耐用碱性二次电池路线，也留下镉污染与回收问题。"], en: ["Nickel-cadmium", "Established a robust alkaline rechargeable route while creating cadmium toxicity and recycling challenges."] },
+    { year: "1991", zh: ["商用锂离子电池", "高电压嵌入材料让便携电子快速发展，并为后来的电动车奠定基础。"], en: ["Commercial lithium-ion", "High-voltage intercalation materials enabled portable electronics and later EVs."] },
+    { year: "2010s", zh: ["电动车规模化", "材料选择开始与电池包结构、快充网络和整车热管理共同优化。"], en: ["EV scale-up", "Material choices began to co-evolve with pack architecture, fast charging, and vehicle thermal systems."] },
+    { year: "2020s", zh: ["多化学体系并行", "LFP 扩张、钠离子进入早期商业化、固态与高硅负极推进中试。"], en: ["Multiple chemistries", "LFP expands, sodium-ion enters early commercialization, and solid-state/high-silicon move through pilots."] }
+  ];
+
+  const quizData = [
+    { id: "q1", answer: 1, zh: ["Wh 衡量什么？", ["瞬时电流", "一段时间内的能量", "电芯温度", "材料硬度"], "Wh 是能量单位；电压乘以容量可给出理论储能。"], en: ["What does Wh measure?", ["Instant current", "Energy over time", "Cell temperature", "Material hardness"], "Wh is energy; voltage multiplied by capacity gives theoretical stored energy."] },
+    { id: "q2", answer: 2, zh: ["串联更多相同电芯，主要提高什么？", ["单体容量", "材料能量密度", "系统电压", "隔膜厚度"], "串联时电压相加；并联时容量和电流能力相加。"], en: ["What mainly rises when identical cells are connected in series?", ["Single-cell capacity", "Material energy density", "System voltage", "Separator thickness"], "Series adds voltage; parallel adds capacity and current capability."] },
+    { id: "q3", answer: 0, zh: ["为什么低温快充可能受限？", ["扩散变慢并增加析锂风险", "电池质量消失", "正极变成液体", "电压自动翻倍"], "低温提高极化并减慢负极嵌锂，电流过大时锂更可能沉积在表面。"], en: ["Why can cold fast charging be limited?", ["Slower transport raises lithium-plating risk", "Battery mass disappears", "The cathode becomes liquid", "Voltage doubles"], "Cold raises polarization and slows anode insertion, making surface plating more likely at high current."] },
+    { id: "q4", answer: 3, zh: ["为什么电池包比电芯的 Wh/kg 更低？", ["所有电芯都会失去电压", "电子不能进入电池包", "电池包不用冷却", "壳体、冷却、BMS 与安全件增加质量"], "系统硬件不直接储能，却是控制温度、碰撞和故障所必需。"], en: ["Why is pack Wh/kg lower than cell Wh/kg?", ["Every cell loses voltage", "Electrons cannot enter a pack", "A pack needs no cooling", "Enclosure, cooling, BMS, and safety hardware add mass"], "System hardware stores little energy but is necessary for thermal, crash, and fault control."] },
+    { id: "q5", answer: 1, zh: ["NCM 811 中的 811 主要代表什么？", ["8.11 V 电压", "镍、钴、锰的大致摩尔比例", "电池包有 811 个电芯", "充电 811 次"], "811 约表示 80% 镍、10% 钴、10% 锰的金属比例，不是产品性能等级。"], en: ["What does 811 mainly mean in NMC 811?", ["An 8.11 V voltage", "Approximate nickel, cobalt, manganese ratio", "811 cells in a pack", "811 charge cycles"], "811 approximates 80% nickel, 10% cobalt, and 10% manganese; it is not a performance grade."] },
+    { id: "q6", answer: 2, zh: ["BMS 能直接测量 SOC 吗？", ["可以，SOC 是一个传感器", "只要测温度就能知道", "不能，通常要结合电流、电压和模型估算", "不需要 SOC"], "SOC 不能像温度一样直接读取，常结合安时积分、开路电压与模型/Kalman 滤波估算。"], en: ["Can a BMS directly measure SOC?", ["Yes, SOC is a sensor", "Temperature alone reveals it", "No, it is estimated from current, voltage, and models", "SOC is unnecessary"], "SOC is not directly sensed like temperature; it is estimated with coulomb counting, OCV, and models/Kalman filtering."] }
+  ];
+
+  const storyData = [
+    { id: "motivation", title: { zh: "Motivation · 动机", en: "Motivation" }, zh: "我希望理解的不只是“哪种电池更好”，而是材料结构为什么会改变电压、容量、热稳定与寿命。把这些关系做成网页，也迫使我判断什么应该被可视化、什么必须说明测试条件。", en: "I wanted to understand not only which battery is better, but why material structure changes voltage, capacity, thermal stability, and life. Turning those relationships into a website also forces me to decide what should be visualized and which conditions must be stated." },
+    { id: "question", title: { zh: "The Question · 核心问题", en: "The Question" }, zh: "为什么相同大小的电池表现不同？为什么电芯数据不等于整车续航？为什么低温影响快充？为什么能量、安全、寿命和成本无法同时最优？这些问题把材料科学连接到系统工程。", en: "Why do similar-size cells perform differently? Why does cell data not equal vehicle range? Why does cold affect fast charge? Why can energy, safety, life, and cost not all be optimized? These questions connect materials science to systems engineering." },
+    { id: "process", title: { zh: "Design Process · 设计过程", en: "Design Process" }, list: { zh: ["主题研究与来源筛选", "信息架构与学习顺序", "视觉与互动原型", "前端开发与数据结构", "键盘、移动端与功能测试", "根据反馈持续修订"], en: ["Topic research and source selection", "Information architecture and learning order", "Visual and interaction prototyping", "Front-end development and data structure", "Keyboard, mobile, and feature testing", "Continued revision from feedback"] } },
+    { id: "learned", title: { zh: "What I Learned · 我学到的", en: "What I Learned" }, zh: "系统性能不等于单一材料性能；一个高容量粉末还要经过电极、界面、电芯、热管理与结构集成。科学数字也必须带着温度、倍率、SOC 窗口和测试方法。视觉表达不是装饰，它会决定读者是否看见这些边界。", en: "System performance is not one material property. A high-capacity powder must become an electrode, interface, cell, thermal system, and structure. Scientific numbers also need temperature, rate, SOC window, and test method. Visual explanation is not decoration; it determines whether readers notice those boundaries." },
+    { id: "future", title: { zh: "Future Development · 下一步", en: "Future Development" }, list: { zh: ["增加更多经过核查的材料与电芯数据", "完善热管理和整车能耗模型", "接入公开实验数据的可视化", "继续扩展钠离子、锂硫和固态路线", "记录版本更新与更正", "持续改进无障碍和移动端体验"], en: ["Add more verified material and cell data", "Improve thermal and vehicle-energy models", "Visualize public experimental datasets", "Expand sodium-ion, lithium-sulfur, and solid-state routes", "Record releases and corrections", "Continue accessibility and mobile improvements"] } }
+  ];
+
+  const selectors = {
+    one: (value, root = document) => root.querySelector(value),
+    all: (value, root = document) => [...root.querySelectorAll(value)]
+  };
+
+  const getText = (path, lang = state.lang) => {
+    const read = (targetLang) => path.split('.').reduce((value, key) => value?.[key], i18n[targetLang]);
+    return read(lang) ?? read('zh') ?? read('en') ?? '';
+  };
+
+  const local = (record) => record?.[state.lang] ?? record?.zh ?? record?.en ?? record;
+  const localValue = (value) => value && typeof value === 'object' && !Array.isArray(value) ? local(value) : value;
+  const format = (template, values) => Object.entries(values).reduce((result, [key, value]) => result.replaceAll(`{${key}}`, value), template);
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+  const normalize = (value) => String(value ?? '').normalize('NFKD').toLowerCase().replace(/[\s_\-–—/·,，。()（）]+/g, '');
+  const sourceById = (id) => sources.find((source) => source.id === id);
+  const technologyById = (id) => technologies.find((technology) => technology.id === id);
+  const materialById = (id) => materials.find((material) => material.id === id);
+
+  function init() {
+    document.body.classList.add('js-ready');
+    generateSystemSvg();
+    bindEvents();
+    setupReveal();
+    setupNavigation();
+    setupHeroMotion();
+    setupSystemStory();
+    renderAll();
+    openDeepLinkedMaterial();
   }
-  labels.forEach((label, i) => {
-    const angle = -Math.PI / 2 + (Math.PI * 2 * i) / axes;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius);
-    ctx.stroke();
-    ctx.fillText(labelFor(label), cx + Math.cos(angle) * (radius + 18) - 34, cy + Math.sin(angle) * (radius + 18) + 4);
-  });
-  techs.forEach((tech) => {
-    ctx.beginPath();
-    tech.scores.forEach((score, i) => {
-      const angle = -Math.PI / 2 + (Math.PI * 2 * i) / axes;
-      const r = (radius * score) / 10;
-      const x = cx + Math.cos(angle) * r;
-      const y = cy + Math.sin(angle) * r;
-      if (i === 0) ctx.moveTo(x, y);
-      else ctx.lineTo(x, y);
+
+  function renderAll() {
+    applyLanguage();
+    renderOverview();
+    renderLearningMap();
+    renderExplorer();
+    renderIonDemo();
+    renderTechnologies();
+    renderTechTable();
+    renderComparisonControls();
+    renderComparison();
+    renderSystemNavigation();
+    renderSystemStage(state.systemStage, false);
+    renderSystemMobile();
+    renderThermal();
+    renderMaterialFilters();
+    renderMaterials();
+    renderResearch();
+    renderSources();
+    renderTimeline();
+    renderQuiz();
+    renderProjectStory();
+    renderTemperatureOptions();
+    calculateEnergy();
+    calculateRange();
+    renderSearchResults();
+  }
+
+  function applyLanguage() {
+    document.body.classList.remove('zh', 'en');
+    document.body.classList.add(state.lang);
+    document.documentElement.lang = state.lang === 'zh' ? 'zh-CN' : 'en';
+    document.title = getText('meta.title');
+    const description = selectors.one('meta[name="description"]');
+    if (description) description.content = getText('meta.description');
+
+    selectors.all('[data-i18n]').forEach((element) => {
+      element.textContent = getText(element.dataset.i18n);
     });
-    ctx.closePath();
-    ctx.globalAlpha = .22;
-    ctx.fillStyle = tech.color;
-    ctx.fill();
-    ctx.globalAlpha = 1;
-    ctx.strokeStyle = tech.color;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-  });
-}
-
-function drawFallbackBar(techs) {
-  const canvas = document.getElementById("bar-chart");
-  if (!canvas) return;
-  const { ctx, width, height } = setupCanvas(canvas);
-  ctx.clearRect(0, 0, width, height);
-  const left = 92;
-  const right = 28;
-  const top = 40;
-  const row = Math.max(42, (height - top - 42) / Math.max(techs.length, 1));
-  const max = Math.max(350, ...techs.map((tech) => tech.midpoint));
-  ctx.font = "13px Inter, Arial";
-  ctx.fillStyle = "#aab0bb";
-  ctx.strokeStyle = "rgba(255,255,255,.1)";
-  for (let tick = 0; tick <= max; tick += 50) {
-    const x = left + ((width - left - right) * tick) / max;
-    ctx.beginPath();
-    ctx.moveTo(x, top - 20);
-    ctx.lineTo(x, height - 34);
-    ctx.stroke();
-    ctx.fillText(String(tick), x - 8, height - 12);
+    selectors.all('[data-i18n-aria]').forEach((element) => {
+      element.setAttribute('aria-label', getText(element.dataset.i18nAria));
+    });
+    selectors.all('[data-i18n-placeholder]').forEach((element) => {
+      element.setAttribute('placeholder', getText(element.dataset.i18nPlaceholder));
+    });
+    selectors.all('[data-i18n-alt]').forEach((element) => {
+      element.setAttribute('alt', getText(element.dataset.i18nAlt));
+    });
+    selectors.all('[data-lang]').forEach((button) => {
+      button.setAttribute('aria-pressed', String(button.dataset.lang === state.lang));
+    });
+    updateMenuLabel();
   }
-  techs.forEach((tech, index) => {
-    const y = top + index * row;
-    const barWidth = ((width - left - right) * tech.midpoint) / max;
-    ctx.fillStyle = "#cbd5e1";
-    ctx.fillText(tech.short, 10, y + 22);
-    ctx.fillStyle = tech.color;
-    ctx.fillRect(left, y, barWidth, 26);
-  });
-}
 
-function renderInsight(techs) {
-  const strongest = [...techs].sort((a, b) => b.scores[0] - a.scores[0])[0];
-  const safest = [...techs].sort((a, b) => b.scores[2] - a.scores[2])[0];
-  const cheapest = [...techs].sort((a, b) => b.scores[1] - a.scores[1])[0];
-  const sentence = state.lang === "zh"
-    ? `${strongest.short} 通常更偏向能量密度；${safest.short} 在安全维度更突出；${cheapest.short} 在成本友好度上更有优势。真实工程选择还要看车辆定位、热管理、供应链和寿命目标。`
-    : `${strongest.short} leans toward energy density; ${safest.short} stands out on safety; ${cheapest.short} is stronger on affordability. Real engineering choices also depend on vehicle positioning, thermal management, supply chain, and lifetime targets.`;
-  document.getElementById("comparison-insight").innerHTML = `<h3>${text("compare.insightTitle")}</h3><p>${sentence}</p>`;
-}
-
-function renderSystem() {
-  document.getElementById("system-steps").innerHTML = data.systems.map((item, index) => {
-    const [title] = local(item);
-    return `<button class="system-step ${item.id === state.activeSystem ? "active" : ""}" type="button" data-system="${item.id}"><span>${String(index + 1).padStart(2, "0")}</span><h3>${title}</h3></button>`;
-  }).join("");
-  const current = data.systems.find((item) => item.id === state.activeSystem) || data.systems[0];
-  const [title, body] = local(current);
-  document.getElementById("system-detail").innerHTML = `<h3>${title}</h3><p>${body}</p>`;
-}
-
-function renderThermal() {
-  const item = data.thermal.find((entry) => entry.id === state.thermalMode) || data.thermal[0];
-  const [copy, chain] = local(item);
-  document.getElementById("thermal-copy").textContent = copy;
-  document.getElementById("thermal-percent").textContent = `${Math.round(item.factor * 100)}%`;
-  document.getElementById("thermal-bar").style.width = `${Math.round(item.factor * 100)}%`;
-  document.getElementById("thermal-chain").innerHTML = chain.map((point) => `<li>${point}</li>`).join("");
-  document.getElementById("thermal-control").innerHTML = data.thermal.map((mode) => `<button type="button" data-thermal="${mode.id}" class="${mode.id === state.thermalMode ? "active" : ""}">${text(`thermal.${mode.id}`)}</button>`).join("");
-}
-
-function renderTemperatureOptions() {
-  const select = document.getElementById("temperature");
-  if (!select) return;
-  const options = data.thermal.map((mode) => `<option value="${mode.factor}">${text(`thermal.${mode.id}`)} · ${Math.round(mode.factor * 100)}%</option>`).join("");
-  const current = select.value;
-  select.innerHTML = options;
-  if (current) select.value = current;
-}
-
-function calculateEnergy() {
-  const voltage = Number(document.getElementById("voltage")?.value);
-  const capacity = Number(document.getElementById("capacity")?.value);
-  const result = document.getElementById("energy-result");
-  const error = document.getElementById("energy-error");
-  if (!result || !error) return;
-  if (voltage <= 0 || capacity <= 0) {
-    error.textContent = text("calc.invalidEnergy");
-    result.innerHTML = `<strong>— Wh</strong><p>${text("calc.energyBody")}</p>`;
-    document.getElementById("energy-meter").style.width = "0%";
-    return;
+  function renderOverview() {
+    const target = selectors.one('#overview-metrics');
+    if (!target) return;
+    const metrics = [
+      [technologies.length, state.lang === 'zh' ? '种电池路线' : 'chemistry routes'],
+      [materials.length, state.lang === 'zh' ? '种关键材料' : 'key materials'],
+      [systemData.length, state.lang === 'zh' ? '个系统阶段' : 'system stages'],
+      [2, state.lang === 'zh' ? '种完整语言' : 'complete languages']
+    ];
+    target.innerHTML = metrics.map(([value, label], index) => `<div><dt>${String(index + 1).padStart(2, '0')}</dt><dd>${value}<small>${escapeHtml(label)}</small></dd></div>`).join('');
   }
-  error.textContent = "";
-  const wh = voltage * capacity;
-  const kwh = wh / 1000;
-  const meter = Math.min(100, Math.max(8, wh / 10));
-  document.getElementById("energy-meter").style.width = `${meter}%`;
-  result.innerHTML = `<strong>${Math.round(wh).toLocaleString()} Wh</strong><p>${text("calc.energyExplain").replace("{kwh}", kwh.toFixed(2)).replace("{wh}", Math.round(wh).toLocaleString())}</p>`;
-}
 
-function calculateRange() {
-  const size = Number(document.getElementById("battery-size")?.value);
-  const consumption = Number(document.getElementById("consumption")?.value);
-  const factor = Number(document.getElementById("temperature")?.value || 1);
-  const result = document.getElementById("range-result");
-  const error = document.getElementById("range-error");
-  if (!result || !error) return;
-  if (size <= 0 || consumption <= 0) {
-    error.textContent = text("calc.invalidRange");
-    result.innerHTML = `<strong>— km</strong><p>${text("calc.rangeBody")}</p>`;
-    document.getElementById("range-meter").style.width = "0%";
-    return;
+  function renderLearningMap() {
+    const target = selectors.one('#learning-map-list');
+    if (!target) return;
+    const items = state.lang === 'zh' ? [
+      ['材料与界面', '先理解正极、负极、电解质和隔膜分别限制什么。'],
+      ['电池体系', '比较不同化学路线如何交换能量、安全、寿命与成本。'],
+      ['系统集成', '观察串并联、BMS、冷却和结构如何改变电芯成绩。'],
+      ['整车与研究', '把温度、能耗和材料选择放回真实使用情景。']
+    ] : [
+      ['Materials and interfaces', 'See what cathodes, anodes, electrolytes, and separators actually limit.'],
+      ['Battery chemistries', 'Compare how material routes exchange energy, safety, life, and cost.'],
+      ['System integration', 'Watch series/parallel, BMS, cooling, and structure reshape cell results.'],
+      ['Vehicle and research', 'Place temperature, consumption, and materials back in real use.']
+    ];
+    target.innerHTML = items.map(([title, body]) => `<li><div><strong>${escapeHtml(title)}</strong><p>${escapeHtml(body)}</p></div></li>`).join('');
   }
-  error.textContent = "";
-  const base = (size * 1000) / consumption;
-  const adjusted = base * factor;
-  document.getElementById("range-meter").style.width = `${Math.min(100, Math.max(10, adjusted / 5))}%`;
-  result.innerHTML = `<strong>${Math.round(adjusted)} km</strong><p>${text("calc.rangeExplain").replace("{base}", Math.round(base)).replace("{adjusted}", Math.round(adjusted))}</p>`;
-}
 
-function renderMaterials() {
-  const categories = ["all", "cathode", "anode", "electrolyte", "separator", "collector", "safety"];
-  document.getElementById("material-filters").innerHTML = categories.map((cat) => `<button type="button" data-filter="${cat}" class="${cat === state.materialFilter ? "active" : ""}">${cat === "all" ? text("materials.all") : cat}</button>`).join("");
-  const query = normalize(state.materialQuery);
-  const entries = data.materials.filter((item) => {
-    const content = local(item);
-    const matchesFilter = state.materialFilter === "all" || item.category === state.materialFilter;
-    const matchesQuery = !query || normalize([content.name, content.role, content.desc, content.advantage, content.challenge, content.used, item.symbol, item.category].join(" ")).includes(query);
-    return matchesFilter && matchesQuery;
-  });
-  document.getElementById("material-grid").innerHTML = entries.length
-    ? entries.map((item) => {
-      const content = local(item);
-      return `<article class="material-card" data-open-material="${item.id}"><div class="material-symbol">${item.symbol}</div><span class="role">${content.role}</span><h3>${content.name}</h3><p>${content.desc}</p></article>`;
-    }).join("")
-    : `<p class="empty-state">${text("materials.empty")}</p>`;
-}
+  function renderExplorer() {
+    const stack = selectors.one('#layer-stack');
+    const panel = selectors.one('#layer-panel');
+    if (!stack || !panel) return;
+    stack.innerHTML = layerData.map((layer, index) => {
+      const copy = local(layer);
+      const active = layer.id === state.activeLayer;
+      return `<button class="layer-button" type="button" role="tab" id="layer-tab-${layer.id}" aria-controls="layer-panel" aria-selected="${active}" tabindex="${active ? 0 : -1}" data-layer="${layer.id}" style="--layer-color:${layer.color};--layer-y:${layer.y}"><span>${escapeHtml(copy.title)}</span><small>${String(index + 1).padStart(2, '0')}</small></button>`;
+    }).join('');
+    const layer = layerData.find((item) => item.id === state.activeLayer) || layerData[0];
+    const copy = local(layer);
+    panel.setAttribute('aria-labelledby', `layer-tab-${layer.id}`);
+    panel.innerHTML = `<span class="panel-index">${String(layerData.indexOf(layer) + 1).padStart(2, '0')} / ${String(layerData.length).padStart(2, '0')}</span><h3>${escapeHtml(copy.title)}</h3><p>${escapeHtml(copy.function)}</p><dl class="layer-facts"><div><dt>${getText('labels.material')}</dt><dd>${escapeHtml(copy.material)}</dd></div><div><dt>${getText('labels.performance')}</dt><dd>${escapeHtml(copy.performance)}</dd></div><div><dt>${getText('labels.failure')}</dt><dd>${escapeHtml(copy.failure)}</dd></div></dl>`;
+  }
 
-function renderResearch() {
-  document.getElementById("research-grid").innerHTML = data.research.map((item) => {
-    const [label, title, body] = local(item);
-    return `<article class="note-card"><span>${label}</span><h3>${title}</h3><p>${body}</p></article>`;
-  }).join("");
-}
+  function selectLayer(id, focus = false) {
+    if (!layerData.some((layer) => layer.id === id)) return;
+    state.activeLayer = id;
+    renderExplorer();
+    if (focus) selectors.one(`#layer-tab-${CSS.escape(id)}`)?.focus();
+  }
 
-function renderTimeline() {
-  document.getElementById("timeline-list").innerHTML = data.timeline.map((item, index) => {
-    const [title, body] = local(item);
-    return `<article class="timeline-item ${index === 2 ? "active" : ""}" tabindex="0"><time>${item.year}</time><div><h4>${title}</h4><p>${body}</p></div></article>`;
-  }).join("");
-}
+  function renderIonDemo() {
+    const mode = ionModes[state.ionMode];
+    const copy = local(mode);
+    const stage = selectors.one('.ion-stage');
+    const ionPath = selectors.one('#ion-path');
+    const electronPath = selectors.one('#electron-path');
+    if (!mode || !stage || !ionPath || !electronPath) return;
+    stage.dataset.mode = state.ionMode;
+    stage.dataset.paused = String(state.ionPaused);
+    selectors.one('#ion-description').textContent = copy.description;
+    selectors.one('#ion-steps').innerHTML = copy.steps.map((step) => `<li>${escapeHtml(step)}</li>`).join('');
+    selectors.all('[data-ion-mode]').forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.ionMode === state.ionMode)));
+    const charging = state.ionMode === 'charge';
+    ionPath.setAttribute('d', charging ? 'M225 292 H675' : 'M675 292 H225');
+    electronPath.setAttribute('d', charging ? 'M165 190 C165 55 735 55 735 190' : 'M735 190 C735 55 165 55 165 190');
+    const labels = selectors.all('[data-ion-label]');
+    const ionLabels = state.lang === 'zh' ? { cathode: '正极', separator: '隔膜 / 电解液', anode: '负极' } : { cathode: 'CATHODE', separator: 'SEPARATOR / ELECTROLYTE', anode: 'ANODE' };
+    labels.forEach((label) => { label.textContent = ionLabels[label.dataset.ionLabel]; });
+    const svg = selectors.one('#ion-svg');
+    if (svg && typeof svg.pauseAnimations === 'function' && typeof svg.unpauseAnimations === 'function') {
+      if (state.ionPaused) svg.pauseAnimations(); else svg.unpauseAnimations();
+    }
+    const pauseButton = selectors.one('#ion-pause');
+    pauseButton.textContent = getText(state.ionPaused ? 'ion.resume' : 'ion.pause');
+    pauseButton.setAttribute('aria-pressed', String(state.ionPaused));
+  }
 
-function renderQuiz() {
-  document.getElementById("quiz-questions").innerHTML = data.quiz.map((item, index) => {
-    const [question, options] = local(item);
-    return `<section class="quiz-question" data-question="${index}"><h3>${index + 1}. ${question}</h3><div class="quiz-options">${options.map((option, optionIndex) => `<label><input type="radio" name="q${index}" value="${optionIndex}"><span>${option}</span></label>`).join("")}</div><p class="quiz-feedback" id="feedback-${index}"></p></section>`;
-  }).join("");
-  document.getElementById("quiz-result").textContent = "";
-}
+  function renderTechnologies() {
+    const target = selectors.one('#technology-rail');
+    if (!target) return;
+    target.innerHTML = technologies.map((technology, index) => {
+      const copy = local(technology);
+      return `<article class="technology-card" style="--tech-color:${technology.color}"><span class="tech-number">${String(index + 1).padStart(2, '0')} / ${String(technologies.length).padStart(2, '0')}</span><div class="tech-symbol">${escapeHtml(technology.short)}</div><h3>${escapeHtml(copy.title)}</h3><p>${escapeHtml(copy.oneLine)}</p><button type="button" data-open-technology="${technology.id}">${getText('labels.learnMore')}</button></article>`;
+    }).join('');
+  }
 
-function scoreQuiz(event) {
-  event.preventDefault();
-  let score = 0;
-  data.quiz.forEach((item, index) => {
-    const selected = document.querySelector(`input[name="q${index}"]:checked`);
-    const feedback = document.getElementById(`feedback-${index}`);
-    const [, options, explanation] = local(item);
-    if (!selected) {
-      feedback.textContent = text("quiz.choose");
-      feedback.style.color = "#fbbf24";
+  function renderTechTable() {
+    const target = selectors.one('#tech-table');
+    if (!target) return;
+    const headers = ['technology', 'voltage', 'massEnergy', 'cycles', 'maturity'];
+    target.innerHTML = `<thead><tr>${headers.map((key) => `<th scope="col">${getText(`labels.${key}`)}</th>`).join('')}</tr></thead><tbody>${technologies.map((technology) => `<tr><th scope="row"><button class="tech-row-button" type="button" data-open-technology="${technology.id}">${escapeHtml(local(technology).title)}</button></th><td>${escapeHtml(localValue(technology.facts.voltage))}</td><td>${escapeHtml(localValue(technology.facts.massEnergy))}</td><td>${escapeHtml(localValue(technology.facts.cycles))}</td><td>${escapeHtml(getText(`maturity.${technology.facts.maturity}`))}</td></tr>`).join('')}</tbody>`;
+  }
+
+  function renderComparisonControls() {
+    const target = selectors.one('#tech-selectors');
+    if (!target) return;
+    const atLimit = state.selectedTechnologies.length >= 4;
+    target.innerHTML = technologies.map((technology) => {
+      const checked = state.selectedTechnologies.includes(technology.id);
+      return `<label class="tech-selector" style="--selector-color:${technology.color}"><input type="checkbox" value="${technology.id}" data-compare-technology ${checked ? 'checked' : ''} ${atLimit && !checked ? 'disabled' : ''}><span>${escapeHtml(technology.short)}</span></label>`;
+    }).join('');
+  }
+
+  function renderComparison() {
+    const selected = state.selectedTechnologies.map(technologyById).filter(Boolean);
+    drawEnergyRanges(selected);
+    renderQualitativeTable(selected);
+    renderComparisonInsight(selected);
+  }
+
+  function drawEnergyRanges(selected) {
+    const svg = selectors.one('#energy-range-chart');
+    if (!svg) return;
+    const width = 900;
+    const left = 170;
+    const right = 55;
+    const top = 58;
+    const rowHeight = 66;
+    const maxValue = 500;
+    const height = Math.max(220, top + selected.length * rowHeight + 55);
+    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    if (!selected.length) {
+      svg.innerHTML = `<text x="450" y="120" text-anchor="middle" class="chart-axis-label">${escapeHtml(getText('compare.choose'))}</text>`;
       return;
     }
-    const correct = Number(selected.value) === item.answer;
-    if (correct) score += 1;
-    feedback.textContent = `${correct ? "✓" : "×"} ${explanation} ${correct ? "" : `(${options[item.answer]})`}`;
-    feedback.style.color = correct ? "#86efac" : "#fb7185";
-  });
-  document.getElementById("quiz-result").textContent = text("quiz.score").replace("{score}", score).replace("{total}", data.quiz.length);
-}
-
-function openTechnology(id) {
-  const tech = data.technologies.find((item) => item.id === id);
-  if (!tech) return;
-  const item = local(tech);
-  const spec = techSpecs[tech.id];
-  const modal = document.getElementById("detail-modal");
-  document.getElementById("modal-content").innerHTML = `
-    <p class="modal-category">${tech.short}</p>
-    <h2>${item.title}</h2>
-    <p>${item.desc}</p>
-    <div class="modal-tags">${item.tags.map((tag) => `<span>${tag}</span>`).join("")}</div>
-    <div class="metric-grid">
-      <div><span>${labelFor("density")}</span><strong>${tech.density}</strong></div>
-      <div><span>${state.lang === "zh" ? "电压平台" : "Voltage"}</span><strong>${localValue(spec.voltage)}</strong></div>
-      <div><span>${labelFor("safety")}</span><strong>${tech.scores[2]}/10</strong></div>
-      <div><span>${labelFor("cost")}</span><strong>${tech.scores[1]}/10</strong></div>
-    </div>
-    ${[
-      ["overview", item.desc],
-      [state.lang === "zh" ? "材料逻辑" : "Material logic", local(spec.platform)],
-      [state.lang === "zh" ? "简化工作原理" : "Simplified mechanism", local(spec.reaction)],
-      ["strengths", item.strengths],
-      ["weaknesses", item.weaknesses],
-      ["applications", item.use],
-      [state.lang === "zh" ? "成熟度与案例" : "Maturity and cases", `${local(spec.maturity)}。${local(spec.case)}`],
-      ["analogy", item.analogy],
-      ["future", item.future]
-    ].map(([key, body]) => `<section class="modal-section"><h3>${labelFor(key) || key}</h3><p>${body}</p></section>`).join("")}
-  `;
-  openDialog(modal);
-  document.body.classList.add("modal-open");
-}
-
-function openMaterial(id) {
-  const material = data.materials.find((item) => item.id === id);
-  if (!material) return;
-  const item = local(material);
-  const modal = document.getElementById("detail-modal");
-  document.getElementById("modal-content").innerHTML = `
-    <p class="modal-category">${item.role}</p>
-    <h2>${item.name}</h2>
-    <p>${item.desc}</p>
-    <div class="modal-tags"><span>${material.category}</span><span>${material.symbol}</span></div>
-    ${[
-      ["role", item.desc],
-      ["advantage", item.advantage],
-      ["challenge", item.challenge],
-      ["applications", item.used]
-    ].map(([key, body]) => `<section class="modal-section"><h3>${labelFor(key)}</h3><p>${body}</p></section>`).join("")}
-  `;
-  openDialog(modal);
-  document.body.classList.add("modal-open");
-}
-
-function knowledgeEntries() {
-  const techs = data.technologies.map((item) => ({
-    id: `tech:${item.id}`,
-    type: "tech",
-    target: item.id,
-    title: local(item).title,
-    desc: local(item).desc,
-    category: state.lang === "zh" ? "电池体系" : "Battery chemistry"
-  }));
-  const mats = data.materials.map((item) => ({
-    id: `mat:${item.id}`,
-    type: "material",
-    target: item.id,
-    title: local(item).name,
-    desc: local(item).desc,
-    category: state.lang === "zh" ? "材料" : "Material"
-  }));
-  const terms = [
-    ["soc", "SOC", state.lang === "zh" ? "剩余电量状态估算，不等于电池健康。" : "State of charge estimate, not the same as battery health."],
-    ["soh", "SOH", state.lang === "zh" ? "电池健康状态估算，常与容量衰减和内阻变化有关。" : "State of health estimate, related to capacity fade and resistance changes."],
-    ["thermal-runaway", state.lang === "zh" ? "热失控" : "Thermal runaway", state.lang === "zh" ? "电池内部热量和副反应失控放大的危险过程。" : "A dangerous process where heat and side reactions amplify inside a cell."],
-    ["bms", "BMS", state.lang === "zh" ? "电池管理系统，监测电压、电流、温度并执行保护。" : "Battery management system that monitors voltage, current, temperature, and protection."]
-  ].map(([id, title, desc]) => ({ id: `term:${id}`, type: "term", target: id, title, desc, category: state.lang === "zh" ? "术语" : "Glossary" }));
-  return [...techs, ...mats, ...terms];
-}
-
-function normalize(value) {
-  return String(value || "").toLowerCase().replace(/\s+/g, "");
-}
-
-function renderSearchResults() {
-  const input = document.getElementById("global-search-input");
-  const target = document.getElementById("global-search-results");
-  if (!target) return;
-  const query = normalize(input?.value || "");
-  const entries = knowledgeEntries().filter((entry) => !query || normalize(`${entry.title} ${entry.desc} ${entry.category}`).includes(query)).slice(0, 12);
-  target.innerHTML = entries.length ? entries.map((entry) => `<button class="search-result" type="button" data-search-type="${entry.type}" data-search-target="${entry.target}"><span>${entry.category}</span><strong>${entry.title}</strong><small>${entry.desc}</small></button>`).join("") : `<p class="empty-state">${text("search.empty")}</p>`;
-}
-
-function openTerm(id) {
-  const term = knowledgeEntries().find((entry) => entry.type === "term" && entry.target === id);
-  if (!term) return;
-  const modal = document.getElementById("detail-modal");
-  document.getElementById("modal-content").innerHTML = `<p class="modal-category">${term.category}</p><h2>${term.title}</h2><p>${term.desc}</p><section class="modal-section"><h3>${state.lang === "zh" ? "为什么重要" : "Why it matters"}</h3><p>${state.lang === "zh" ? "这些术语会频繁出现在材料、BMS、续航和安全讨论中。先理解它们，后面的内容会轻松很多。" : "These terms appear often in materials, BMS, range, and safety discussions. Understanding them makes the rest of the site easier."}</p></section>`;
-  openDialog(modal);
-  document.body.classList.add("modal-open");
-}
-
-function bindNavigation() {
-  const header = document.getElementById("site-header");
-  window.addEventListener("scroll", () => {
-    header.classList.toggle("scrolled", window.scrollY > 20);
-    updateActiveNav();
-  }, { passive: true });
-  document.getElementById("menu-toggle")?.addEventListener("click", () => {
-    const menu = document.getElementById("nav-links");
-    const open = !menu.classList.contains("open");
-    menu.classList.toggle("open", open);
-    document.getElementById("menu-toggle").setAttribute("aria-expanded", String(open));
-  });
-  document.querySelectorAll(".nav-links a").forEach((link) => {
-    link.addEventListener("click", () => document.getElementById("nav-links").classList.remove("open"));
-  });
-}
-
-function updateActiveNav() {
-  const sections = [...document.querySelectorAll("main section[id]")];
-  let active = sections[0]?.id;
-  sections.forEach((section) => {
-    if (section.getBoundingClientRect().top <= 120) active = section.id;
-  });
-  document.querySelectorAll("[data-nav]").forEach((link) => {
-    link.classList.toggle("active", link.getAttribute("href") === `#${active}`);
-  });
-}
-
-function bindGlobalEvents() {
-  document.addEventListener("click", (event) => {
-    const layerButton = event.target.closest("[data-layer]");
-    if (layerButton) {
-      state.activeLayer = layerButton.dataset.layer;
-      renderExplorer();
-    }
-    const ionButton = event.target.closest("[data-ion-mode]");
-    if (ionButton) {
-      state.ionMode = ionButton.dataset.ionMode;
-      renderIonDemo();
-    }
-    const detailButton = event.target.closest("[data-open-detail]");
-    if (detailButton) openTechnology(detailButton.dataset.openDetail);
-    const materialButton = event.target.closest("[data-open-material]");
-    if (materialButton) openMaterial(materialButton.dataset.openMaterial);
-    const systemButton = event.target.closest("[data-system]");
-    if (systemButton) {
-      state.activeSystem = systemButton.dataset.system;
-      renderSystem();
-    }
-    const thermalButton = event.target.closest("[data-thermal]");
-    if (thermalButton) {
-      state.thermalMode = thermalButton.dataset.thermal;
-      renderThermal();
-    }
-    const filterButton = event.target.closest("[data-filter]");
-    if (filterButton) {
-      state.materialFilter = filterButton.dataset.filter;
-      renderMaterials();
-    }
-    const searchResult = event.target.closest("[data-search-type]");
-    if (searchResult) {
-      closeModals();
-      document.body.classList.remove("modal-open");
-      if (searchResult.dataset.searchType === "tech") openTechnology(searchResult.dataset.searchTarget);
-      if (searchResult.dataset.searchType === "material") openMaterial(searchResult.dataset.searchTarget);
-      if (searchResult.dataset.searchType === "term") openTerm(searchResult.dataset.searchTarget);
-    }
-    if (event.target.closest(".timeline-item")) {
-      event.target.closest(".timeline-item").classList.toggle("active");
-    }
-  });
-  document.addEventListener("change", (event) => {
-    if (event.target.matches("#tech-selectors input")) {
-      const checked = getSelectedTechIds();
-      if (checked.length > 4) {
-        event.target.checked = false;
-        window.alert(text("compare.max"));
-      }
-      updateCharts();
-    }
-    if (event.target.matches("#temperature")) calculateRange();
-  });
-  document.addEventListener("input", (event) => {
-    if (event.target.matches("#voltage, #capacity")) calculateEnergy();
-    if (event.target.matches("#battery-size, #consumption")) calculateRange();
-    if (event.target.matches("#material-search")) {
-      state.materialQuery = event.target.value;
-      renderMaterials();
-    }
-    if (event.target.matches("#global-search-input")) renderSearchResults();
-  });
-  document.querySelectorAll("[data-lang]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.lang = button.dataset.lang;
-      localStorage.setItem("battery-lab-lang", state.lang);
-      renderAll();
-      calculateEnergy();
-      calculateRange();
-    });
-  });
-  document.getElementById("energy-form")?.addEventListener("submit", (event) => { event.preventDefault(); calculateEnergy(); });
-  document.getElementById("range-form")?.addEventListener("submit", (event) => { event.preventDefault(); calculateRange(); });
-  document.getElementById("quiz-form")?.addEventListener("submit", scoreQuiz);
-  document.getElementById("quiz-reset")?.addEventListener("click", renderQuiz);
-  document.getElementById("modal-close")?.addEventListener("click", closeModals);
-  document.getElementById("search-close")?.addEventListener("click", closeModals);
-  document.getElementById("detail-modal")?.addEventListener("close", () => document.body.classList.remove("modal-open"));
-  document.getElementById("search-modal")?.addEventListener("close", () => document.body.classList.remove("modal-open"));
-  document.getElementById("open-search")?.addEventListener("click", () => {
-    openDialog(document.getElementById("search-modal"));
-    document.body.classList.add("modal-open");
-    setTimeout(() => document.getElementById("global-search-input")?.focus(), 40);
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "/" && !["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) {
-      event.preventDefault();
-      openDialog(document.getElementById("search-modal"));
-      document.body.classList.add("modal-open");
-      setTimeout(() => document.getElementById("global-search-input")?.focus(), 40);
-    }
-  });
-}
-
-function openDialog(dialog) {
-  if (!dialog) return;
-  if (typeof dialog.showModal === "function") dialog.showModal();
-  else dialog.setAttribute("open", "");
-}
-
-function closeModals() {
-  document.querySelectorAll("dialog[open]").forEach((dialog) => {
-    if (typeof dialog.close === "function") dialog.close();
-    else dialog.removeAttribute("open");
-  });
-  document.body.classList.remove("modal-open");
-}
-
-function setupReveal() {
-  const items = document.querySelectorAll(".reveal");
-  if (!("IntersectionObserver" in window)) {
-    items.forEach((item) => item.classList.add("visible"));
-    return;
+    const axisWidth = width - left - right;
+    const x = (value) => left + (value / maxValue) * axisWidth;
+    const grid = [0, 100, 200, 300, 400, 500].map((value) => `<line class="chart-grid-line" x1="${x(value)}" y1="28" x2="${x(value)}" y2="${height - 38}"></line><text class="chart-axis-label" x="${x(value)}" y="${height - 12}" text-anchor="middle">${value}</text>`).join('');
+    const rows = selected.map((technology, index) => {
+      const y = top + index * rowHeight;
+      const [min, max] = technology.facts.massRange;
+      return `<text class="chart-tech-label" x="0" y="${y + 5}">${escapeHtml(technology.short)}</text><line class="chart-range" x1="${x(min)}" y1="${y}" x2="${x(max)}" y2="${y}" stroke="${technology.color}"></line><line class="chart-cap" x1="${x(min)}" y1="${y - 10}" x2="${x(min)}" y2="${y + 10}" stroke="${technology.color}"></line><line class="chart-cap" x1="${x(max)}" y1="${y - 10}" x2="${x(max)}" y2="${y + 10}" stroke="${technology.color}"></line><text class="chart-value" x="${x(max) + 10}" y="${y + 4}">${min}–${max}</text>`;
+    }).join('');
+    svg.innerHTML = `${grid}${rows}<text class="chart-axis-label" x="${width - right}" y="${height - 12}" text-anchor="end">Wh/kg</text>`;
   }
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("visible");
-        observer.unobserve(entry.target);
+
+  function renderQualitativeTable(selected) {
+    const target = selectors.one('#qualitative-table');
+    if (!target) return;
+    const dimensions = ['safety', 'fastCharge', 'cold', 'availability', 'cost', 'maturity'];
+    if (!selected.length) {
+      target.innerHTML = `<tbody><tr><td>${escapeHtml(getText('compare.choose'))}</td></tr></tbody>`;
+      return;
+    }
+    target.innerHTML = `<thead><tr><th scope="col">${getText('labels.technology')}</th>${dimensions.map((key) => `<th scope="col">${getText(`labels.${key}`)}</th>`).join('')}</tr></thead><tbody>${selected.map((technology) => `<tr><th scope="row">${escapeHtml(technology.short)}</th>${dimensions.map((key) => { const rating = technology.ratings[key]; return `<td><span class="rating rating-${rating}">${escapeHtml(getText(`ratings.${rating}`))}</span></td>`; }).join('')}</tr>`).join('')}</tbody>`;
+  }
+
+  function renderComparisonInsight(selected) {
+    const target = selectors.one('#comparison-insight');
+    const status = selectors.one('#comparison-status');
+    if (!target || !status) return;
+    if (!selected.length) {
+      target.innerHTML = '';
+      status.textContent = getText('compare.choose');
+      return;
+    }
+    const highestEnergy = [...selected].sort((a, b) => b.facts.massRange[1] - a.facts.massRange[1])[0];
+    const safest = selected.find((technology) => technology.ratings.safety === 'high');
+    const sentence = state.lang === 'zh'
+      ? `${highestEnergy.short} 在所选技术中具有更高的典型质量能量密度上限。${safest ? `${safest.short} 的安全性被概括为“高”，但真实结果仍取决于电芯设计和系统防护。` : '当前选择中没有被概括为高安全等级的路线。'}`
+      : `${highestEnergy.short} has the highest typical gravimetric-energy upper range among this selection. ${safest ? `${safest.short} is summarized as high in safety, while real results still depend on cell and system design.` : 'None of the selected routes is summarized as high in safety.'}`;
+    target.innerHTML = `<h4>${getText('compare.insight')}</h4><p>${escapeHtml(sentence)}</p>`;
+    if (!status.textContent.includes(getText('compare.max'))) status.textContent = '';
+  }
+
+  function generateSystemSvg() {
+    const moduleTarget = selectors.one('#module-cells');
+    const packTarget = selectors.one('#pack-modules');
+    if (moduleTarget) {
+      moduleTarget.innerHTML = Array.from({ length: 18 }, (_, index) => {
+        const column = index % 6;
+        const row = Math.floor(index / 6);
+        return `<rect class="module-cell" x="${255 + column * 82}" y="${220 + row * 86}" width="60" height="68" rx="8"></rect>`;
+      }).join('');
+    }
+    if (packTarget) {
+      packTarget.innerHTML = Array.from({ length: 8 }, (_, index) => {
+        const column = index % 4;
+        const row = Math.floor(index / 4);
+        return `<rect class="pack-module" x="${175 + column * 155}" y="${235 + row * 135}" width="125" height="100" rx="12"></rect>`;
+      }).join('');
+    }
+  }
+
+  function renderSystemNavigation() {
+    const target = selectors.one('#system-steps');
+    if (!target) return;
+    target.innerHTML = systemData.map((stage, index) => `<button class="system-step" type="button" data-system-jump="${stage.id}" aria-current="${stage.id === state.systemStage ? 'step' : 'false'}"><span>${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(local(stage).title.split('·')[0].trim())}</strong></button>`).join('');
+  }
+
+  function renderSystemStage(id, updateProgress = true) {
+    const stage = systemData.find((item) => item.id === id) || systemData[0];
+    state.systemStage = stage.id;
+    selectors.one('#system-visual')?.setAttribute('data-stage', stage.id);
+    const copy = local(stage);
+    const detail = selectors.one('#system-detail');
+    if (detail) detail.innerHTML = `<span class="system-index">${String(systemData.indexOf(stage) + 1).padStart(2, '0')} / 04</span><h3>${escapeHtml(copy.title)}</h3><p>${escapeHtml(copy.body)}</p><div class="system-facts">${copy.facts.map((fact) => `<p>${escapeHtml(fact)}</p>`).join('')}</div>`;
+    selectors.one('#system-equation').textContent = copy.equation;
+    selectors.all('[data-system-jump]').forEach((button) => button.setAttribute('aria-current', button.dataset.systemJump === stage.id ? 'step' : 'false'));
+    if (updateProgress) {
+      const index = systemData.indexOf(stage);
+      state.systemProgress = index / (systemData.length - 1);
+      updateSystemProgressBar();
+    }
+  }
+
+  function renderSystemMobile() {
+    const target = selectors.one('#system-mobile-stages');
+    if (!target) return;
+    target.innerHTML = systemData.map((stage, index) => { const copy = local(stage); return `<article class="mobile-system-stage"><span>${String(index + 1).padStart(2, '0')} / 04</span><h3>${escapeHtml(copy.title)}</h3><p>${escapeHtml(copy.body)}</p><p><strong>${escapeHtml(copy.equation)}</strong></p></article>`; }).join('');
+  }
+
+  function updateSystemProgressBar() {
+    const bar = selectors.one('#system-progress-bar');
+    if (bar) bar.style.height = `${Math.max(0, Math.min(100, state.systemProgress * 100))}%`;
+  }
+
+  function setupSystemStory() {
+    const section = selectors.one('#system-scroll');
+    if (!section) return;
+    const update = () => {
+      state.systemFrame = 0;
+      if (window.matchMedia('(max-width: 1080px), (prefers-reduced-motion: reduce)').matches) return;
+      const rect = section.getBoundingClientRect();
+      const range = Math.max(1, rect.height - window.innerHeight);
+      const progress = Math.max(0, Math.min(1, -rect.top / range));
+      state.systemProgress = progress;
+      const index = Math.min(systemData.length - 1, Math.floor(progress * systemData.length));
+      const id = systemData[index].id;
+      if (id !== state.systemStage) {
+        state.systemStage = id;
+        renderSystemNavigation();
+        renderSystemStage(id, false);
+      }
+      updateSystemProgressBar();
+    };
+    const schedule = () => {
+      if (state.systemFrame) return;
+      state.systemFrame = requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule, { passive: true });
+    schedule();
+  }
+
+  function jumpToSystemStage(id) {
+    const section = selectors.one('#system-scroll');
+    const stageIndex = systemData.findIndex((stage) => stage.id === id);
+    if (!section || stageIndex < 0 || window.matchMedia('(max-width: 1080px), (prefers-reduced-motion: reduce)').matches) {
+      renderSystemStage(id);
+      return;
+    }
+    const top = window.scrollY + section.getBoundingClientRect().top;
+    const range = Math.max(1, section.offsetHeight - window.innerHeight);
+    window.scrollTo({ top: top + (stageIndex / (systemData.length - 1)) * range, behavior: 'smooth' });
+  }
+
+  function renderThermal() {
+    const scenario = thermalScenarios[state.thermalMode];
+    const copy = local(scenario);
+    selectors.one('#thermal-description').textContent = copy.text;
+    selectors.one('#thermal-temp').textContent = scenario.temp;
+    selectors.one('#thermal-percent').textContent = `${Math.round(scenario.factor * 100)}%`;
+    selectors.one('#thermal-bar').style.width = `${scenario.factor * 100}%`;
+    selectors.one('#thermal-chain').innerHTML = copy.chain.map((item) => `<li>${escapeHtml(item)}</li>`).join('');
+    const target = selectors.one('#thermal-control');
+    target.innerHTML = Object.keys(thermalScenarios).map((id) => `<button type="button" data-thermal="${id}" aria-pressed="${id === state.thermalMode}">${getText(`thermal.${id}`)}</button>`).join('');
+  }
+
+  function renderMaterialFilters() {
+    const target = selectors.one('#material-filters');
+    if (!target) return;
+    const categories = ['all', 'cathode', 'anode', 'electrolyte', 'separator', 'additive', 'collector', 'emerging'];
+    target.innerHTML = categories.map((category) => `<button type="button" data-material-filter="${category}" aria-pressed="${category === state.materialFilter}">${getText(`categories.${category}`)}</button>`).join('');
+  }
+
+  function materialSearchText(material) {
+    return normalize([material.formula, ...material.aliases, material.zh.name, material.en.name, material.zh.role, material.en.role, material.zh.summary, material.en.summary].join(' '));
+  }
+
+  function renderMaterials() {
+    const target = selectors.one('#material-grid');
+    const empty = selectors.one('#material-empty');
+    if (!target || !empty) return;
+    const query = normalize(state.materialQuery);
+    const filtered = materials.filter((material) => (state.materialFilter === 'all' || material.category === state.materialFilter) && (!query || materialSearchText(material).includes(query)));
+    target.innerHTML = filtered.map((material) => { const copy = local(material); return `<button class="material-row" type="button" data-open-material="${material.id}"><span class="formula">${escapeHtml(material.formula)}</span><h3>${escapeHtml(copy.name)}</h3><p class="summary">${escapeHtml(copy.summary)}</p><span class="category">${getText(`categories.${material.category}`)}</span><span class="arrow">→</span></button>`; }).join('');
+    empty.hidden = filtered.length > 0;
+    const count = selectors.one('#material-count');
+    if (count) count.textContent = format(getText('materials.count'), { shown: filtered.length, total: materials.length });
+  }
+
+  function resetMaterials() {
+    state.materialFilter = 'all';
+    state.materialQuery = '';
+    const input = selectors.one('#material-search');
+    if (input) input.value = '';
+    renderMaterialFilters();
+    renderMaterials();
+  }
+
+  function renderResearch() {
+    const target = selectors.one('#research-notes');
+    if (target) target.innerHTML = researchNotes.map((note) => { const title = local(note.title); const body = local(note.body); return `<article class="research-note"><span class="note-label">${escapeHtml(local(note.label))}</span><div><h3>${escapeHtml(title)}</h3><p>${escapeHtml(body)}</p></div></article>`; }).join('');
+    const caseTarget = selectors.one('#industry-cases');
+    const cases = Array.isArray(experience.cases) ? experience.cases : [];
+    if (caseTarget) caseTarget.innerHTML = cases.slice(0, 3).map((item) => `<article class="case-item"><time>${escapeHtml(item.date)}</time><h3>${escapeHtml(local(item.title))}</h3><p>${escapeHtml(local(item.body))}</p><a href="${escapeHtml(item.url)}" target="_blank" rel="noopener">${escapeHtml(item.source)} ↗</a></article>`).join('');
+  }
+
+  function renderSources() {
+    const target = selectors.one('#source-list');
+    if (!target) return;
+    target.innerHTML = sources.map((source) => `<article class="source-entry"><a href="${escapeHtml(source.url)}" target="_blank" rel="noopener">${escapeHtml(source.title)}</a><p>${escapeHtml(source.publisher)} · ${escapeHtml(source.year)} · ${getText('sources.accessed')} ${escapeHtml(source.accessed)}<br>${escapeHtml(local(source.scope))}</p></article>`).join('');
+  }
+
+  function renderTemperatureOptions() {
+    const select = selectors.one('#temperature');
+    if (!select) return;
+    const previous = select.value || state.thermalMode;
+    select.innerHTML = Object.keys(thermalScenarios).map((id) => `<option value="${id}">${getText(`thermal.${id}`)} · ${thermalScenarios[id].temp}</option>`).join('');
+    select.value = thermalScenarios[previous] ? previous : 'normal';
+  }
+
+  function numberValue(selector) {
+    return Number.parseFloat(selectors.one(selector)?.value ?? '');
+  }
+
+  function calculateEnergy() {
+    const voltage = numberValue('#voltage');
+    const capacity = numberValue('#capacity');
+    const error = selectors.one('#energy-error');
+    const output = selectors.one('#energy-result');
+    const meter = selectors.one('#energy-meter');
+    if (!error || !output || !meter) return;
+    const valid = Number.isFinite(voltage) && Number.isFinite(capacity) && voltage >= .1 && voltage <= 1000 && capacity >= .1 && capacity <= 10000;
+    if (!valid) {
+      error.textContent = getText('calc.invalidEnergy');
+      output.innerHTML = '';
+      meter.style.width = '0%';
+      return;
+    }
+    error.textContent = '';
+    const wh = voltage * capacity;
+    const kwh = wh / 1000;
+    const whText = wh >= 1000 ? wh.toLocaleString(undefined, { maximumFractionDigits: 0 }) : wh.toLocaleString(undefined, { maximumFractionDigits: 1 });
+    const kwhText = kwh.toLocaleString(undefined, { maximumFractionDigits: 3 });
+    output.innerHTML = `<strong>${escapeHtml(format(getText('calc.energyResult'), { wh: whText }))}<span class="secondary-result">${escapeHtml(format(getText('calc.energySecondary'), { kwh: kwhText }))}</span></strong><p>${escapeHtml(format(getText('calc.energyExplain'), { power: whText }))}</p>`;
+    meter.style.width = `${Math.min(100, 8 + Math.log10(Math.max(1, wh)) * 18)}%`;
+  }
+
+  function calculateRange() {
+    const size = numberValue('#battery-size');
+    const consumption = numberValue('#consumption');
+    const usable = numberValue('#usable-capacity');
+    const temperature = selectors.one('#temperature')?.value || 'normal';
+    const scenario = thermalScenarios[temperature] || thermalScenarios.normal;
+    const error = selectors.one('#range-error');
+    const output = selectors.one('#range-result');
+    const meter = selectors.one('#range-meter');
+    if (!error || !output || !meter) return;
+    const valid = Number.isFinite(size) && Number.isFinite(consumption) && Number.isFinite(usable) && size >= 1 && size <= 300 && consumption >= 50 && consumption <= 600 && usable >= 50 && usable <= 100;
+    if (!valid) {
+      error.textContent = getText('calc.invalidRange');
+      output.innerHTML = '';
+      meter.style.width = '0%';
+      return;
+    }
+    error.textContent = '';
+    const buffer = size * (1 - usable / 100);
+    const usableEnergy = size * usable / 100;
+    const tempLoss = usableEnergy * (1 - scenario.factor);
+    const effectiveEnergy = usableEnergy * scenario.factor;
+    const range = effectiveEnergy * 1000 / consumption;
+    output.innerHTML = `<strong>${escapeHtml(format(getText('calc.rangeResult'), { range: Math.round(range) }))}</strong><p>${escapeHtml(format(getText('calc.rangeExplain'), { size: size.toFixed(1), buffer: buffer.toFixed(1), tempLoss: tempLoss.toFixed(1) }))}</p><p>${escapeHtml(getText('calc.rangeNote'))}</p>`;
+    meter.style.width = `${Math.min(100, Math.max(5, range / 7))}%`;
+  }
+
+  function renderTimeline() {
+    const target = selectors.one('#timeline-list');
+    if (!target) return;
+    target.innerHTML = timelineData.map((item, index) => { const [title, body] = item[state.lang]; const expanded = index === 3; return `<button class="timeline-item" type="button" aria-expanded="${expanded}"><time>${escapeHtml(item.year)}</time><div><h4>${escapeHtml(title)}</h4><div class="timeline-body">${escapeHtml(body)}</div></div><span class="plus">${expanded ? '−' : '+'}</span></button>`; }).join('');
+  }
+
+  function visibleQuizData() {
+    return state.quizScope === 'incorrect' ? quizData.filter((question) => state.incorrectQuestions.includes(question.id)) : quizData;
+  }
+
+  function renderQuiz() {
+    const target = selectors.one('#quiz-questions');
+    if (!target) return;
+    const questions = visibleQuizData();
+    target.innerHTML = questions.map((question, index) => {
+      const [prompt, options] = question[state.lang];
+      return `<fieldset class="quiz-question" data-question="${question.id}"><legend><span class="quiz-number">${String(index + 1).padStart(2, '0')}</span>${escapeHtml(prompt)}</legend><div class="quiz-options">${options.map((option, optionIndex) => `<label class="quiz-option"><input type="radio" name="${question.id}" value="${optionIndex}"><span>${escapeHtml(option)}</span></label>`).join('')}</div><p class="quiz-feedback" aria-live="polite"></p></fieldset>`;
+    }).join('');
+    selectors.one('#quiz-result').textContent = '';
+    selectors.one('#quiz-retry').hidden = true;
+    state.quizSubmitted = false;
+  }
+
+  function scoreQuiz(event) {
+    event.preventDefault();
+    const questions = visibleQuizData();
+    const incorrect = [];
+    let score = 0;
+    questions.forEach((question) => {
+      const fieldset = selectors.one(`[data-question="${CSS.escape(question.id)}"]`);
+      const selected = selectors.one(`input[name="${CSS.escape(question.id)}"]:checked`, fieldset);
+      const selectedIndex = selected ? Number(selected.value) : -1;
+      const correct = selectedIndex === question.answer;
+      if (correct) score += 1; else incorrect.push(question.id);
+      selectors.all('.quiz-option', fieldset).forEach((label, index) => {
+        label.classList.toggle('correct', index === question.answer);
+        label.classList.toggle('incorrect', index === selectedIndex && !correct);
+      });
+      const feedback = selectors.one('.quiz-feedback', fieldset);
+      feedback.textContent = `${getText(correct ? 'quiz.correct' : 'quiz.incorrect')} — ${question[state.lang][2]}`;
+    });
+    state.incorrectQuestions = state.quizScope === 'incorrect'
+      ? [...new Set(quizData.filter((question) => !state.incorrectQuestions.includes(question.id)).map((question) => question.id).filter(() => false).concat(incorrect))]
+      : incorrect;
+    state.quizSubmitted = true;
+    const result = selectors.one('#quiz-result');
+    const message = format(getText('quiz.score'), { score, total: questions.length });
+    result.textContent = score === questions.length ? `${message} · ${getText('quiz.allCorrect')}` : message;
+    selectors.one('#quiz-retry').hidden = incorrect.length === 0;
+  }
+
+  function retryIncorrect() {
+    if (!state.incorrectQuestions.length) return;
+    state.quizScope = 'incorrect';
+    renderQuiz();
+    selectors.one('#quiz-form')?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  }
+
+  function resetQuiz() {
+    state.quizScope = 'all';
+    state.incorrectQuestions = [];
+    renderQuiz();
+  }
+
+  function renderProjectStory() {
+    const nav = selectors.one('#story-nav');
+    const content = selectors.one('#story-content');
+    if (!nav || !content) return;
+    nav.innerHTML = storyData.map((section, index) => `<a href="#story-${section.id}">${String(index + 1).padStart(2, '0')} · ${escapeHtml(local(section.title).split('·')[0].trim())}</a>`).join('');
+    content.innerHTML = storyData.map((section) => {
+      const body = section[state.lang];
+      const list = section.list?.[state.lang];
+      return `<section class="story-section" id="story-${section.id}"><h3>${escapeHtml(local(section.title))}</h3>${body ? `<p>${escapeHtml(body)}</p>` : ''}${list ? `<ol>${list.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ol>` : ''}</section>`;
+    }).join('');
+  }
+
+  function citationMarkup(sourceIds) {
+    return sourceIds.map(sourceById).filter(Boolean).map((source) => `<article class="citation"><a href="${escapeHtml(source.url)}" target="_blank" rel="noopener">${escapeHtml(source.title)} ↗</a><p>${escapeHtml(source.publisher)} · ${escapeHtml(source.year)} · ${getText('sources.accessed')} ${escapeHtml(source.accessed)}<br>${getText('sources.conditions')}: ${escapeHtml(local(source.conditions))}</p></article>`).join('');
+  }
+
+  function openTechnology(id, trigger = null) {
+    const technology = technologyById(id);
+    if (!technology) return;
+    const copy = local(technology);
+    const content = selectors.one('#modal-content');
+    content.innerHTML = `<p class="modal-category">${getText('dialog.technology')} · ${escapeHtml(technology.short)}</p><h2 id="detail-title">${escapeHtml(copy.title)}</h2><p class="modal-intro">${escapeHtml(copy.oneLine)}</p><dl class="modal-facts"><div><dt>${getText('labels.voltage')}</dt><dd>${escapeHtml(localValue(technology.facts.voltage))}</dd></div><div><dt>${getText('labels.massEnergy')}</dt><dd>${escapeHtml(localValue(technology.facts.massEnergy))}</dd></div><div><dt>${getText('labels.volumeEnergy')}</dt><dd>${escapeHtml(localValue(technology.facts.volumeEnergy))}</dd></div><div><dt>${getText('labels.cycles')}</dt><dd>${escapeHtml(localValue(technology.facts.cycles))}</dd></div><div><dt>${getText('labels.maturity')}</dt><dd>${escapeHtml(getText(`maturity.${technology.facts.maturity}`))}</dd></div></dl><section class="modal-section"><h3>${getText('labels.overview')}</h3><p>${escapeHtml(copy.overview)}</p></section><section class="modal-section"><h3>${getText('labels.how')}</h3><p>${escapeHtml(copy.how)}</p></section><section class="modal-section"><h3>${getText('labels.electrodes')}</h3><p>${escapeHtml(copy.electrodes)}</p></section><div class="modal-columns"><section class="modal-section"><h3>${getText('labels.strengths')}</h3><ul>${copy.strengths.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section class="modal-section"><h3>${getText('labels.limitations')}</h3><ul>${copy.limitations.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section></div><section class="modal-section"><h3>${getText('labels.applications')}</h3><p>${escapeHtml(copy.applications.join(' · '))}</p></section><section class="modal-section"><h3>${getText('labels.comparison')}</h3><p>${escapeHtml(copy.comparison)}</p></section><section class="modal-section"><h3>${getText('labels.analogy')}</h3><p>${escapeHtml(copy.analogy)}</p></section><section class="modal-section"><h3>${getText('labels.outlook')}</h3><p>${escapeHtml(copy.outlook)}</p></section><section class="modal-section"><h3>${getText('labels.sources')}</h3><div class="citation-list">${citationMarkup(technology.sourceIds)}</div></section>`;
+    openDialog(selectors.one('#detail-modal'), trigger);
+  }
+
+  function openMaterial(id, trigger = null, updateUrl = true) {
+    const material = materialById(id);
+    if (!material) return;
+    const copy = local(material);
+    const content = selectors.one('#modal-content');
+    content.innerHTML = `<p class="modal-category">${getText('dialog.material')} · ${getText(`categories.${material.category}`)}</p><h2 id="detail-title">${escapeHtml(copy.name)}</h2><p class="modal-intro">${escapeHtml(copy.summary)}</p><dl class="modal-facts"><div><dt>${getText('labels.formula')}</dt><dd>${escapeHtml(material.formula)}</dd></div><div><dt>${getText('labels.role')}</dt><dd>${escapeHtml(copy.role)}</dd></div><div><dt>${getText('labels.status')}</dt><dd>${escapeHtml(getText(`maturity.${material.status}`))}</dd></div></dl><div class="modal-columns"><section class="modal-section"><h3>${getText('labels.strengths')}</h3><ul>${copy.advantages.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section class="modal-section"><h3>${getText('labels.limitations')}</h3><ul>${copy.limitations.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section></div><section class="modal-section"><h3>${getText('labels.properties')}</h3><ul>${copy.properties.map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></section><section class="modal-section"><h3>${getText('labels.applications')}</h3><p>${escapeHtml(copy.applications)}</p></section><section class="modal-section"><h3>${getText('labels.sustainability')}</h3><p>${escapeHtml(copy.sustainability)}</p></section><section class="modal-section"><h3>${getText('labels.research')}</h3><p>${escapeHtml(copy.research)}</p></section><section class="modal-section"><h3>${getText('labels.sources')}</h3><div class="citation-list">${citationMarkup(material.sourceIds)}</div></section>`;
+    openDialog(selectors.one('#detail-modal'), trigger);
+    if (updateUrl) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('material', material.id);
+      url.hash = 'materials';
+      history.replaceState({ material: material.id }, '', url);
+    }
+  }
+
+  function knowledgeEntries() {
+    const glossary = Array.isArray(depthContent.glossary) ? depthContent.glossary : [];
+    return [
+      ...technologies.map((item) => ({ type: 'technology', id: item.id, category: getText('dialog.technology'), title: local(item).title, description: local(item).oneLine, terms: item.aliases })),
+      ...materials.map((item) => ({ type: 'material', id: item.id, category: getText('dialog.material'), title: local(item).name, description: local(item).summary, terms: item.aliases })),
+      ...glossary.map((item) => ({ type: 'term', id: item.id, category: local(item.category), title: item[state.lang]?.title || item.short, description: item[state.lang]?.desc || '', terms: [item.short, ...(item[state.lang]?.tags || [])] })),
+      ...layerData.map((item) => ({ type: 'layer', id: item.id, category: getText('nav.inside'), title: local(item).title, description: local(item).function, terms: [item.id, local(item).material] }))
+    ];
+  }
+
+  function renderSearchResults() {
+    const input = selectors.one('#global-search-input');
+    const target = selectors.one('#global-search-results');
+    if (!target) return;
+    const query = normalize(input?.value || '');
+    if (!query) {
+      target.innerHTML = `<p class="empty-state">${escapeHtml(getText('search.hint'))}</p>`;
+      return;
+    }
+    const entries = knowledgeEntries().filter((entry) => normalize([entry.title, entry.description, entry.category, ...entry.terms].join(' ')).includes(query)).slice(0, 16);
+    target.innerHTML = entries.length ? entries.map((entry) => `<button class="search-result" type="button" data-search-type="${entry.type}" data-search-id="${entry.id}"><span class="search-type">${escapeHtml(entry.category)}</span><strong>${escapeHtml(entry.title)}</strong><span class="arrow">→</span><small>${escapeHtml(entry.description)}</small></button>`).join('') : `<p class="empty-state">${escapeHtml(getText('search.empty'))}</p>`;
+  }
+
+  function openTerm(id, trigger = null) {
+    const glossary = Array.isArray(depthContent.glossary) ? depthContent.glossary : [];
+    const term = glossary.find((item) => item.id === id);
+    if (!term) return;
+    const copy = term[state.lang] || term.zh || term.en;
+    selectors.one('#modal-content').innerHTML = `<p class="modal-category">${escapeHtml(local(term.category))}</p><h2 id="detail-title">${escapeHtml(copy.title)}</h2><p class="modal-intro">${escapeHtml(copy.desc)}</p>${(copy.sections || []).map(([title, body]) => `<section class="modal-section"><h3>${escapeHtml(title)}</h3><p>${escapeHtml(body)}</p></section>`).join('')}`;
+    openDialog(selectors.one('#detail-modal'), trigger);
+  }
+
+  function openDialog(dialog, trigger = null) {
+    if (!dialog) return;
+    state.lastDialogTrigger = trigger || document.activeElement;
+    if (typeof dialog.showModal === 'function') dialog.showModal(); else dialog.setAttribute('open', '');
+    document.body.classList.add('modal-open');
+    requestAnimationFrame(() => selectors.one('.modal-close', dialog)?.focus());
+  }
+
+  function closeDialog(dialog, restoreFocus = true) {
+    if (!dialog?.hasAttribute('open')) return;
+    if (typeof dialog.close === 'function') dialog.close(); else dialog.removeAttribute('open');
+    document.body.classList.remove('modal-open');
+    if (dialog.id === 'detail-modal') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.has('material')) {
+        url.searchParams.delete('material');
+        history.replaceState({}, '', `${url.pathname}${url.search}${url.hash || '#materials'}`);
+      }
+    }
+    if (restoreFocus && state.lastDialogTrigger instanceof HTMLElement) requestAnimationFrame(() => state.lastDialogTrigger.focus());
+  }
+
+  function closeAllDialogs() {
+    selectors.all('dialog[open]').forEach((dialog) => closeDialog(dialog));
+  }
+
+  function openDeepLinkedMaterial() {
+    const materialId = new URL(window.location.href).searchParams.get('material');
+    if (materialId && materialById(materialId)) requestAnimationFrame(() => openMaterial(materialId, selectors.one('#materials'), false));
+  }
+
+  function setupReveal() {
+    const items = selectors.all('.reveal');
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
+      items.forEach((item) => item.classList.add('visible'));
+      return;
+    }
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: .12, rootMargin: '0px 0px -5% 0px' });
+    items.forEach((item) => observer.observe(item));
+  }
+
+  function setupNavigation() {
+    const update = () => {
+      selectors.one('#site-header')?.classList.toggle('scrolled', window.scrollY > 16);
+      let active = 'overview';
+      selectors.all('main > section[id]').forEach((section) => {
+        if (section.getBoundingClientRect().top <= 140) active = section.id;
+      });
+      selectors.all('[data-nav]').forEach((link) => {
+        const isActive = link.getAttribute('href') === `#${active}`;
+        if (isActive) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
+      });
+    };
+    let frame = 0;
+    window.addEventListener('scroll', () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => { frame = 0; update(); });
+    }, { passive: true });
+    update();
+  }
+
+  function toggleMenu(force) {
+    const menu = selectors.one('#nav-links');
+    const button = selectors.one('#menu-toggle');
+    if (!menu || !button) return;
+    const open = typeof force === 'boolean' ? force : !menu.classList.contains('open');
+    menu.classList.toggle('open', open);
+    button.setAttribute('aria-expanded', String(open));
+    document.body.classList.toggle('menu-open', open);
+    selectors.one('#site-header')?.classList.toggle('menu-visible', open);
+    updateMenuLabel();
+    if (!open && document.activeElement && menu.contains(document.activeElement)) button.focus();
+  }
+
+  function updateMenuLabel() {
+    const button = selectors.one('#menu-toggle');
+    if (!button) return;
+    const open = button.getAttribute('aria-expanded') === 'true';
+    button.setAttribute('aria-label', getText(open ? 'a11y.menuClose' : 'a11y.menuOpen'));
+  }
+
+  function setupHeroMotion() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce), (max-width: 768px)').matches) return;
+    const hero = selectors.one('.hero');
+    if (!hero) return;
+    const apply = () => {
+      state.heroFrame = 0;
+      const scroll = Math.min(80, window.scrollY * .09);
+      hero.style.setProperty('--hero-scroll', `${scroll}px`);
+    };
+    hero.addEventListener('pointermove', (event) => {
+      const rect = hero.getBoundingClientRect();
+      hero.style.setProperty('--hero-x', ((event.clientX - rect.left) / rect.width - .5).toFixed(3));
+      hero.style.setProperty('--hero-y', ((event.clientY - rect.top) / rect.height - .5).toFixed(3));
+    }, { passive: true });
+    hero.addEventListener('pointerleave', () => {
+      hero.style.setProperty('--hero-x', 0);
+      hero.style.setProperty('--hero-y', 0);
+    });
+    window.addEventListener('scroll', () => {
+      if (state.heroFrame) return;
+      state.heroFrame = requestAnimationFrame(apply);
+    }, { passive: true });
+  }
+
+  function bindEvents() {
+    document.addEventListener('click', (event) => {
+      const layer = event.target.closest('[data-layer]');
+      if (layer) selectLayer(layer.dataset.layer);
+
+      const ionMode = event.target.closest('[data-ion-mode]');
+      if (ionMode) { state.ionMode = ionMode.dataset.ionMode; renderIonDemo(); }
+
+      if (event.target.closest('#ion-pause')) { state.ionPaused = !state.ionPaused; renderIonDemo(); }
+
+      const technology = event.target.closest('[data-open-technology]');
+      if (technology) openTechnology(technology.dataset.openTechnology, technology);
+
+      const material = event.target.closest('[data-open-material]');
+      if (material) openMaterial(material.dataset.openMaterial, material);
+
+      const filter = event.target.closest('[data-material-filter]');
+      if (filter) { state.materialFilter = filter.dataset.materialFilter; renderMaterialFilters(); renderMaterials(); }
+
+      if (event.target.closest('#material-reset') || event.target.closest('[data-reset-materials]')) resetMaterials();
+
+      const thermal = event.target.closest('[data-thermal]');
+      if (thermal) { state.thermalMode = thermal.dataset.thermal; renderThermal(); }
+
+      const systemJump = event.target.closest('[data-system-jump]');
+      if (systemJump) jumpToSystemStage(systemJump.dataset.systemJump);
+
+      const timeline = event.target.closest('.timeline-item');
+      if (timeline) {
+        const expanded = timeline.getAttribute('aria-expanded') === 'true';
+        timeline.setAttribute('aria-expanded', String(!expanded));
+        selectors.one('.plus', timeline).textContent = expanded ? '+' : '−';
+      }
+
+      const searchResult = event.target.closest('[data-search-type]');
+      if (searchResult) {
+        closeDialog(selectors.one('#search-modal'), false);
+        const { searchType, searchId } = searchResult.dataset;
+        if (searchType === 'technology') openTechnology(searchId, selectors.one('#open-search'));
+        if (searchType === 'material') openMaterial(searchId, selectors.one('#open-search'));
+        if (searchType === 'term') openTerm(searchId, selectors.one('#open-search'));
+        if (searchType === 'layer') { selectLayer(searchId); location.hash = 'inside'; }
       }
     });
-  }, { threshold: 0.14 });
-  items.forEach((item) => observer.observe(item));
-}
 
-window.addEventListener("DOMContentLoaded", init);
+    document.addEventListener('change', (event) => {
+      if (event.target.matches('[data-compare-technology]')) {
+        const id = event.target.value;
+        if (event.target.checked && !state.selectedTechnologies.includes(id)) {
+          if (state.selectedTechnologies.length >= 4) {
+            event.target.checked = false;
+            selectors.one('#comparison-status').textContent = getText('compare.max');
+          } else state.selectedTechnologies.push(id);
+        } else if (!event.target.checked) state.selectedTechnologies = state.selectedTechnologies.filter((item) => item !== id);
+        renderComparisonControls();
+        renderComparison();
+      }
+      if (event.target.matches('#temperature')) calculateRange();
+    });
+
+    document.addEventListener('input', (event) => {
+      if (event.target.matches('#voltage, #capacity')) calculateEnergy();
+      if (event.target.matches('#battery-size, #consumption, #usable-capacity')) calculateRange();
+      if (event.target.matches('#material-search')) { state.materialQuery = event.target.value; renderMaterials(); }
+      if (event.target.matches('#global-search-input')) renderSearchResults();
+    });
+
+    selectors.one('#clear-comparison')?.addEventListener('click', () => { state.selectedTechnologies = []; selectors.one('#comparison-status').textContent = ''; renderComparisonControls(); renderComparison(); });
+    selectors.one('#menu-toggle')?.addEventListener('click', () => toggleMenu());
+    selectors.all('.nav-links a').forEach((link) => link.addEventListener('click', () => toggleMenu(false)));
+    selectors.all('[data-lang]').forEach((button) => button.addEventListener('click', () => {
+      state.lang = button.dataset.lang;
+      localStorage.setItem('battery-lab-lang', state.lang);
+      renderAll();
+    }));
+
+    selectors.one('#energy-form')?.addEventListener('submit', (event) => { event.preventDefault(); calculateEnergy(); });
+    selectors.one('#range-form')?.addEventListener('submit', (event) => { event.preventDefault(); calculateRange(); });
+    selectors.one('#quiz-form')?.addEventListener('submit', scoreQuiz);
+    selectors.one('#quiz-retry')?.addEventListener('click', retryIncorrect);
+    selectors.one('#quiz-reset')?.addEventListener('click', resetQuiz);
+
+    selectors.one('#open-search')?.addEventListener('click', (event) => { openDialog(selectors.one('#search-modal'), event.currentTarget); renderSearchResults(); requestAnimationFrame(() => selectors.one('#global-search-input')?.focus()); });
+    selectors.one('#modal-close')?.addEventListener('click', () => closeDialog(selectors.one('#detail-modal')));
+    selectors.one('#search-close')?.addEventListener('click', () => closeDialog(selectors.one('#search-modal')));
+    selectors.all('dialog').forEach((dialog) => {
+      dialog.addEventListener('click', (event) => { if (event.target === dialog) closeDialog(dialog); });
+      dialog.addEventListener('close', () => { document.body.classList.remove('modal-open'); });
+    });
+
+    selectors.one('#layer-stack')?.addEventListener('keydown', (event) => {
+      const keys = ['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft', 'Home', 'End'];
+      if (!keys.includes(event.key)) return;
+      event.preventDefault();
+      const current = layerData.findIndex((layer) => layer.id === state.activeLayer);
+      let next = current;
+      if (['ArrowDown', 'ArrowRight'].includes(event.key)) next = (current + 1) % layerData.length;
+      if (['ArrowUp', 'ArrowLeft'].includes(event.key)) next = (current - 1 + layerData.length) % layerData.length;
+      if (event.key === 'Home') next = 0;
+      if (event.key === 'End') next = layerData.length - 1;
+      selectLayer(layerData[next].id, true);
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        if (selectors.one('dialog[open]')) closeAllDialogs();
+        else if (selectors.one('#nav-links')?.classList.contains('open')) toggleMenu(false);
+      }
+      if (event.key === '/' && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) {
+        event.preventDefault();
+        const trigger = selectors.one('#open-search');
+        openDialog(selectors.one('#search-modal'), trigger);
+        requestAnimationFrame(() => selectors.one('#global-search-input')?.focus());
+      }
+    });
+  }
+
+  window.addEventListener('DOMContentLoaded', init);
+})();
